@@ -5,6 +5,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Phase 3: Importers (Task B data side)
+- `core/io`: `LineReader` (fixed 64 KB buffer, LF/CRLF, UTF-8 BOM, progress = bytes read / size,
+  cancellation and byte limit checked per buffer refill, line-length limit), locale-independent
+  number parsing with `std::from_chars` (rejects NaN, Inf, overflow, trailing text),
+  `ImportLimits`, `ImportStats`, `Vec3d`, an ASCII STL writer and shared error builders.
+- `parseAsciiStl` / `parseAsciiStlFile`: keyword state machine; separate messages for a 0-byte
+  file and a solid without facets; binary STL sniffed (NUL bytes, or size = 84 + 50·n) and
+  rejected with "Export as ASCII STL"; wrong vertex or coordinate count, unknown or misplaced
+  keyword, EOF inside a facet; zero normals recomputed, other normals normalised; degenerate
+  triangles counted as a warning; bbox; several solids merged; missing `endsolid` is a warning.
+- `parseThermalCsv` / `parseThermalCsvFile`: exact header `node_id,x_m,y_m,z_m,temperature_C`
+  (trimmed); per-row errors with line numbers for missing/extra columns, quoted fields, empty or
+  non-numeric values, non-integer ids, NaN/Inf, duplicate ids (also in unsorted files),
+  T < −273.15 °C; header-only file → "No data rows"; Tmin/Tmax, bbox; `syntheticFlag` from a
+  `SYNTHETIC` file name.
+- Error copy follows spec §8.5: "Line N: <what>" plus a hint on how to fix it.
+- `uniforge_cli`: `gen-samples` (seeded, byte-identical; reads the files back and checks counts,
+  bbox, enclosed volume and temperatures), `inspect FILE...`, `import-bench` (child process per
+  run for clean peak-memory readings; `platform/Process_{win,posix}.cpp`), `--data`, `--sizes`;
+  `all` now runs `fea` + `gen-samples`.
+- `CsvWriter`: optional shortest round-trip number format (`CsvNumberFormat::Shortest`) for
+  human-readable sample data; the evidence CSVs keep `%.17g`.
+- Data: `data/geometry/rod_10x10mm_1m.stl` (12 facets), `data/geometry/heatsink_fins.stl`
+  (96 facets), `data/thermal/rod_nodal_temperature_SYNTHETIC.csv` (909 nodes) and
+  `data/PROVENANCE.md` (generator, seed, units, schema, MIT licence, SYNTHETIC statement).
+- Measured limits (`results/benchmarks/import_limits.{md,csv}`): ~250 MB/s STL, ~210 MB/s CSV;
+  2 M facets (496 MB) in 2.0 s / 270 MB peak, 5 M nodes (275 MB) in 1.3 s / 318 MB peak.
+  `ImportLimits` defaults: 512 MiB, 2,000,000 facets (the spec's 5 M would need a ~1.2 GB file,
+  over the byte limit), 5,000,000 nodes, 4,096-character lines.
+- Tests: 93 new (176 in total): 37 malformed fixtures in `tests/fixtures/{stl,csv}/` asserting
+  the exact `ErrorCode` and line (label `negative`), parser/reader unit tests incl. CRLF + BOM,
+  cancellation and limits, `integration.cli_samples_match_data` (regenerated samples equal
+  `data/` byte for byte and import cleanly) and `SampleData.*`.
+- `.gitattributes`: `tests/fixtures/** -text`, so CRLF, BOM and binary fixtures stay byte-exact.
+
 ### Phase 2: Thermal FEA (Task C)
 - `uniforge_core` is now a static library. `core/common`: `Result<T>`/`Result<void>`, `Error`
   with `ErrorCode` and `hint` (no exceptions across the core API), `writeFileAtomic` (temp file

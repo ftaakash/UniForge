@@ -1,0 +1,27 @@
+{
+  "file": "import_limits.csv",
+  "description": "Measured ASCII STL / thermal CSV import time and peak memory",
+  "tool": "uniforge_cli import-bench",
+  "tool_version": "0.1.0",
+  "git_commit": "2137e3344e17",
+  "generated_utc": "2026-11-01T18:03:55Z",
+  "cpu": "Intel(R) Core(TM) i5-14600K",
+  "logical_cpus": 20,
+  "ram_bytes": 34116202496,
+  "os": "Windows (x64)",
+  "compiler": "MSVC 19.44.35229",
+  "build": "Release (optimised)",
+  "repetitions": 3,
+  "columns": ["kind", "elements", "file_bytes", "parse_median_s", "parse_min_s", "throughput_MB_per_s", "baseline_ws_bytes", "peak_ws_bytes", "peak_private_bytes"],
+  "units": {
+    "kind": "stl = ASCII STL facets, csv = thermal CSV nodes",
+    "elements": "facets or nodes",
+    "file_bytes": "bytes",
+    "parse_median_s": "s, median of 3 parses",
+    "parse_min_s": "s",
+    "throughput_MB_per_s": "10^6 bytes per second",
+    "baseline_ws_bytes": "bytes, worker working set before the first parse",
+    "peak_ws_bytes": "bytes, worker peak working set (resident)",
+    "peak_private_bytes": "bytes, worker peak committed private memory (Windows)"
+  }
+}

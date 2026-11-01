@@ -197,6 +197,90 @@ misplaced function); the build or a parse error caught both, and the files were 
 
 ---
 
+## 2026-11-01: Importers, Task B data side (Phase 3)
+
+### Prompts (representative)
+1. "Implement Phase 3 (importers, Task B data side) of UniForge in this repo, following
+   `docs/design/UniForge_Final_Build_Spec.md` … No rendering or Geometry view UI (that's
+   Phase 4)." The brief listed the scope: streamed `LineReader`, `ImportLimits`, the STL and CSV
+   parsers with every rejection case, ~15 STL + ~12 CSV negative fixtures asserting code and
+   line, positive tests (CRLF + BOM, cancellation, limits), `gen-samples` with golden copies,
+   `data/PROVENANCE.md` stating the CSV is SYNTHETIC, an `import-bench` command measuring
+   10 k / 100 k / 1 M elements, limits set from the measurements, and doc updates.
+2. Commit rules as before: nothing committed before my review; no AI attribution lines.
+
+### Outputs
+- `src/core/io/`: `LineReader`, `TextParse` (`from_chars` wrappers, message helpers),
+  `ImportTypes`, `ImportLimits`, `ImportErrors`, `StlParser`, `ThermalCsvParser`, `StlWriter`.
+- `src/core/common/CsvWriter`: optional shortest number format (`CsvNumberFormat::Shortest`).
+- `src/cli/`: `SamplesCommand` (`gen-samples`, `inspect`), `ImportBenchCommand` (`import-bench`
+  + internal worker), `platform/Process.hpp` with `Process_win.cpp` / `Process_posix.cpp`,
+  `--data` / `--sizes` options, `all` = `fea` + `gen-samples`.
+- Tests: `tests/unit/io/` (4 files), `tests/negative/io/ImportFixtureTest.cpp`,
+  `tests/fixtures/stl/` (21 malformed + 1 valid), `tests/fixtures/csv/` (16 malformed + 1 valid),
+  `tests/integration/samples_golden.cmake`, `tests/integration/SampleDataTest.cpp`.
+- `data/` (3 sample files + `PROVENANCE.md`), `results/benchmarks/import_limits.{md,csv,meta.json}`,
+  README / CHANGELOG / `.gitattributes` / `regenerate_evidence.cmd` comment updates.
+
+### Verification
+- Release build with `/W4 /WX`: no warnings. `ctest --preset windows-release`: 176/176 pass
+  (83 existing + 93 new: 43 `unit_io`, 45 `negative_io`, 1 `CsvWriter`, 3 `SampleData`,
+  1 `integration.cli_samples_match_data`).
+- Ran `uniforge_cli inspect` over every fixture and read all 37 rejection messages and hints for wording
+  and line numbers (three were reworded: plurals, the empty-value hint, CSV field names).
+- Fault injection (deliberate, reverted): changing one digit of the committed SYNTHETIC CSV
+  failed `integration.cli_samples_match_data` ("differs from the committed copy"); making
+  `parseDouble` accept NaN/Inf failed 6 tests (1 unit, 5 negative fixtures).
+- `gen-samples` checks pass: rod 12 facets, bbox exactly [0, 1] × [−0.005, 0.005]² m, enclosed
+  volume = A·L = 1e-4 m³; heat sink 96 facets, volume 2.416e-5 m³; CSV 909 unique nodes, flagged
+  SYNTHETIC, every node within 0.02 °C (+ rounding) of the documented formula, Tmax 188.1923 °C.
+- `import-bench` (i5-14600K, 32 GB, MSVC 19.44 Release): ~250 MB/s STL, ~210 MB/s CSV;
+  1 M facets 248 MB / 1.0 s / 123 MB peak; 2 M facets 496 MB / 2.0 s / 270 MB peak;
+  1 M nodes 54 MB / 0.24 s / 68 MB peak; 5 M nodes 275 MB / 1.3 s / 318 MB peak. Temporary files
+  were deleted (checked the temp folder afterwards). Largest file on disk at once: 496 MB.
+- `tools/package.ps1`: all tests pass, `uniforge_cli.exe` still imports only `KERNEL32.dll`
+  (`K32GetProcessMemoryInfo`), hygiene scan clean, ZIP 4.6 MB. In the staged package, deleting
+  `data/geometry` and `data/thermal` and running `app\uniforge_cli.exe all` recreated all three
+  samples byte-identical to the repository copies.
+- `TextParse.IgnoresTheCLocaleDecimalSeparator` switched the C locale to German (it exists on
+  this machine) and `from_chars` still parsed `0.25` and rejected `0,25`.
+- Not verified yet: the Linux/GCC build, including `Process_posix.cpp` (Linux CI arrives in
+  Phase 5; floating-point `from_chars` needs GCC ≥ 11). `GetProcessMemoryInfo`'s peak values
+  were taken at face value; they were not cross-checked with another tool.
+
+### Incorrect / unsuitable suggestions and how they were caught
+| # | What the AI produced | Problem | How it was caught | Resolution |
+|---|---|---|---|---|
+| 1 | Spec default `maxFacets = 5'000'000` with `maxBytes = 512 MiB` (from the design phase) | The two limits contradict each other: 5 M ASCII facets is a ~1.24 GB file, so the facet limit could never be reached and was never testable | First `import-bench` run (248 MB per 1 M facets) | `maxFacets = 2'000'000` (496 MB file), and the bench now also runs exactly at each limit |
+| 2 | Sample temperatures rounded as `round(T / 1e-4) * 1e-4` | Multiplying by the inexact `1e-4` gave values such as `99.76350000000001` in the CSV | Reading the generated file | `round(T * 1e4) / 1e4`, the nearest double to the 4-decimal value |
+| 3 | A shell `sed` edit of `regenerate_evidence.cmd` | Backslash escaping turned `app\uniforge_cli.exe` into `appNiforge_cli.exe` in a comment | Reading the file after the edit | Fixed with an exact-text edit |
+| 4 | Running `clang-format` on the new platform files, then an `awk` one-liner to restore the include order | clang-format moved `Process.hpp` below `<windows.h>`; the `awk` script then deleted every blank line in `Process_win.cpp` | Reading both files | File rewritten; include order matches the rest of the repository |
+| 5 | First fault-injection attempt (`if (false && …)`) | Did not compile under `/WX` (constant condition), so it tested nothing | Build output | Replaced with a mutation that compiles |
+| 6 | A round-trip test value `4.9e-324` (subnormal) | libstdc++'s `from_chars` may report `result_out_of_range` for subnormals (not tried on Linux); a portability risk, not an observed failure | Review before running | Replaced with `DBL_MIN` (2.2250738585072014e-308) |
+
+### Deviations from the spec for me to confirm
+- `ImportLimits` gained `maxLineBytes` (4096); `maxFacets` is 2,000,000 instead of 5,000,000
+  (see #1 above).
+- `StlMesh` gained `recomputedNormals`. Types live in `namespace uniforge::io`.
+- `parseAsciiStlFile` / `parseThermalCsvFile` overloads open the file and set the size hint;
+  `syntheticFlag` is set only by the file overload (the stream overload has no name).
+- Lenient where real exporters differ: keywords in any case, a leading `+` on numbers, several
+  solids merged, a missing `endsolid` after complete facets is a warning (EOF inside a facet is
+  still an error).
+- Codes chosen where the spec names none: duplicate `node_id` and T < −273.15 °C are
+  `InvalidInput`; a number outside the double range (overflow or underflow, e.g. `1e400`,
+  `1e-400`) is `NonFinite`; a file not starting with `solid` is `UnsupportedFormat` with line 1.
+- `all` now runs `fea` + `gen-samples`; `import-bench` stays separate because its numbers are
+  machine-specific and it writes ~0.5 GB of temporary files.
+- `CsvWriter` (Phase 2 code) gained a shortest-format option for the sample CSV; the Phase 2
+  evidence files and their golden copies are unchanged.
+- The heat sink is 8 separate closed boxes (touching), not one fused solid.
+
+### My decisions
+- _To fill after review._
+
+---
+
 ## Entry template
 
 ```markdown
