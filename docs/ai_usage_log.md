@@ -412,6 +412,66 @@ misplaced function); the build or a parse error caught both, and the files were 
 - `bench` also writes three SVG plots; `all` writes its quick bench to the git-ignored
   `results/benchmarks/quick/`.
 - No p = 8/16 series (cut for time; discussed, not measured).
+## 2026-11-02: Embedded integration, Task E (Phase 6)
+
+### Prompts (representative)
+1. "Implement Phase 6 (embedded integration, Task E) of UniForge, following
+   `docs/design/UniForge_Final_Build_Spec.md` …" The brief listed the scope: design doc +
+   hand-written SVG block diagram with **every electrical fact cited** from the official
+   datasheet / user manual (or marked as an unverified assumption), the `core/hw` mocks
+   (`MockTransport`, state machine, `RetryPolicy`, three adapters, discovery, injectable time),
+   the `DeviceManager` thread and the Hardware view, tests, and doc rows.
+2. Run in parallel with Phases 4, 5 and 7 on separate branches/worktrees; commit on the branch
+   (no push, tag or merge), no AI attribution lines in commits. A second message moved the
+   finish time after a usage-limit pause.
+
+### Outputs
+- `docs/embedded_design.md`, `docs/embedded_block_diagram.svg`.
+- `src/core/hw/`: `DeviceTypes`, `Clock`, `MockTransport`, `DeviceStateMachine`, `RetryPolicy`,
+  `IDeviceAdapter`, `MockAdapter`, `Adapters` (MCU/FPGA/JTAG + `discoverDevices`).
+- `src/app/services/DeviceManager`, `src/app/views/HardwareView`; AppShell registers the view.
+- `tests/unit/hw/HwAdapterTest.cpp`, `tests/negative/hw/HwRecoveryTest.cpp`,
+  `tests/unit/services/DeviceManagerTest.cpp`.
+
+### Sources actually read
+ST UM1724 Rev 17 and DS10693 Rev 11 (PDF text), the Digilent Basys 3 reference manual (web
+page; the site showed a bot check in the browser, which was not bypassed; the text came from a
+search service's fetch of the same URL), the SEGGER EDU Mini product page and two SEGGER
+knowledge-base pages. The SEGGER UM08001 PDF was downloaded but had no EDU Mini pin data, so it
+is not cited. Xilinx UG480 (XADC) could not be fetched; XADC facts are cited from the Basys 3
+manual only.
+
+### Verification
+- Release build `/W4 /WX` clean; `ctest` 199/199 (23 new: `unit_hw` 10, `negative_hw` 10,
+  `DeviceManager` 3). Recovery timings asserted exactly on `ManualClock` (TimeoutAlways =
+  4 × 250 ms + 700 ms back-off = 1700 ms simulated).
+- Every pin/voltage value in the design doc re-checked against the extracted text (section,
+  table and page numbers looked up, not recalled).
+- SVG rendered in a browser and the overlapping labels fixed.
+- `UniForge.exe` launched and logged ready. **Not verified on screen:** the click-through
+  (Discover → Connect → Inject timeout → "recovered after 1 retry"). It is covered by the
+  `DeviceManager` tests, but I still need to try it in the app.
+
+### Incorrect / unsuitable suggestions and how they were caught
+| # | Suggestion | Why it was wrong | Caught by | Fix |
+|---|---|---|---|---|
+| 1 | Spec §7.5: J-Link "→ 10/20-pin debug header of a chosen target" | The EDU Mini has a **9-pin 0.05" Samtec FTSH** connector, a 1.8 V / 3.3 V interface only, no target supply, and SEGGER describes it for Cortex-M targets | SEGGER product page + KB | Target = the Nucleo's STM32F446 over CN7; Basys 3 keeps its on-board USB-JTAG |
+| 2 | The obvious reading "external probe goes on the Nucleo's SWD header CN4" | CN4 is the ST-LINK's *output* to an external board; an external probe reaches the on-board MCU via CN7-13/15 with both CN2 jumpers OFF | UM1724 §7.4.4–7.4.5, Table 29 | Ownership table in the design doc |
+| 3 | First draft of `RetryPolicy` built "retry"+"s" | Would have printed "3 retrys" in the hint | Reading the code before the first build | Explicit "retry"/"retries" |
+| 4 | First SVG layout | Wire labels overlapped the legend and the USB line crossed it | Browser render | Legend and USB route moved |
+| 5 | Spec's "powered USB hub" | No document read here sets the boards' combined USB draw (Basys 3 USB current is not stated) | Writing the current-limit row | Kept as an unverified assumption |
+
+### Deviations from the spec for me to confirm
+- `simulated idcode` uses 0x4BA00477 and is labelled simulated and unverified. I did not check
+  it against the Arm/ST reference manuals.
+- The view owns the `DeviceManager` (created on first display) instead of `App`, so the shared
+  `AppContext` did not change during parallel work. It can move to `App` at integration.
+- A device that is timing out blocks the DeviceManager tick for up to ~1.7 s (the other cards
+  stop updating during that time; the UI thread is not blocked).
+- Disconnect fail mode: the link drops after 3 successful exchanges; its exhausted error is
+  reported as `DeviceFault` (the spec names no code).
+- The sparkline and retry trail are drawn with plain ImGui (`PlotLines`, text) inside the view
+  until Phase 4's shared widgets land.
 
 ### My decisions
 - _To fill after review._

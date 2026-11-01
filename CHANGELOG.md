@@ -66,6 +66,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CI: `linux-asan` (GCC 13, ASan + UBSan, full suite) and `linux-tsan` (perf + services tests)
   on ubuntu-24.04.
 - Tests: 39 new (215 in total): `unit_perf`, `numerical_perf` and Rng tests in `unit_common`.
+### Phase 6: Embedded integration (Task E)
+- `docs/embedded_design.md` + `docs/embedded_block_diagram.svg` (light/dark): interface and
+  pin-voltage table for NUCLEO-F446RE, Basys 3 and J-Link EDU Mini, every value cited to the
+  vendor document (ST UM1724 Rev 17, ST DS10693 Rev 11, Digilent Basys 3 reference manual,
+  SEGGER EDU Mini specification and knowledge base) with unverified assumptions marked; why a
+  JTAG probe is not a compute board; the ST-LINK vs external-probe ownership conflict (CN2
+  jumpers); safe integration plan; limitations. All three boards kept. The EDU Mini's 9-pin
+  0.05" connector, 1.8/3.3 V interface and Cortex-M scope make the Nucleo's STM32F446 its target.
+- `core/hw`: `IDeviceAdapter`, `MockTransport` (seed, latency, jitter, `FailMode` None /
+  TimeoutOnce / TimeoutAlways / Disconnect), `DeviceStateMachine`, `RetryPolicy` (250 ms, 3
+  retries at 100/200/400 ms, "recovered after n retries" or Faulted with a hint), injectable
+  `SystemClock` / `ManualClock`, `McuAdapter` (vdd_V, die_temp_C), `FpgaAdapter` (xadc_temp_C,
+  done), `JtagAdapter` (vtref_V, idcode), `discoverDevices()`. Every adapter is `simulated`.
+- `DeviceManager` service (own thread, 10 Hz tick, command queue, 12 s telemetry ring buffers)
+  and the Hardware view (simulated banner, Discover, three DeviceCards with SIMULATED chip, state,
+  capabilities, telemetry + sparkline, Connect/Disconnect, Inject timeout, Retry/Reset fault,
+  retry trail, "Design notes →").
+- Tests: 23 new (199 in total): `unit_hw`, `negative_hw` (ManualClock, instant) and
+  `DeviceManager.*`.
 
 ### Phase 3: Importers (Task B data side)
 - `core/io`: `LineReader` (fixed 64 KB buffer, LF/CRLF, UTF-8 BOM, progress = bytes read / size,

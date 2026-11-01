@@ -19,7 +19,7 @@ numerics, file processing and concurrency are written in C++17.
 | CAD / ANSYS data | B | ASCII STL viewer and nodal-temperature CSV point cloud with validation | Importers, samples, limits: Phase 3; Geometry view (3D viewer, picking, legend): Phase 4 |
 | Thermal FEA | C | Steady 1D rod solver with two-node linear elements, verified against the analytical solution | Solver, CLI evidence: Phase 2; Thermal view (plots, table, export, badges): Phase 4 |
 | Multicore | D | Serial vs bounded-thread-pool batch solves with a reproducible benchmark | Worker pool, benchmark, `bench` CLI, Performance view: Phase 5 (report provisional, see [docs/performance.md](docs/performance.md)) |
-| Embedded design | E | MCU / FPGA / JTAG integration design and simulated C++ device adapters | Phase 6 |
+| Embedded design | E | MCU / FPGA / JTAG integration design and simulated C++ device adapters | Design doc (cited pin/voltage table, block diagram), simulated adapters, Hardware view: Phase 6 |
 | Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by finite differences | Phase 7 |
 
 ## Run the packaged app (no build needed)
