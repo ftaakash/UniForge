@@ -36,6 +36,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (radius, nearest, depth tie-break, behind camera), PNG encoder, and the UI-less import →
   render-model pipeline and study job/exports (`integration_views`).
 - Not done: Overview "Run all self-checks" (cut), screenshots (see `docs/demo/phase4/README.md`).
+### Phase 5: Multicore (Task D)
+- `core/common/Rng`: `std::mt19937_64` with UniForge's own [a, b) mapping (top 53 bits × 2⁻⁵³),
+  so batches are identical on MSVC and GCC; pinned test vectors.
+- `core/perf`: `generateBatch` (k ~ U[5, 50) W/(m·K), q ~ U[1e3, 5e4) W/m³, brief values for
+  L, A, T0, TL), bounded `WorkerPool` (p `std::thread`s, chunk = max(1, cases/(8p)) from an
+  atomic index, per-index writes, exceptions → `Error{Internal}` after join, cancel per case),
+  `runSerial` / `runParallel` sharing `solveCase` (bitwise-equal results, index order kept,
+  no result allocation in the timed region), `benchmark` (p ∈ {1, 2, 4} capped at the logical
+  CPUs, 1 warm-up + 5 timed reps, median/min/max, speedup, efficiency, max |ΔT| over every node
+  of every rep, order check, single-CPU disclosure), `SystemInfo` (`_win.cpp`:
+  CPUID, `GetLogicalProcessorInformationEx` incl. P/E split, RAM, `RtlGetVersion`;
+  `_linux.cpp`: `/proc`, `/etc/os-release`; compiler + flags from a build define) and
+  `BenchmarkReportIO` (JSON, CSV, Markdown, three SVG plots, `.meta.json`).
+- Report preset is 10 000 cases × 8 000 elements: the planned 4 000 × 4 000 measured
+  T1 = 0.21 s, below the 1 s target.
+- `uniforge_cli bench` (`--quick`, `--report`, `--seed`, `--cases`, `--elements`, `--workers`,
+  `--status`) → `results/benchmarks/bench_<UTC date>.*`; `all` adds a quick bench in
+  `results/benchmarks/quick/` (git-ignored).
+- Performance view: parameters with worker cap note, Quick/Report presets, run bar
+  ("Rep 3/5 · p = 2", Esc cancels, previous result kept), badges (agreement, order, 5 reps +
+  warm-up), single-CPU warning, ImPlot tabs Timing / Speedup & efficiency / System, per-p
+  table, Export report. New `ResultStore::benchmark` slot.
+- Provisional report (`results/benchmarks/bench_2026-11-01.*`): T1 = 1.067 s, speedup 2.01 at
+  p = 2 and 4.03 at p = 4, max |ΔT| = 0 °C. Labelled provisional; `tools/bench_report.ps1`
+  regenerates the files and the results section of `docs/performance.md` in one command.
+- `docs/performance.md`: method, results, overhead, memory, Intel hybrid/turbo, Amdahl,
+  limitations.
+- CI: `linux-asan` (GCC 13, ASan + UBSan, full suite) and `linux-tsan` (perf + services tests)
+  on ubuntu-24.04.
+- Tests: 39 new (215 in total): `unit_perf`, `numerical_perf` and Rng tests in `unit_common`.
 
 ### Phase 3: Importers (Task B data side)
 - `core/io`: `LineReader` (fixed 64 KB buffer, LF/CRLF, UTF-8 BOM, progress = bytes read / size,

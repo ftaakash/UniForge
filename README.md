@@ -18,7 +18,7 @@ numerics, file processing and concurrency are written in C++17.
 | Interface & delivery | A | One app with Overview, Geometry, Thermal Analysis, Performance, Hardware and Backprop views; one-click `Launch.exe` | Shell, launcher, job runner: Phase 1 |
 | CAD / ANSYS data | B | ASCII STL viewer and nodal-temperature CSV point cloud with validation | Importers, samples, limits: Phase 3; Geometry view (3D viewer, picking, legend): Phase 4 |
 | Thermal FEA | C | Steady 1D rod solver with two-node linear elements, verified against the analytical solution | Solver, CLI evidence: Phase 2; Thermal view (plots, table, export, badges): Phase 4 |
-| Multicore | D | Serial vs bounded-thread-pool batch solves with a reproducible benchmark | Phase 5 |
+| Multicore | D | Serial vs bounded-thread-pool batch solves with a reproducible benchmark | Worker pool, benchmark, `bench` CLI, Performance view: Phase 5 (report provisional, see [docs/performance.md](docs/performance.md)) |
 | Embedded design | E | MCU / FPGA / JTAG integration design and simulated C++ device adapters | Phase 6 |
 | Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by finite differences | Phase 7 |
 
@@ -69,7 +69,8 @@ writable. The command-line tool uses the same C++ core as the GUI:
 | `uniforge_cli gen-samples [--data DATA]` | Task B samples: `DATA/geometry/rod_10x10mm_1m.stl`, `heatsink_fins.stl`, `DATA/thermal/rod_nodal_temperature_SYNTHETIC.csv`; reads each back and prints PASS/FAIL checks ([data/PROVENANCE.md](data/PROVENANCE.md)) |
 | `uniforge_cli inspect FILE...` | Nothing: imports `.stl` / `.csv` files with the GUI's parsers and prints the summary and warnings, or the error with its code, line and hint (exit code 1 if a file is rejected) |
 | `uniforge_cli import-bench [--sizes N,...] [--out DIR]` | `DIR/benchmarks/import_limits.md`, `.csv` (+ `.meta.json`): parse time and peak memory for generated STL/CSV files of 10 k, 100 k, 1 M elements and at the import limits. Writes up to ~0.5 GB of temporary files (one at a time, in the system temp folder) and deletes them. Machine-specific, so not part of `all` |
-| `uniforge_cli all [--out DIR] [--data DATA]` | `fea` + `gen-samples` |
+| `uniforge_cli bench [--quick \| --report] [--seed S] [--cases C] [--elements N] [--workers 1,2,4] [--status TEXT] [--out DIR]` | Task D benchmark: `DIR/benchmarks/bench_<UTC date>.{md,csv,json}` + `.meta.json` + `_timing/_speedup/_efficiency.svg`. Serial vs parallel batch of rod solves, 1 warm-up + 5 timed reps per p (capped at the logical CPU count), median/min/max, speedup, efficiency, max \|ΔT\| serial vs parallel. `--report` (default): 10 000 cases × 8 000 elements, seed 20261101, T1 ≈ 1 s on an i5-14600K, needs ~1.3 GB RAM; `--quick`: 500 × 1 000. Exit code 3 if agreement fails. Machine-specific; the committed report is regenerated with `tools/bench_report.ps1` |
+| `uniforge_cli all [--out DIR] [--data DATA]` | `fea` + `gen-samples` + a quick bench into `DIR/benchmarks/quick/` |
 
 `DIR` defaults to `results`, `DATA` to `data`. CSVs, SVGs and sample files are byte-identical on
 every run (only the sidecars carry a timestamp). The tool prints PASS/FAIL verification checks;
@@ -150,7 +151,8 @@ cmake/          compiler options, warnings, HLSL shader compilation
 third_party/    Dear ImGui, ImPlot, GoogleTest, fonts (pinned; see DEPENDENCIES.md), patches/
 LICENSES/       third-party licence texts
 src/core/       portable C++17 engineering core (standard library only): common/ (Result, Error,
-                CSV/SVG/JSON writers), thermal/ (1D FEA), io/ (line reader, STL and CSV importers)
+                CSV/SVG/JSON writers, Rng), thermal/ (1D FEA), io/ (line reader, STL and CSV
+                importers), perf/ (batch generator, worker pool, runners, benchmark, SystemInfo)
 src/app/        UniForge.exe: platform/ (Win32, D3D11), services/ (JobRunner, LogSink,
                 ResultStore), ui/ (theme, fonts, shell, widgets), views/, shaders/
 src/launcher/   Launch.exe (starts app\UniForge.exe; no application logic)
@@ -161,7 +163,7 @@ tests/          unit, numerical, negative and integration tests (GoogleTest + CT
                 output)
 data/           sample STL and SYNTHETIC CSV files, PROVENANCE.md
 results/        committed evidence: csv/ (with .meta.json sidecars), plots/, benchmarks/
-tools/          package.ps1, hygiene_scan.ps1, ZIP-specific VS Code config and
+tools/          package.ps1, hygiene_scan.ps1, bench_report.ps1, ZIP-specific VS Code config and
                 regenerate_evidence.cmd wrapper (no backend logic)
 docs/           design documents, thermal_fea.md, AI-use and effort logs, demo screenshots
 ```

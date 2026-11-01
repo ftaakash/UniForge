@@ -346,6 +346,72 @@ misplaced function); the build or a parse error caught both, and the files were 
 - The camera is z-up (CAD convention); the inferno colours come from a CC0 polynomial fit, not
   the matplotlib table.
 - `AppContext` gained `gfx`, `window`, `droppedFiles`; `RuntimeInfo` gained `deviceGeneration`.
+## 2026-11-02: Multicore benchmark, Task D (Phase 5)
+
+### Prompts (representative)
+1. "Implement Phase 5 (multicore, Task D) of UniForge, following
+   `docs/design/UniForge_Final_Build_Spec.md` …" with the scope: portable `Rng`, `core/perf`
+   (batch generator, bounded worker pool, serial/parallel runners, benchmark, system info),
+   `uniforge_cli bench` with Quick/Report presets, the Performance view, tests, Linux sanitizer
+   CI jobs, `docs/performance.md` with provisional numbers and a one-command regeneration.
+2. Run in parallel with Phases 4, 6 and 7 in separate worktrees; commit on the phase branch
+   without waiting for review (approved for that night); no push, tag or merge; no AI
+   attribution in commits. After a usage-limit pause the coordinating session moved the finish
+   time and set the cut order (no p = 8/16 series; CI jobs only if time remained).
+
+### Outputs
+- `src/core/common/Rng.{hpp,cpp}`; `src/core/perf/`: `BatchGenerator`, `WorkerPool`,
+  `SerialRunner`, `ParallelRunner`, `Benchmark`, `BenchmarkReportIO`, `SystemInfo` +
+  `SystemInfo_win.cpp` / `SystemInfo_linux.cpp`.
+- `src/cli/commands/BenchCommand.*`, `bench` options in `main.cpp`, `all` runs a quick bench.
+- `src/app/views/PerformanceView.*`, `ResultStore::benchmark`, registration in `AppShell`.
+- Tests: `tests/unit/common/RngTest.cpp`, `tests/unit/perf/{BatchGenerator,WorkerPool}Test.cpp`,
+  `tests/numerical/perf/{RunnerAgreement,Benchmark}Test.cpp`.
+- `.github/workflows/ci.yml` (`linux-asan`, `linux-tsan`), `tools/bench_report.ps1`,
+  `docs/performance.md`, `results/benchmarks/bench_2026-11-01.*` (provisional).
+
+### My edits
+- _To fill after review._
+
+### Verification
+- Windows Release `/W4 /WX`: clean. ctest 215/215 (39 new).
+- Serial vs parallel: `maxAbsDiff_C` is exactly 0 in tests and in every benchmark run (bitwise
+  equal, not just ≤ 1e-8).
+- Rng: the C++ standard's reference value (10 000th output of a default-seeded
+  `mt19937_64` = 9981545732273789042) is a test.
+- The new core/perf sources, CLI and tests were also run through the clang frontend
+  (`clang-tidy` from the VS Build Tools, `-Wall -Wextra -Wpedantic -Wshadow -Wconversion
+  -Wsign-conversion -Wold-style-cast -Wnull-dereference`): no diagnostics. GCC itself was not
+  available, so the Linux CI jobs are untested until the first push; `SystemInfo_linux.cpp` and
+  the Phase 3 `Process_posix.cpp` have never been compiled.
+- Benchmark runs (report preset, i5-14600K, MSVC Release): under visible load T1 = 1.25 s,
+  S(4) = 3.88; later, quieter: T1 = 1.058 s / 1.067 s, S(4) = 4.00 / 4.03.
+- Not verified: the Performance view was built but not opened and clicked through in the
+  running app (no screenshot yet).
+
+### Incorrect / unsuitable suggestions and how they were caught
+| # | Suggestion / output | Problem | How caught | Fix |
+|---|---|---|---|---|
+| 1 | Spec preset 4 000 × 4 000 for the report "tuned so T1 ≥ 1 s" | Measured T1 = 0.21 s: the design estimate was ~5× off | First `bench --report` run | Preset 10 000 × 8 000 (T1 ≈ 1.06 s, 640 MB per result set), recorded in the code comment, commit and docs |
+| 2 | JSON string escaping via a helper that formats a `double` with `%04x` | Passing a double to `%x` is undefined behaviour | Reading the code before the first build | Direct `snprintf` with an `unsigned` argument |
+| 3 | Report test that read the CSV with an `std::ifstream` and then deleted the folder | The stream was still open, so `remove_all` failed on Windows ("file in use") | Test failure | Stream closed in its own scope; `remove_all` with `error_code` |
+| 4 | Writing several source files through one long shell heredoc | The shell aborted on a quoting error and silently wrote none of the `SystemInfo` files | `ls` of the folder | Files written with the editor tool instead |
+| 5 | A `sed` script to cut intermediate `CMakeLists.txt` versions for per-commit builds | Produced a garbled file (a dangling argument line) | Printing the file before using it | Rebuilt from the clean version by hand |
+| 6 | Provisional report label "measured while three other builds were running" | Not true for the committed run: the other sessions had stopped by then, so the claim was unverified | Comparing the quieter numbers with the earlier run | Label changed to "not checked to be idle"; both runs cited in `performance.md` |
+| 7 | Recorded build flags | `/EHsc` appeared twice (already in `CMAKE_CXX_FLAGS`) | Reading the first bench output | Removed from the extra-flags list |
+
+### Deviations from the spec for me to confirm
+- Report preset 10 000 × 8 000 instead of 4 000 × 4 000 (#1); memory for the two result sets
+  is ~1.28 GB, under the 1.5 GB target but not by much.
+- p = 1 runs the serial runner on the calling thread, not a 1-thread pool.
+- `WorkerPool` body returns `Result<void>` (so a case's validation error stops the pool) and
+  the pool starts min(p, cases) threads.
+- `BenchRow` gained `threads` and `warmupSec`; `BenchmarkReport` gained `orderPreserved`,
+  `speedupAssessable` and `resultSetBytes`; `SystemInfo` gained `coreTypes` and `buildType`.
+- `generateBatch` returns `Result<std::vector<RodProblem>>` (InvalidInput for bad sizes).
+- `bench` also writes three SVG plots; `all` writes its quick bench to the git-ignored
+  `results/benchmarks/quick/`.
+- No p = 8/16 series (cut for time; discussed, not measured).
 
 ### My decisions
 - _To fill after review._
