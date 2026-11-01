@@ -151,6 +151,8 @@ uniforge_add_test(numerical_perf
     SOURCES
         numerical/perf/BenchmarkTest.cpp
         numerical/perf/RunnerAgreementTest.cpp
+    LIBS uniforge_core)
+
 # Task F: one-neuron backprop values, finite-difference check and loss curve.
 uniforge_add_test(numerical_ml
     LABEL numerical
