@@ -10,6 +10,7 @@ add_library(uniforge_core STATIC
     io/StlParser.cpp
     io/StlWriter.cpp
     io/TextParse.cpp
+    io/ThermalCsvParser.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp

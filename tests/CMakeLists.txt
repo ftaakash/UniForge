@@ -47,6 +47,7 @@ uniforge_add_test(unit_io
         unit/io/LineReaderTest.cpp
         unit/io/StlParserTest.cpp
         unit/io/TextParseTest.cpp
+        unit/io/ThermalCsvParserTest.cpp
     LIBS uniforge_core)
 target_compile_definitions(unit_io PRIVATE
     UNIFORGE_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
