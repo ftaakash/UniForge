@@ -40,6 +40,15 @@ uniforge_add_test(negative_thermal
     SOURCES negative/thermal/ThermalInputTest.cpp
     LIBS uniforge_core)
 
+# The CLI regenerates the committed FEA evidence byte for byte (golden files in golden/fea/).
+add_test(NAME integration.cli_fea_matches_golden
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DGOLDEN_DIR=${CMAKE_CURRENT_SOURCE_DIR}/golden/fea"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_golden_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/cli_golden.cmake")
+set_tests_properties(integration.cli_fea_matches_golden PROPERTIES LABELS integration)
+
 uniforge_add_test(unit_services
     LABEL unit
     SOURCES

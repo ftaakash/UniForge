@@ -23,18 +23,7 @@ target_compile_options(imgui_backends PRIVATE /utf-8)
 target_link_libraries(imgui_backends PUBLIC imgui d3d11 dxgi dwmapi)
 
 # --- Build information and resources -----------------------------------------------------
-find_package(Git QUIET)
-set(UNIFORGE_GIT_COMMIT "unknown")
-if(GIT_FOUND)
-    execute_process(
-        COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        OUTPUT_VARIABLE git_commit OUTPUT_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE git_result ERROR_QUIET)
-    if(git_result EQUAL 0)
-        set(UNIFORGE_GIT_COMMIT "${git_commit}")
-    endif()
-endif()
+# UNIFORGE_GIT_COMMIT is set in src/CMakeLists.txt.
 string(STRIP "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} /MT /W4 /WX /utf-8 /permissive-"
        UNIFORGE_RELEASE_FLAGS)
 configure_file(BuildInfo.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/generated/app/BuildInfo.hpp" @ONLY)

@@ -6,8 +6,9 @@
     Packaging only: no backend logic lives here. Steps:
       1. configure (preset windows-msvc) and build Release (preset windows-release)
       2. run the test suite (ctest --preset windows-release)
-      3. stage dist\<CandidateId>_Workbench\ with Launch.exe, app\UniForge.exe, sources,
-         docs, licences and the ZIP-specific .vscode configuration
+      3. stage dist\<CandidateId>_Workbench\ with Launch.exe, app\UniForge.exe,
+         app\uniforge_cli.exe, regenerate_evidence.cmd, sources, docs, results, licences and
+         the ZIP-specific .vscode configuration
       4. check with dumpbin /dependents that the executables import only Windows DLLs
       5. run tools\hygiene_scan.ps1 on the staged folder
       6. zip the staged folder
@@ -113,7 +114,7 @@ try {
         Invoke-Checked $ctest @('--preset', 'windows-release')
     }
 
-    foreach ($exe in @('Launch.exe', 'UniForge.exe')) {
+    foreach ($exe in @('Launch.exe', 'UniForge.exe', 'uniforge_cli.exe')) {
         if (-not (Test-Path -LiteralPath (Join-Path $BinDir $exe))) {
             throw "$exe not found in $BinDir. Build first or drop -SkipBuild."
         }
@@ -124,6 +125,9 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $Stage 'app') -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $BinDir 'Launch.exe') -Destination $Stage
     Copy-Item -LiteralPath (Join-Path $BinDir 'UniForge.exe') -Destination (Join-Path $Stage 'app')
+    Copy-Item -LiteralPath (Join-Path $BinDir 'uniforge_cli.exe') -Destination (Join-Path $Stage 'app')
+    # Wrapper with no logic: runs app\uniforge_cli.exe all --out results from the package root.
+    Copy-Item -LiteralPath (Join-Path $Root 'tools\package\regenerate_evidence.cmd') -Destination $Stage
     foreach ($dir in @('src', 'tests', 'cmake', 'third_party', 'tools', 'docs', 'LICENSES', 'data', 'results')) {
         Copy-Tree $dir
     }
@@ -142,6 +146,7 @@ try {
     $dumpbin = Get-Dumpbin
     Test-Dependencies (Join-Path $Stage 'Launch.exe') $dumpbin
     Test-Dependencies (Join-Path $Stage 'app\UniForge.exe') $dumpbin
+    Test-Dependencies (Join-Path $Stage 'app\uniforge_cli.exe') $dumpbin
 
     Write-Step 'Hygiene scan'
     & (Join-Path $PSScriptRoot 'hygiene_scan.ps1') -Path $Stage

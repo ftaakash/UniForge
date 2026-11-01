@@ -14,7 +14,7 @@ include(CompilerOptions)
 include(Warnings)
 
 option(UNIFORGE_BUILD_TESTS "Build the test suite" ON)
-option(UNIFORGE_BUILD_APP "Build the Windows GUI, launcher and CLI" ${WIN32})
+option(UNIFORGE_BUILD_APP "Build the Windows GUI and launcher (the CLI builds everywhere)" ${WIN32})
 option(UNIFORGE_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 set(UNIFORGE_SANITIZE "" CACHE STRING
     "GCC/Clang sanitizers to enable, e.g. 'address,undefined' or 'thread' (empty = none)")
