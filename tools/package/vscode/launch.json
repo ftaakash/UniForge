@@ -1,0 +1,19 @@
+{
+  // VS Code configuration shipped INSIDE the ZIP (copied by tools/package.ps1).
+  // F5 / Run and Debug: "Run UniForge (packaged)" starts the packaged app through Launch.exe.
+  // Needs the C/C++ extension (ms-vscode.cpptools). Without extensions, use
+  // Terminal > Run Build Task (Ctrl+Shift+B), defined in tasks.json.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run UniForge (packaged)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/Launch.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

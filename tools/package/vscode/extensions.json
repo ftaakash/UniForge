@@ -1,0 +1,4 @@
+{
+  // Only needed for the launch.json entry; tasks.json works without extensions.
+  "recommendations": ["ms-vscode.cpptools"]
+}

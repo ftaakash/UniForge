@@ -1,0 +1,16 @@
+{
+  // VS Code configuration shipped INSIDE the ZIP (copied by tools/package.ps1).
+  // Terminal > Run Build Task (Ctrl+Shift+B) starts the packaged app. No extension needed.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run UniForge (packaged)",
+      "type": "process",
+      "command": "${workspaceFolder}/Launch.exe",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    }
+  ]
+}

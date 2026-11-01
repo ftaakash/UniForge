@@ -1,0 +1,28 @@
+{
+  // Repository VS Code configuration (developer use). The ZIP ships its own version from
+  // tools/package/vscode/ that targets ${workspaceFolder}/Launch.exe.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run UniForge (dev build)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/windows-msvc/bin/Release/UniForge.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/build/windows-msvc/bin/Release",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "preLaunchTask": "Build Release"
+    },
+    {
+      "name": "Run packaged (dist)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/dist/CandidateID_Workbench/Launch.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/dist/CandidateID_Workbench",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

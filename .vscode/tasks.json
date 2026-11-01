@@ -1,0 +1,43 @@
+{
+  // Repository tasks. cmake/ctest must be on PATH (e.g. Developer PowerShell for VS 2022).
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Configure",
+      "type": "process",
+      "command": "cmake",
+      "args": ["--preset", "windows-msvc"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Release",
+      "type": "process",
+      "command": "cmake",
+      "args": ["--build", "--preset", "windows-release"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "Test",
+      "type": "process",
+      "command": "ctest",
+      "args": ["--preset", "windows-release"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Package (dist ZIP)",
+      "type": "process",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/tools/package.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run packaged (dist)",
+      "type": "process",
+      "command": "${workspaceFolder}/dist/CandidateID_Workbench/Launch.exe",
+      "options": { "cwd": "${workspaceFolder}/dist/CandidateID_Workbench" },
+      "problemMatcher": []
+    }
+  ]
+}
