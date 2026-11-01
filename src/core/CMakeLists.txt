@@ -1,6 +1,9 @@
-# uniforge_core: the portable engineering core. Phase 1 only needs the header-only job
-# primitives in common/ (CancelToken, Progress); Phase 2 turns this into a static library
-# when the first sources (thermal solver, writers) arrive.
-add_library(uniforge_core INTERFACE)
-target_include_directories(uniforge_core INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
-target_compile_features(uniforge_core INTERFACE cxx_std_17)
+# uniforge_core: the portable engineering core. C++17 and the standard library only (spec §4.2):
+# no Windows, ImGui or other third-party headers, so it also builds with GCC/Clang on Linux.
+add_library(uniforge_core STATIC
+    common/AtomicFile.cpp
+    common/CsvWriter.cpp
+    common/MetaJson.cpp
+    common/SvgPlot.cpp)
+target_include_directories(uniforge_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
+uniforge_target_defaults(uniforge_core)

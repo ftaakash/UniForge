@@ -13,6 +13,15 @@ function(uniforge_add_test target)
         DISCOVERY_TIMEOUT 30)
 endfunction()
 
+uniforge_add_test(unit_common
+    LABEL unit
+    SOURCES
+        unit/common/CsvWriterTest.cpp
+        unit/common/MetaJsonTest.cpp
+        unit/common/ResultTest.cpp
+        unit/common/SvgPlotTest.cpp
+    LIBS uniforge_core)
+
 uniforge_add_test(unit_services
     LABEL unit
     SOURCES
