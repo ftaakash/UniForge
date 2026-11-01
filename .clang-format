@@ -12,6 +12,16 @@ AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 BreakConstructorInitializers: BeforeComma
 IncludeBlocks: Regroup
+# <windows.h> must precede other Win32 headers (shellapi.h, shlobj.h, dwmapi.h).
+IncludeCategories:
+  - Regex: '^<windows\.h>$'
+    Priority: 1
+  - Regex: '^<(imgui|implot|imstb_|gtest)'
+    Priority: 3
+  - Regex: '^<.*>$'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 4
 SortIncludes: CaseSensitive
 FixNamespaceComments: true
 ...

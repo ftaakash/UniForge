@@ -8,3 +8,7 @@
 add_subdirectory(core)
 add_subdirectory(app/services)
 
+if(UNIFORGE_BUILD_APP)
+    add_subdirectory(app)
+
+endif()

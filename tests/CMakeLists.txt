@@ -20,3 +20,17 @@ uniforge_add_test(unit_services
         unit/services/LogSinkTest.cpp
     LIBS uniforge_services)
 
+if(UNIFORGE_BUILD_APP)
+    # stb_truetype (shipped inside Dear ImGui) reads the TTF cmap tables for the coverage test.
+    # Its implementation is third-party code, so it is compiled without UniForge's /W4 /WX.
+    add_library(test_stb_truetype STATIC support/StbTruetypeImpl.cpp)
+    target_include_directories(test_stb_truetype SYSTEM PUBLIC "${PROJECT_SOURCE_DIR}/third_party/imgui")
+
+    uniforge_add_test(unit_ui_fonts
+        LABEL unit
+        SOURCES unit/ui/FontCoverageTest.cpp
+        LIBS test_stb_truetype)
+    target_include_directories(unit_ui_fonts PRIVATE "${PROJECT_SOURCE_DIR}/src")
+    target_compile_definitions(unit_ui_fonts PRIVATE
+        UNIFORGE_FONTS_DIR="${PROJECT_SOURCE_DIR}/third_party/fonts")
+endif()
