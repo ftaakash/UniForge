@@ -1,0 +1,30 @@
+{
+  "file": "fea_N20_nodes.csv",
+  "description": "Nodal FE temperatures vs the exact solution",
+  "tool": "uniforge_cli fea",
+  "tool_version": "0.1.0",
+  "git_commit": "0abc9817f613",
+  "generated_utc": "2026-11-01T15:23:05Z",
+  "problem": {
+    "L_m": 1,
+    "A_m2": 0.0001,
+    "k_W_per_m_K": 10,
+    "q_W_per_m3": 10000,
+    "T0_C": 100,
+    "TL_C": 20
+  },
+  "exact_solution": "T(x) = T0 + (TL - T0) x / L + q / (2 k) x (L - x)",
+  "element": "two-node linear, consistent load, Dirichlet by symmetric elimination, Thomas solve",
+  "columns": ["x_m", "T_fe_C", "T_exact_C", "abs_err_C"],
+  "units": {
+    "x_m": "m",
+    "T_fe_C": "degC",
+    "T_exact_C": "degC",
+    "abs_err_C": "degC"
+  },
+  "number_format": "%.17g",
+  "details": {
+    "elements": 20,
+    "h_m": 0.050000000000000003
+  }
+}

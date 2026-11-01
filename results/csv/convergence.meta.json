@@ -1,0 +1,33 @@
+{
+  "file": "convergence.csv",
+  "description": "Midpoint-error convergence study",
+  "tool": "uniforge_cli fea",
+  "tool_version": "0.1.0",
+  "git_commit": "0abc9817f613",
+  "generated_utc": "2026-11-01T15:23:05Z",
+  "problem": {
+    "L_m": 1,
+    "A_m2": 0.0001,
+    "k_W_per_m_K": 10,
+    "q_W_per_m3": 10000,
+    "T0_C": 100,
+    "TL_C": 20
+  },
+  "exact_solution": "T(x) = T0 + (TL - T0) x / L + q / (2 k) x (L - x)",
+  "element": "two-node linear, consistent load, Dirichlet by symmetric elimination, Thomas solve",
+  "columns": ["N", "h_m", "max_mid_err_C", "expected_qh2_8k_C", "ratio", "order", "max_nodal_err_C", "energy_residual_W"],
+  "units": {
+    "N": "elements",
+    "h_m": "m",
+    "max_mid_err_C": "degC",
+    "expected_qh2_8k_C": "degC",
+    "ratio": "1 (previous max_mid_err / this one; blank in row 1)",
+    "order": "1 (log(ratio) / log(h_prev / h); blank in row 1)",
+    "max_nodal_err_C": "degC",
+    "energy_residual_W": "W (heat out left + right - q*A*L)"
+  },
+  "number_format": "%.17g",
+  "details": {
+    "mesh_sizes": [10, 20, 40, 80]
+  }
+}
