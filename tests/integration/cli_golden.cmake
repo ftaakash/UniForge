@@ -1,5 +1,6 @@
 # Integration test (spec §10, N8): the CLI regenerates the FEA evidence byte for byte.
-#   1. `uniforge_cli fea` into <WORK_DIR>/run1, `uniforge_cli all` into <WORK_DIR>/run2
+#   1. `uniforge_cli fea` into <WORK_DIR>/run1, `uniforge_cli all` (fea + gen-samples) into
+#      <WORK_DIR>/run2
 #   2. every golden CSV in <GOLDEN_DIR> equals the CSV from run 1
 #   3. run 1 and run 2 produce identical CSVs and SVGs (only the .meta.json sidecars differ)
 # Run by CTest as: cmake -DCLI=... -DGOLDEN_DIR=... -DWORK_DIR=... -P cli_golden.cmake
@@ -16,7 +17,7 @@ foreach(run IN ITEMS "fea;run1" "all;run2")
     list(GET run 0 command)
     list(GET run 1 dir)
     execute_process(
-        COMMAND "${CLI}" ${command} --out "${WORK_DIR}/${dir}"
+        COMMAND "${CLI}" ${command} --out "${WORK_DIR}/${dir}" --data "${WORK_DIR}/${dir}/data"
         RESULT_VARIABLE exit_code
         OUTPUT_VARIABLE output
         ERROR_VARIABLE errors)
