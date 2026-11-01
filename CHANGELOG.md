@@ -61,6 +61,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provisional report (`results/benchmarks/bench_2026-11-01.*`): T1 = 1.067 s, speedup 2.01 at
   p = 2 and 4.03 at p = 4, max |ΔT| = 0 °C. Labelled provisional; `tools/bench_report.ps1`
   regenerates the files and the results section of `docs/performance.md` in one command.
+- Official report (regenerated on an idle machine during integration): T1 = 1.073 s, speedup
+  2.00 at p = 2 and 4.00 at p = 4 (efficiency 100 %), max |ΔT| = 0 °C.
 - `docs/performance.md`: method, results, overhead, memory, Intel hybrid/turbo, Amdahl,
   limitations.
 - CI: `linux-asan` (GCC 13, ASan + UBSan, full suite) and `linux-tsan` (perf + services tests)

@@ -18,7 +18,7 @@ numerics, file processing and concurrency are written in C++17.
 | Interface & delivery | A | One app with Overview, Geometry, Thermal Analysis, Performance, Hardware and Backprop views; one-click `Launch.exe` | Shell, launcher, job runner: Phase 1 |
 | CAD / ANSYS data | B | ASCII STL viewer and nodal-temperature CSV point cloud with validation | Importers, samples, limits: Phase 3; Geometry view (3D viewer, picking, legend): Phase 4 |
 | Thermal FEA | C | Steady 1D rod solver with two-node linear elements, verified against the analytical solution | Solver, CLI evidence: Phase 2; Thermal view (plots, table, export, badges): Phase 4 |
-| Multicore | D | Serial vs bounded-thread-pool batch solves with a reproducible benchmark | Worker pool, benchmark, `bench` CLI, Performance view: Phase 5 (report provisional, see [docs/performance.md](docs/performance.md)) |
+| Multicore | D | Serial vs bounded-thread-pool batch solves with a reproducible benchmark | Worker pool, benchmark, `bench` CLI, Performance view: Phase 5 (official report in [docs/performance.md](docs/performance.md)) |
 | Embedded design | E | MCU / FPGA / JTAG integration design and simulated C++ device adapters | Design doc (cited pin/voltage table, block diagram), simulated adapters, Hardware view: Phase 6 |
 | Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by finite differences | Core, CLI evidence, view: Phase 7; handwritten appendix: to add |
 

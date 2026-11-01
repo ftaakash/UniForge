@@ -19,22 +19,22 @@
 <text x="250.00" y="456.00" text-anchor="middle">2</text>
 <text x="420.00" y="456.00" text-anchor="middle">3</text>
 <text x="590.00" y="456.00" text-anchor="middle">4</text>
-<text x="72.00" y="442.00" text-anchor="end">100</text>
-<text x="72.00" y="344.50" text-anchor="end">100.2</text>
-<text x="72.00" y="247.00" text-anchor="end">100.4</text>
-<text x="72.00" y="149.50" text-anchor="end">100.6</text>
-<text x="72.00" y="52.00" text-anchor="end">100.8</text>
+<text x="72.00" y="442.00" text-anchor="end">99.9</text>
+<text x="72.00" y="344.50" text-anchor="end">100</text>
+<text x="72.00" y="247.00" text-anchor="end">100.1</text>
+<text x="72.00" y="149.50" text-anchor="end">100.2</text>
+<text x="72.00" y="52.00" text-anchor="end">100.3</text>
 </g>
 <rect x="80.00" y="48.00" width="510.00" height="390.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
 <text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">Parallel efficiency speedup/p (10000 cases x 8000 elements)</text>
 <text x="335.00" y="484.00" font-size="13" text-anchor="middle" fill="#1A1E24">workers p</text>
 <text transform="translate(20 243.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">efficiency (%)</text>
 <g clip-path="url(#plot-area)">
-<polyline fill="none" stroke="#D55E00" stroke-width="2.00" stroke-linejoin="round" points="80.00,438.00 250.00,276.30 590.00,132.01"/>
-<circle cx="80.00" cy="438.00" r="3.5" fill="#D55E00"/>
-<circle cx="250.00" cy="276.30" r="3.5" fill="#D55E00"/>
-<circle cx="590.00" cy="132.01" r="3.5" fill="#D55E00"/>
-<polyline fill="none" stroke="#1A1E24" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,438.00 250.00,438.00 590.00,438.00"/>
+<polyline fill="none" stroke="#D55E00" stroke-width="2.00" stroke-linejoin="round" points="80.00,340.50 250.00,105.59 590.00,436.24"/>
+<circle cx="80.00" cy="340.50" r="3.5" fill="#D55E00"/>
+<circle cx="250.00" cy="105.59" r="3.5" fill="#D55E00"/>
+<circle cx="590.00" cy="436.24" r="3.5" fill="#D55E00"/>
+<polyline fill="none" stroke="#1A1E24" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,340.50 250.00,340.50 590.00,340.50"/>
 </g>
 <g font-size="12" fill="#1A1E24">
 <line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#D55E00" stroke-width="2.00" stroke-linejoin="round"/>
