@@ -23,12 +23,21 @@ if(UNIFORGE_BUILD_APP AND NOT WIN32)
     message(FATAL_ERROR "UNIFORGE_BUILD_APP requires Windows (Win32 + Direct3D 11).")
 endif()
 
+if(UNIFORGE_BUILD_APP)
+    enable_language(RC)
+    include(Shaders)
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
+if(UNIFORGE_BUILD_TESTS)
+    enable_testing()
+endif()
+
+add_subdirectory(third_party)
 add_subdirectory(src)
 
 if(UNIFORGE_BUILD_TESTS)
-    enable_testing()
     add_subdirectory(tests)
 endif()
