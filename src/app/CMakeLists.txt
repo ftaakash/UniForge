@@ -83,8 +83,10 @@ add_executable(UniForge WIN32
     ui/widgets/Viewport3D.cpp
     ui/widgets/Widgets.cpp
     views/AboutView.cpp
+    views/GeometryView.cpp
     views/OverviewView.cpp
     views/PlaceholderView.cpp
+    views/ThermalView.cpp
     app.manifest
     "${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc"
     "${SCENE_MESH_VS_HEADER}" "${SCENE_MESH_PS_HEADER}"

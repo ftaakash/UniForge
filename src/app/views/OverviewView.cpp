@@ -1,7 +1,9 @@
 #include "app/views/OverviewView.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <cstdio>
+#include <string>
 
 #include <imgui.h>
 
@@ -26,9 +28,11 @@ struct TaskRow {
 };
 
 constexpr TaskRow kTasks[] = {
-    {"B", "Geometry", "ASCII STL viewer and nodal-temperature CSV point cloud", "Phases 3–4",
+    {"A", "Workbench shell", "One UI, background jobs with progress and cancel, one-click launch",
+     "Phase 1", ViewId::About},
+    {"B", "Geometry", "ASCII STL viewer and nodal-temperature CSV point cloud", "Phase 4",
      ViewId::Geometry},
-    {"C", "Thermal Analysis", "1D steady FEA, N = 10/20/40/80, convergence vs exact", "Phase 2",
+    {"C", "Thermal Analysis", "1D steady FEA, N = 10/20/40/80, convergence vs exact", "Phase 4",
      ViewId::Thermal},
     {"D", "Performance", "Serial vs parallel batch solves, 5-rep median benchmark", "Phase 5",
      ViewId::Performance},
@@ -37,6 +41,52 @@ constexpr TaskRow kTasks[] = {
     {"F", "Backprop", "One-neuron gradients checked by central differences", "Phase 7",
      ViewId::Backprop},
 };
+
+// Live status where the task has data in this session, "Pending" otherwise.
+void drawTaskStatus(const AppContext& ctx, const TaskRow& row) {
+    switch (row.view) {
+    case ViewId::About:
+        if (ctx.runtime.launchMeasured) {
+            ui::statusLabel(ui::Status::Success, "Running",
+                            ctx.runtime.render.software() ? "software rendering"
+                                                          : "hardware rendering");
+            return;
+        }
+        break;
+    case ViewId::Geometry: {
+        const auto mesh = ctx.results.geometryMesh.get();
+        const auto points = ctx.results.geometryPoints.get();
+        if (mesh || points) {
+            const std::string detail =
+                std::string(mesh ? "STL loaded" : "no STL") + " · " +
+                (points ? std::to_string(points->source.nodes.size()) + " nodes" : "no CSV");
+            ui::statusLabel(ui::Status::Success, "Loaded", detail.c_str());
+            return;
+        }
+        ui::statusLabel(ui::Status::Pending, "Pending", "load an STL / CSV");
+        return;
+    }
+    case ViewId::Thermal: {
+        const auto study = ctx.results.thermal.get();
+        if (study && !study->rows.empty()) {
+            bool pass = true;
+            for (const auto& r : study->rows) {
+                pass = pass && std::fabs(r.maxMidErr - r.expected) <= 1e-9;
+            }
+            const std::string detail =
+                "midpoint error = qh²/8k for " + std::to_string(study->rows.size()) + " meshes";
+            ui::statusLabel(pass ? ui::Status::Success : ui::Status::Error, pass ? "Pass" : "Fail",
+                            detail.c_str());
+            return;
+        }
+        ui::statusLabel(ui::Status::Pending, "Pending", "run the study");
+        return;
+    }
+    default:
+        break;
+    }
+    ui::statusLabel(ui::Status::Pending, "Pending", row.arrives);
+}
 
 } // namespace
 
@@ -75,7 +125,7 @@ void OverviewView::drawTasks(AppContext& ctx) {
             ui::secondaryText("%s", row.summary);
             ImGui::TableNextColumn();
             ImGui::AlignTextToFramePadding();
-            ui::statusLabel(ui::Status::Pending, "Pending", row.arrives);
+            drawTaskStatus(ctx, row);
             ImGui::TableNextColumn();
             if (ui::secondaryButton("Open view →")) {
                 ctx.navigateTo = row.view;

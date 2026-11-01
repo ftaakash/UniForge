@@ -7,8 +7,10 @@
 #include "app/ui/widgets/StatusBar.hpp"
 #include "app/ui/widgets/Widgets.hpp"
 #include "app/views/AboutView.hpp"
+#include "app/views/GeometryView.hpp"
 #include "app/views/OverviewView.hpp"
 #include "app/views/PlaceholderView.hpp"
+#include "app/views/ThermalView.hpp"
 
 namespace uniforge::ui {
 
@@ -26,19 +28,8 @@ int index(ViewId id) {
 
 AppShell::AppShell() {
     views_[index(ViewId::Overview)] = std::make_unique<views::OverviewView>();
-    views_[index(ViewId::Geometry)] = placeholder(
-        {"Geometry", "Task B",
-         "Import ASCII STL geometry and nodal-temperature CSV results and inspect them in 3D.",
-         "No geometry viewer yet",
-         "The STL and CSV importers arrive in Phase 3 and the 3D viewer (orbit, pan, zoom, fit, "
-         "node picking, colour legend in °C) in Phase 4."});
-    views_[index(ViewId::Thermal)] = placeholder(
-        {"Thermal Analysis", "Task C",
-         "Steady 1D heat conduction in a rod with two-node linear elements, checked against the "
-         "exact solution.",
-         "No thermal solver yet",
-         "The FEA solver, convergence study (N = 10, 20, 40, 80) and T vs x plots arrive in "
-         "Phase 2 (core) and Phase 4 (view)."});
+    views_[index(ViewId::Geometry)] = std::make_unique<views::GeometryView>();
+    views_[index(ViewId::Thermal)] = std::make_unique<views::ThermalView>();
     views_[index(ViewId::Performance)] = placeholder(
         {"Performance", "Task D",
          "Serial vs CPU-parallel batch of independent rod solves with a reproducible benchmark.",
