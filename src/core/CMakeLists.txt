@@ -4,6 +4,8 @@ add_library(uniforge_core STATIC
     common/AtomicFile.cpp
     common/CsvWriter.cpp
     common/MetaJson.cpp
-    common/SvgPlot.cpp)
+    common/SvgPlot.cpp
+    thermal/Assembler.cpp
+    thermal/RodProblem.cpp)
 target_include_directories(uniforge_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
 uniforge_target_defaults(uniforge_core)
