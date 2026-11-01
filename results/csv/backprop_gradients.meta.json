@@ -1,0 +1,43 @@
+{
+  "file": "backprop_gradients.csv",
+  "description": "Analytic gradients vs central finite differences at the initial parameters",
+  "tool": "uniforge_cli backprop",
+  "tool_version": "0.1.0",
+  "git_commit": "e4f4ce5ebea5",
+  "generated_utc": "2026-11-01T18:28:48Z",
+  "problem": {
+    "x": 1,
+    "y": 2,
+    "initial_params": {
+      "w": 0.5,
+      "b": 0,
+      "v": 1,
+      "c": 0
+    },
+    "lr": 0.10000000000000001,
+    "steps": 100
+  },
+  "model": "z = w*x + b, h = tanh(z), yhat = v*h + c, e = yhat - y, J = 0.5*e^2",
+  "gradients": "dc = e, dv = e*h, db = e*v*(1 - h^2), dw = db*x (hand-derived, no autodiff)",
+  "columns": ["param", "analytic", "numeric", "abs_diff", "pass"],
+  "units": {
+    "param": "parameter name",
+    "analytic": "1 (dJ/dparam, hand-derived)",
+    "numeric": "1 (central difference (J(p+eps) - J(p-eps)) / (2 eps))",
+    "abs_diff": "1 (|analytic - numeric|)",
+    "pass": "abs_diff <= tolerance"
+  },
+  "number_format": "%.17g",
+  "details": {
+    "eps": 9.9999999999999995e-07,
+    "tolerance": 1.0000000000000001e-05,
+    "all_pass": true,
+    "forward": {
+      "z": 0.5,
+      "h": 0.46211715726000974,
+      "yhat": 0.46211715726000974,
+      "e": -1.5378828427399902,
+      "J": 1.1825418189970167
+    }
+  }
+}

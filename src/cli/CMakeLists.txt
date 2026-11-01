@@ -5,6 +5,7 @@
 add_executable(uniforge_cli
     main.cpp
     commands/BenchCommand.cpp
+    commands/BackpropCommand.cpp
     commands/FeaCommand.cpp
     commands/ImportBenchCommand.cpp
     commands/SamplesCommand.cpp)

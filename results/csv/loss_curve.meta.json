@@ -1,0 +1,40 @@
+{
+  "file": "loss_curve.csv",
+  "description": "Training loss over gradient-descent steps",
+  "tool": "uniforge_cli backprop",
+  "tool_version": "0.1.0",
+  "git_commit": "e4f4ce5ebea5",
+  "generated_utc": "2026-11-01T18:28:48Z",
+  "problem": {
+    "x": 1,
+    "y": 2,
+    "initial_params": {
+      "w": 0.5,
+      "b": 0,
+      "v": 1,
+      "c": 0
+    },
+    "lr": 0.10000000000000001,
+    "steps": 100
+  },
+  "model": "z = w*x + b, h = tanh(z), yhat = v*h + c, e = yhat - y, J = 0.5*e^2",
+  "gradients": "dc = e, dv = e*h, db = e*v*(1 - h^2), dw = db*x (hand-derived, no autodiff)",
+  "columns": ["step", "loss"],
+  "units": {
+    "step": "updates applied (0 = initial parameters)",
+    "loss": "1 (J = 0.5*e^2)"
+  },
+  "number_format": "%.17g",
+  "details": {
+    "final_params": {
+      "w": 0.90372928550252696,
+      "b": 0.40372928550252751,
+      "v": 1.4929479173781868,
+      "c": 0.71064397768741472
+    },
+    "final_z": 1.3074585710050544,
+    "final_h": 0.86363094594239509,
+    "final_yhat": 1.9999999998154669,
+    "final_loss": 1.7026224286601817e-20
+  }
+}

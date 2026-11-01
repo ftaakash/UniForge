@@ -161,3 +161,12 @@ uniforge_add_test(negative_ml
     LABEL negative
     SOURCES negative/ml/BackpropInputTest.cpp
     LIBS uniforge_core)
+
+# Task F evidence: `backprop` and `all` regenerate the golden CSVs in golden/backprop/.
+add_test(NAME integration.cli_backprop_matches_golden
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DGOLDEN_DIR=${CMAKE_CURRENT_SOURCE_DIR}/golden/backprop"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_backprop_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/backprop_golden.cmake")
+set_tests_properties(integration.cli_backprop_matches_golden PROPERTIES LABELS integration)

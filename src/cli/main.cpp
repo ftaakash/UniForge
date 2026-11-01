@@ -7,7 +7,8 @@
 //   uniforge_cli import-bench [--sizes N,...] [--out DIR]   measured import limits
 //   uniforge_cli bench [--quick|--report] [--seed S] [--cases C] [--elements N] [--workers 1,2,4]
 //                                                    Task D multicore benchmark report
-//   uniforge_cli all [--out DIR] [--data DIR]        fea + gen-samples + quick bench
+//   uniforge_cli backprop [--out DIR]                Task F gradient check + loss curve
+//   uniforge_cli all [--out DIR] [--data DIR]        fea + backprop + gen-samples + quick bench
 //
 // DIR defaults to "results" (--out) and "data" (--data) relative to the current folder.
 
@@ -19,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "cli/commands/BackpropCommand.hpp"
 #include "cli/commands/BenchCommand.hpp"
 #include "cli/commands/Command.hpp"
 #include "cli/commands/FeaCommand.hpp"
@@ -40,7 +42,9 @@ void printUsage(std::ostream& os) {
           "                 (writes about 0.4 GB of temporary files, deleted afterwards)\n"
           "  bench          Serial vs parallel batch benchmark (Task D): 1 warm-up + 5 timed\n"
           "                 reps per p, report in DIR/benchmarks/bench_<date>.{json,csv,md}\n"
-          "  all            fea + gen-samples + a quick bench into DIR/benchmarks/quick\n"
+          "  backprop       One-neuron backprop (Task F): gradients vs central differences,\n"
+          "                 one update and the 100-step loss curve\n"
+          "  all            fea + backprop + gen-samples + a quick bench into DIR/benchmarks/quick\n"
           "                 (import-bench and bench --report are machine-specific, run alone)\n"
           "\n"
           "Options:\n"
@@ -130,6 +134,9 @@ int run(const std::vector<std::string>& args) {
     if (command == "fea") {
         return runFea(ctx);
     }
+    if (command == "backprop") {
+        return runBackprop(ctx);
+    }
     if (command == "gen-samples") {
         return runGenSamples(ctx);
     }
@@ -148,14 +155,17 @@ int run(const std::vector<std::string>& args) {
     if (command == "all") {
         const int fea = runFea(ctx);
         ctx.out << "\n";
+        const int backprop = runBackprop(ctx);
+        ctx.out << "\n";
         const int samples = runGenSamples(ctx);
         ctx.out << "\n";
         const int quickBench = runQuickBench(ctx);
         // Report the most serious outcome: error (1) over check failure (3) over ok (0).
-        if (fea == kExitError || samples == kExitError || quickBench == kExitError) {
+        if (fea == kExitError || backprop == kExitError || samples == kExitError ||
+            quickBench == kExitError) {
             return kExitError;
         }
-        return std::max({fea, samples, quickBench});
+        return std::max({fea, backprop, samples, quickBench});
     }
     std::cerr << "error: unknown command '" << command << "'\n\n";
     printUsage(std::cerr);

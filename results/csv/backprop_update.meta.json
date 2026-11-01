@@ -1,0 +1,30 @@
+{
+  "file": "backprop_update.csv",
+  "description": "One simultaneous gradient-descent update (all gradients from the original parameters)",
+  "tool": "uniforge_cli backprop",
+  "tool_version": "0.1.0",
+  "git_commit": "e4f4ce5ebea5",
+  "generated_utc": "2026-11-01T18:28:48Z",
+  "problem": {
+    "x": 1,
+    "y": 2,
+    "initial_params": {
+      "w": 0.5,
+      "b": 0,
+      "v": 1,
+      "c": 0
+    },
+    "lr": 0.10000000000000001,
+    "steps": 100
+  },
+  "model": "z = w*x + b, h = tanh(z), yhat = v*h + c, e = yhat - y, J = 0.5*e^2",
+  "gradients": "dc = e, dv = e*h, db = e*v*(1 - h^2), dw = db*x (hand-derived, no autodiff)",
+  "columns": ["param", "before", "gradient", "after"],
+  "units": {
+    "param": "parameter name",
+    "before": "1",
+    "gradient": "1 (dJ/dparam at the initial parameters)",
+    "after": "1 (before - lr * gradient)"
+  },
+  "number_format": "%.17g"
+}
