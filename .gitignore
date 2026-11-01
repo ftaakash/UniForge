@@ -28,3 +28,6 @@ imgui.ini
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Quick benchmark written by `uniforge_cli all` (machine-specific smoke run)
+results/benchmarks/quick/

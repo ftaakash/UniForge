@@ -4,6 +4,7 @@
 # platform/Process.hpp with one source file per platform.
 add_executable(uniforge_cli
     main.cpp
+    commands/BenchCommand.cpp
     commands/FeaCommand.cpp
     commands/ImportBenchCommand.cpp
     commands/SamplesCommand.cpp)
