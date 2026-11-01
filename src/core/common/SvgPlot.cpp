@@ -127,6 +127,23 @@ Axis logAxis(double lo, double hi) {
             axis.ticks.push_back(c);
         }
     }
+    // Over many decades the 1-2-5 labels overlap: keep powers of ten only, and over more than
+    // ~10 decades every k-th one (a training loss can span 20 decades).
+    const int decades = static_cast<int>(std::lround(std::log10(axis.hi / axis.lo)));
+    if (decades > 4) {
+        const int every = (decades + 9) / 10;
+        std::vector<double> sparse;
+        for (const double c : axis.ticks) {
+            const double e = std::log10(c);
+            const long rounded = std::lround(e);
+            if (std::abs(e - static_cast<double>(rounded)) < 1e-9 && rounded % every == 0) {
+                sparse.push_back(c);
+            }
+        }
+        if (sparse.size() >= 2) {
+            axis.ticks = std::move(sparse);
+        }
+    }
     return axis;
 }
 

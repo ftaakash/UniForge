@@ -100,6 +100,29 @@ TEST(SvgPlot, LogAxesUseOneTwoFiveTicks) {
     }
 }
 
+TEST(SvgPlot, WideLogAxesThinTicksToPowersOfTen) {
+    // A training loss falling from 1 to 1e-20: 1-2-5 ticks would print 60+ overlapping labels.
+    PlotSpec spec;
+    spec.title = "Loss";
+    spec.xLabel = "step";
+    spec.yLabel = "J";
+    spec.logY = true;
+    PlotSeries s;
+    s.label = "J";
+    s.x = {0, 50, 100};
+    s.y = {1.18, 1.3e-10, 1.7e-20};
+    spec.series = {s};
+    const auto r = renderSvgPlot(spec);
+    ASSERT_TRUE(r.ok());
+    const std::string& svg = r.value();
+    for (const char* tick : {">1e-20<", ">1e-16<", ">1e-10<", ">0.0001<", ">1<"}) {
+        EXPECT_NE(svg.find(tick), std::string::npos) << tick;
+    }
+    for (const char* tick : {">2e-20<", ">5e-10<", ">1e-19<", ">0.5<"}) {
+        EXPECT_EQ(svg.find(tick), std::string::npos) << tick;
+    }
+}
+
 TEST(SvgPlot, RejectsInvalidData) {
     PlotSpec empty;
     EXPECT_EQ(renderSvgPlot(empty).error().code, ErrorCode::InvalidInput);
