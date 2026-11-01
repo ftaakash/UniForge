@@ -89,3 +89,19 @@ if(UNIFORGE_BUILD_APP)
     target_compile_definitions(unit_ui_fonts PRIVATE
         UNIFORGE_FONTS_DIR="${PROJECT_SOURCE_DIR}/third_party/fonts")
 endif()
+
+# Task B samples: gen-samples reproduces data/ byte for byte, and the committed files import.
+add_test(NAME integration.cli_samples_match_data
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DDATA_DIR=${PROJECT_SOURCE_DIR}/data"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_samples_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/samples_golden.cmake")
+set_tests_properties(integration.cli_samples_match_data PROPERTIES LABELS integration)
+
+uniforge_add_test(integration_samples
+    LABEL integration
+    SOURCES integration/SampleDataTest.cpp
+    LIBS uniforge_core)
+target_compile_definitions(integration_samples PRIVATE
+    UNIFORGE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
