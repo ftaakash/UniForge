@@ -45,6 +45,7 @@ uniforge_add_test(unit_io
     LABEL unit
     SOURCES
         unit/io/LineReaderTest.cpp
+        unit/io/StlParserTest.cpp
         unit/io/TextParseTest.cpp
     LIBS uniforge_core)
 target_compile_definitions(unit_io PRIVATE

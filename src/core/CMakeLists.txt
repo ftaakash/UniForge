@@ -7,6 +7,8 @@ add_library(uniforge_core STATIC
     common/SvgPlot.cpp
     io/ImportErrors.cpp
     io/LineReader.cpp
+    io/StlParser.cpp
+    io/StlWriter.cpp
     io/TextParse.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
