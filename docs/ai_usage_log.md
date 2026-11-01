@@ -130,6 +130,73 @@ misplaced function); the build or a parse error caught both, and the files were 
 
 ---
 
+## 2026-11-01: Thermal FEA core (Phase 2)
+
+### Prompts (representative)
+1. "Implement Phase 2 (Thermal FEA core, Task C) of UniForge in this repo, following
+   `docs/design/UniForge_Final_Build_Spec.md` … Don't build later-phase features." The brief
+   listed the scope (Result/Error, CSV/SVG/meta writers, the thermal modules, tests with the
+   exact expected values, `uniforge_cli fea`/`all`, golden-file integration test, packaging,
+   committed evidence, `docs/thermal_fea.md` with a debugging log that invents nothing).
+2. Commit rules: nothing is committed until I have reviewed the diff; no AI attribution lines.
+
+### Outputs
+- `src/core/common/`: `Error.hpp`, `Result.hpp`, `AtomicFile`, `CsvWriter`, `SvgPlot`, `MetaJson`.
+- `src/core/thermal/`: `RodProblem`, `Mesh1D`, `ElementMatrices`, `Assembler`, `DirichletBC`,
+  `ThomasSolver`, `Analytical`, `RodSolver`, `ErrorAnalysis`, `ConvergenceStudy`.
+- `src/cli/` (`uniforge_cli.exe`), `tools/package/regenerate_evidence.cmd`, `tools/package.ps1` changes.
+- Tests: `tests/unit/common/`, `tests/unit/thermal/`, `tests/numerical/thermal/`,
+  `tests/negative/thermal/`, `tests/support/DenseGauss.hpp` (test-only oracle),
+  `tests/integration/cli_golden.cmake`, `tests/golden/fea/`.
+- `results/csv/`, `results/plots/`, `docs/thermal_fea.md`, README/CHANGELOG/DEPENDENCIES updates.
+
+### Verification
+- Release build with `/W4 /WX`: no warnings. `ctest --preset windows-release`: 83/83 pass
+  (13 from Phase 1, 69 new unit/numerical/negative tests, 1 integration test).
+- Measured values (`results/csv/convergence.csv`): midpoint errors 1.2500000000000284,
+  0.3125, 0.078124999999964473, 0.019531249999992895 °C vs q·h²/8k = 1.25, 0.3125, 0.078125,
+  0.01953125; ratio 4 and order 2 to within 7e-13; max nodal error 1.2e-12 °C; energy
+  residual ≤ 8.7e-15 W; exact peak 188.2 °C at 0.42 m (FE node 21 of N = 50 and node 42 of
+  N = 100 hit it to 1e-10).
+- Thomas vs the dense Gaussian-elimination oracle: agree to 1e-11 °C on the rod systems and to
+  1e-12 (relative) on 20 random diagonally dominant systems.
+- Determinism: the integration test runs `fea` and `all` into two folders and compares every
+  CSV with `tests/golden/fea/` and every CSV/SVG between the runs. Changing the last digit of
+  one golden value made it fail ("differs from golden: convergence.csv").
+- Fault injection (deliberate, reverted): removing `f[1] −= a[1]·T0` from the Dirichlet
+  elimination failed 18 tests and all but one CLI check; details in `docs/thermal_fea.md` §5.
+- `tools/package.ps1`: `uniforge_cli.exe` imports only `KERNEL32.dll`; hygiene scan clean;
+  ZIP 4.3 MB. Extracted the ZIP to a folder whose path has spaces, `ü` and `ï`, deleted its
+  `results/`, ran `regenerate_evidence.cmd`: all 11 regenerated CSV/SVG files had the same
+  SHA-256 as the committed ones.
+- Both SVG plots inspected visually in a browser.
+- Not verified yet: the Linux/GCC build of the new core and CLI (Linux CI arrives in Phase 5).
+  The code avoids MSVC-only constructs and was written for `-Wconversion -Wsign-conversion
+  -Wshadow`, but it has not been compiled with GCC.
+
+### Incorrect / unsuitable suggestions and how they were caught
+| # | What the AI produced | Problem | How it was caught | Resolution |
+|---|---|---|---|---|
+| 1 | `src/cli/cli.manifest` with a comment that mentioned the `--out` option | XML forbids `--` inside comments; the linker's manifest tool failed (`c1010070`) | First build of `uniforge_cli` | Comment reworded |
+| 2 | `T_vs_x.svg` drawing the meshes coarse to fine | All four meshes lie on the same curve (nodal exactness), so the 81 N = 80 markers hid the other three series | Looking at the rendered SVG | Finest mesh drawn first, coarse ones on top |
+
+### Deviations from the spec for me to confirm
+- `analyse()` returns `Result<ErrorReport>` instead of `ErrorReport` (spec §5.2), so a solution
+  that does not match the problem gives `InvalidInput` instead of undefined behaviour (spec
+  §5.2 also says violations → `Error`, never UB). `ErrorReport` gained `nodalExact` for the CSVs.
+- `convergenceStudy` takes an optional `std::vector<StudyMesh>*` so the CLI gets each mesh's
+  solution without solving twice, and requires strictly increasing N.
+- `solveRod` has a second overload with a reusable `RodWorkspace` for the Phase 5 batch runner.
+- Element-matrix and assembler tests carry the `unit` label (spec §10 lists them as unit tests);
+  the task brief had them under `numerical/`.
+- `uniforge_cli` is built on every platform, not only with `UNIFORGE_BUILD_APP`, so the
+  golden-file test can run on Linux in Phase 5.
+
+### My decisions
+- _To fill after review._
+
+---
+
 ## Entry template
 
 ```markdown

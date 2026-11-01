@@ -55,9 +55,10 @@ strings in the upstream backend (MIT).
 
 The packaged executables link the MSVC runtime statically (`/MT`) and depend only on DLLs that
 ship with Windows 11. `tools/package.ps1` checks this on every package with `dumpbin /dependents`
-against an allow-list. Result for Phase 1:
+against an allow-list. Result for Phase 2:
 
 | Executable | Imports |
 |---|---|
 | `Launch.exe` | `KERNEL32.dll`, `USER32.dll` |
 | `app/UniForge.exe` | `KERNEL32.dll`, `USER32.dll`, `GDI32.dll`, `ADVAPI32.dll`, `SHELL32.dll`, `ole32.dll`, `IMM32.dll`, `d3d11.dll`, `dwmapi.dll` |
+| `app/uniforge_cli.exe` | `KERNEL32.dll` |
