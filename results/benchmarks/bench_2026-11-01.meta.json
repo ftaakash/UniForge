@@ -1,0 +1,34 @@
+{
+  "file": "bench_2026-11-01.csv",
+  "description": "Task D serial vs parallel batch benchmark",
+  "status": "PROVISIONAL: development machine during a night of parallel build sessions, not checked to be idle; replaced by a quiet-machine run at integration",
+  "tool": "uniforge_cli bench",
+  "tool_version": "0.1.0",
+  "git_commit": "b1cdb54d79b0",
+  "generated_utc": "2026-11-01T22:41:19Z",
+  "regenerate": "uniforge_cli bench --report",
+  "cpu": "Intel(R) Core(TM) i5-14600K",
+  "logical_cpus": 20,
+  "compiler": "MSVC 19.44.35229",
+  "flags": "/DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /MT /W4 /utf-8 /permissive-",
+  "params": {
+    "seed": "20261101",
+    "cases": 10000,
+    "elements": 8000,
+    "requested_workers": [1, 2, 4],
+    "effective_workers": [1, 2, 4],
+    "warmup_reps": 1,
+    "timed_reps": 5
+  },
+  "units": {
+    "workers": "p, worker threads requested",
+    "threads": "threads started",
+    "warmup_s": "s, untimed for statistics",
+    "repN_s": "s, compute-only wall time (steady_clock)",
+    "median_s": "s",
+    "speedup": "T1 / Tp (medians)",
+    "efficiency": "speedup / p"
+  },
+  "max_abs_diff_C": 0,
+  "agreement_pass": true
+}

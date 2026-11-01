@@ -1,0 +1,48 @@
+{
+  "tool": "uniforge_cli bench",
+  "tool_version": "0.1.0",
+  "git_commit": "b1cdb54d79b0",
+  "generated_utc": "2026-11-01T22:41:19Z",
+  "status": "PROVISIONAL: development machine during a night of parallel build sessions, not checked to be idle; replaced by a quiet-machine run at integration",
+  "regenerate": "uniforge_cli bench --report",
+  "system": {
+    "cpu": "Intel(R) Core(TM) i5-14600K",
+    "core_types": "6 performance + 8 efficiency cores (hybrid)",
+    "physical_cores": 14,
+    "logical_cpus": 20,
+    "ram_bytes": 34116202496,
+    "os": "Windows 11 (10.0.26200), x64",
+    "compiler": "MSVC 19.44.35229",
+    "flags": "/DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /MT /W4 /utf-8 /permissive-",
+    "build_type": "Release"
+  },
+  "workload": {
+    "seed": 20261101,
+    "cases": 10000,
+    "elements": 8000,
+    "k_range_W_per_mK": [5, 50],
+    "q_range_W_per_m3": [1000, 50000],
+    "result_set_bytes": 640080000,
+    "requested_workers": [1, 2, 4],
+    "effective_workers": [1, 2, 4],
+    "warmup_reps": 1,
+    "timed_reps": 5
+  },
+  "rows": [
+    {"workers": 1, "threads": 1, "warmup_s": 1.0732226, "reps_s": [1.0670744000000001, 1.0625429, 1.0746070999999999, 1.0645019, 1.0689356000000001], "median_s": 1.0670744000000001, "min_s": 1.0625429, "max_s": 1.0746070999999999, "speedup": 1, "efficiency": 1},
+    {"workers": 2, "threads": 2, "warmup_s": 0.53345030000000004, "reps_s": [0.53177339999999995, 0.53116920000000001, 0.53144279999999999, 0.53776729999999995, 0.53206529999999996], "median_s": 0.53177339999999995, "min_s": 0.53116920000000001, "max_s": 0.53776729999999995, "speedup": 2.0066336526046622, "efficiency": 1.0033168263023311},
+    {"workers": 4, "threads": 4, "warmup_s": 0.26525290000000001, "reps_s": [0.26510460000000002, 0.26516800000000001, 0.26535969999999998, 0.26487270000000002, 0.2645941], "median_s": 0.26510460000000002, "min_s": 0.2645941, "max_s": 0.26535969999999998, "speedup": 4.0251070709448271, "efficiency": 1.0062767677362068}
+  ],
+  "agreement": {
+    "max_abs_diff_C": 0,
+    "tolerance_C": 1e-08,
+    "pass": true,
+    "order_preserved": true,
+    "speedup_assessable": true
+  },
+  "notes": [
+    "Timed region: the batch solve only (steady_clock). Batch generation, the two preallocated result sets (640.1 MB each), the NaN pre-fill and the agreement check run outside it.",
+    "p = 1 is the serial runner on the calling thread. p >= 2 start p std::threads per repetition (thread start-up and join are inside the timed region) that take chunks of max(1, cases / (8p)) cases from an atomic index.",
+    "Agreement: every timed repetition (serial and parallel) is compared node by node with the serial warm-up result."
+  ]
+}
