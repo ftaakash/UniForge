@@ -7,6 +7,7 @@
 #include "app/services/DemoJob.hpp"
 #include "app/services/GeometryModel.hpp"
 #include "app/services/ThermalStudy.hpp"
+#include "core/perf/Benchmark.hpp"
 
 namespace uniforge {
 
@@ -44,6 +45,7 @@ struct ResultStore {
     ResultSlot<MeshModel> geometryMesh;     // Task B: last STL that imported cleanly
     ResultSlot<PointModel> geometryPoints;  // Task B: last nodal CSV that imported cleanly
     ResultSlot<ThermalStudyResult> thermal; // Task C: last completed convergence study
+    ResultSlot<perf::BenchmarkReport> benchmark; // Task D, Performance view
 };
 
 } // namespace uniforge

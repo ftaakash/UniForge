@@ -9,6 +9,7 @@
 #include "app/views/AboutView.hpp"
 #include "app/views/GeometryView.hpp"
 #include "app/views/OverviewView.hpp"
+#include "app/views/PerformanceView.hpp"
 #include "app/views/PlaceholderView.hpp"
 #include "app/views/ThermalView.hpp"
 
@@ -30,12 +31,7 @@ AppShell::AppShell() {
     views_[index(ViewId::Overview)] = std::make_unique<views::OverviewView>();
     views_[index(ViewId::Geometry)] = std::make_unique<views::GeometryView>();
     views_[index(ViewId::Thermal)] = std::make_unique<views::ThermalView>();
-    views_[index(ViewId::Performance)] = placeholder(
-        {"Performance", "Task D",
-         "Serial vs CPU-parallel batch of independent rod solves with a reproducible benchmark.",
-         "No benchmark yet",
-         "The worker pool, benchmark harness (warm-up + 5 timed repetitions, median) and "
-         "speedup plots arrive in Phase 5."});
+    views_[index(ViewId::Performance)] = std::make_unique<views::PerformanceView>();
     views_[index(ViewId::Hardware)] = placeholder(
         {"Hardware", "Task E",
          "Simulated MCU, FPGA and JTAG adapters: discovery, connect, telemetry and recovery.",
