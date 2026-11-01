@@ -26,6 +26,7 @@ add_library(uniforge_core STATIC
     perf/SerialRunner.cpp
     perf/SystemInfo.cpp
     perf/WorkerPool.cpp
+    ml/TinyNet.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp
