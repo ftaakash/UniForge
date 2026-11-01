@@ -22,6 +22,24 @@ uniforge_add_test(unit_common
         unit/common/SvgPlotTest.cpp
     LIBS uniforge_core)
 
+uniforge_add_test(unit_thermal
+    LABEL unit
+    SOURCES unit/thermal/ElementMatricesTest.cpp
+    LIBS uniforge_core)
+
+uniforge_add_test(numerical_thermal
+    LABEL numerical
+    SOURCES
+        numerical/thermal/ConvergenceStudyTest.cpp
+        numerical/thermal/RodSolverTest.cpp
+    LIBS uniforge_core)
+target_include_directories(numerical_thermal PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}") # support/
+
+uniforge_add_test(negative_thermal
+    LABEL negative
+    SOURCES negative/thermal/ThermalInputTest.cpp
+    LIBS uniforge_core)
+
 uniforge_add_test(unit_services
     LABEL unit
     SOURCES
