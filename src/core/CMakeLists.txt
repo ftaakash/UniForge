@@ -5,8 +5,11 @@ add_library(uniforge_core STATIC
     common/CsvWriter.cpp
     common/MetaJson.cpp
     common/SvgPlot.cpp
+    thermal/Analytical.cpp
     thermal/Assembler.cpp
+    thermal/ConvergenceStudy.cpp
     thermal/DirichletBC.cpp
+    thermal/ErrorAnalysis.cpp
     thermal/RodProblem.cpp
     thermal/RodSolver.cpp
     thermal/ThomasSolver.cpp)
