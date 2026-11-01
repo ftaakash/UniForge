@@ -3,6 +3,7 @@
 add_library(uniforge_services STATIC
     DemoJob.cpp
     GeometryModel.cpp
+    DeviceManager.cpp
     JobRunner.cpp
     LogSink.cpp
     ThermalStudy.cpp)

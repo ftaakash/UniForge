@@ -8,6 +8,7 @@
 #include "app/ui/widgets/Widgets.hpp"
 #include "app/views/AboutView.hpp"
 #include "app/views/GeometryView.hpp"
+#include "app/views/HardwareView.hpp"
 #include "app/views/OverviewView.hpp"
 #include "app/views/PerformanceView.hpp"
 #include "app/views/PlaceholderView.hpp"
@@ -32,12 +33,7 @@ AppShell::AppShell() {
     views_[index(ViewId::Geometry)] = std::make_unique<views::GeometryView>();
     views_[index(ViewId::Thermal)] = std::make_unique<views::ThermalView>();
     views_[index(ViewId::Performance)] = std::make_unique<views::PerformanceView>();
-    views_[index(ViewId::Hardware)] = placeholder(
-        {"Hardware", "Task E",
-         "Simulated MCU, FPGA and JTAG adapters: discovery, connect, telemetry and recovery.",
-         "No device adapters yet",
-         "The mock adapters (clearly labelled simulated) and the embedded design notes arrive "
-         "in Phase 6."});
+    views_[index(ViewId::Hardware)] = std::make_unique<views::HardwareView>();
     views_[index(ViewId::Backprop)] = placeholder(
         {"Backprop", "Task F",
          "Hand-derived gradients of a one-neuron network, checked by central differences.",

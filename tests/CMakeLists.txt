@@ -83,6 +83,7 @@ uniforge_add_test(negative_hw
 uniforge_add_test(unit_services
     LABEL unit
     SOURCES
+        unit/services/DeviceManagerTest.cpp
         unit/services/JobRunnerTest.cpp
         unit/services/LogSinkTest.cpp
     LIBS uniforge_services)
