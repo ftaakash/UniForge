@@ -5,6 +5,8 @@
 #include <mutex>
 
 #include "app/services/DemoJob.hpp"
+#include "app/services/GeometryModel.hpp"
+#include "app/services/ThermalStudy.hpp"
 
 namespace uniforge {
 
@@ -39,6 +41,9 @@ private:
 // One slot per result domain. Later phases add thermal, geometry, benchmark and backprop slots.
 struct ResultStore {
     ResultSlot<DemoJobResult> demo;
+    ResultSlot<MeshModel> geometryMesh;     // Task B: last STL that imported cleanly
+    ResultSlot<PointModel> geometryPoints;  // Task B: last nodal CSV that imported cleanly
+    ResultSlot<ThermalStudyResult> thermal; // Task C: last completed convergence study
 };
 
 } // namespace uniforge

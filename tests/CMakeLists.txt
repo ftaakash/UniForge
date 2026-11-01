@@ -105,3 +105,23 @@ uniforge_add_test(integration_samples
     LIBS uniforge_core)
 target_compile_definitions(integration_samples PRIVATE
     UNIFORGE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
+
+# Phase 4: UI-less import -> render-model pipeline and the Thermal view's study job.
+uniforge_add_test(integration_views
+    LABEL integration
+    SOURCES integration/GeometryPipelineTest.cpp
+    LIBS uniforge_services)
+target_compile_definitions(integration_views PRIVATE
+    UNIFORGE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
+
+if(UNIFORGE_BUILD_APP)
+    # Phase 4: number formatting (spec §8.3), camera fit/orbit/pan/zoom, picking, PNG export.
+    uniforge_add_test(unit_viewcore
+        LABEL unit
+        SOURCES
+            unit/render/CameraTest.cpp
+            unit/render/PickingTest.cpp
+            unit/render/PngWriterTest.cpp
+            unit/ui/FormatTest.cpp
+        LIBS uniforge_viewcore)
+endif()

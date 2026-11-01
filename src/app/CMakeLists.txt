@@ -22,6 +22,30 @@ target_compile_definitions(imgui_backends PRIVATE IMGUI_IMPL_DX11_PRECOMPILED_SH
 target_compile_options(imgui_backends PRIVATE /utf-8)
 target_link_libraries(imgui_backends PUBLIC imgui d3d11 dxgi dwmapi)
 
+# --- Geometry viewport shaders (Phase 4) ----------------------------------------------------
+uniforge_compile_shader(SCENE_MESH_VS_HEADER
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/scene_mesh_vs.hlsl"
+    PROFILE vs_4_0 VARIABLE g_scene_mesh_vs)
+uniforge_compile_shader(SCENE_MESH_PS_HEADER
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/scene_mesh_ps.hlsl"
+    PROFILE ps_4_0 VARIABLE g_scene_mesh_ps)
+uniforge_compile_shader(SCENE_POINTS_VS_HEADER
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/scene_points_vs.hlsl"
+    PROFILE vs_4_0 VARIABLE g_scene_points_vs)
+uniforge_compile_shader(SCENE_POINTS_PS_HEADER
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/shaders/scene_points_ps.hlsl"
+    PROFILE ps_4_0 VARIABLE g_scene_points_ps)
+
+# --- View maths without GPU or ImGui (unit-tested: tests/unit/ui, tests/unit/render) -----
+add_library(uniforge_viewcore STATIC
+    render/Camera.cpp
+    render/Picking.cpp
+    render/PngWriter.cpp
+    ui/Format.cpp)
+target_include_directories(uniforge_viewcore PUBLIC "${PROJECT_SOURCE_DIR}/src")
+target_link_libraries(uniforge_viewcore PUBLIC uniforge_core)
+uniforge_target_defaults(uniforge_viewcore)
+
 # --- Build information and resources -----------------------------------------------------
 # UNIFORGE_GIT_COMMIT is set in src/CMakeLists.txt.
 string(STRIP "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} /MT /W4 /WX /utf-8 /permissive-"
@@ -44,9 +68,11 @@ add_executable(UniForge WIN32
     platform/SystemTheme.cpp
     platform/Text.cpp
     platform/Win32Window.cpp
+    render/SceneRenderer.cpp
     ui/AppShell.cpp
     ui/Fonts.cpp
     ui/Theme.cpp
+    ui/ThemeViz.cpp
     ui/widgets/LogPanel.cpp
     ui/widgets/NavRail.cpp
     ui/widgets/StatusBar.cpp
@@ -55,10 +81,13 @@ add_executable(UniForge WIN32
     views/OverviewView.cpp
     views/PlaceholderView.cpp
     app.manifest
-    "${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc")
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc"
+    "${SCENE_MESH_VS_HEADER}" "${SCENE_MESH_PS_HEADER}"
+    "${SCENE_POINTS_VS_HEADER}" "${SCENE_POINTS_PS_HEADER}")
 target_include_directories(UniForge PRIVATE
     "${PROJECT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_BINARY_DIR}/generated"
-    "${CMAKE_CURRENT_SOURCE_DIR}") # resource.h for rc.exe
-target_link_libraries(UniForge PRIVATE uniforge_services imgui implot imgui_backends shell32 ole32)
+    "${CMAKE_CURRENT_SOURCE_DIR}" # resource.h for rc.exe
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+target_link_libraries(UniForge PRIVATE uniforge_services uniforge_viewcore imgui implot imgui_backends shell32 ole32)
 uniforge_target_defaults(UniForge)
