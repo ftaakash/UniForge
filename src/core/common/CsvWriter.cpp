@@ -1,5 +1,6 @@
 #include "core/common/CsvWriter.hpp"
 
+#include <charconv>
 #include <cmath>
 #include <cstdio>
 
@@ -27,7 +28,14 @@ std::string formatFullPrecision(double value) {
     return std::string(buffer, n > 0 ? static_cast<std::size_t>(n) : 0U);
 }
 
-CsvWriter::CsvWriter(std::vector<std::string> columns) : columns_(columns.size()) {
+std::string formatShortest(double value) {
+    char buffer[32];
+    const auto result = std::to_chars(buffer, buffer + sizeof buffer, value + 0.0); // -0 -> 0
+    return std::string(buffer, result.ptr);
+}
+
+CsvWriter::CsvWriter(std::vector<std::string> columns, CsvNumberFormat format)
+    : format_(format), columns_(columns.size()) {
     if (columns.empty()) {
         fail(ErrorCode::Internal, "CSV has no columns");
     }
@@ -52,7 +60,8 @@ void CsvWriter::add(double value) {
         fail(ErrorCode::NonFinite, "CSV row " + std::to_string(rows_ + 1) + ", column " +
                                        std::to_string(cellsInRow_ + 1) + " is not finite");
     }
-    addCell(formatFullPrecision(value));
+    addCell(format_ == CsvNumberFormat::Shortest ? formatShortest(value)
+                                                 : formatFullPrecision(value));
 }
 
 void CsvWriter::add(int value) { addCell(std::to_string(value)); }

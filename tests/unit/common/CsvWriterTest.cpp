@@ -15,6 +15,7 @@
 #include "core/common/AtomicFile.hpp"
 
 namespace fs = std::filesystem;
+using uniforge::CsvNumberFormat;
 using uniforge::CsvWriter;
 using uniforge::ErrorCode;
 using uniforge::formatFullPrecision;
@@ -137,4 +138,15 @@ TEST(AtomicFile, ReportsIoErrorWhenFolderCannotBeCreated) {
     EXPECT_EQ(r.error().code, ErrorCode::IoError);
     EXPECT_FALSE(r.error().hint.empty());
     fs::remove_all(dir);
+}
+
+TEST(CsvWriter, ShortestFormatForSampleData) {
+    CsvWriter csv({"x_m", "T_C"}, CsvNumberFormat::Shortest);
+    csv.beginRow();
+    csv.add(0.42);
+    csv.add(-0.0);
+    csv.beginRow();
+    csv.add(1e-05);
+    csv.add(188.2);
+    EXPECT_EQ(csv.str(), "x_m,T_C\n0.42,0\n1e-05,188.2\n");
 }

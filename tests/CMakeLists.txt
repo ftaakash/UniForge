@@ -40,6 +40,16 @@ uniforge_add_test(negative_thermal
     SOURCES negative/thermal/ThermalInputTest.cpp
     LIBS uniforge_core)
 
+# Importers (Task B). Fixture files are read from the source tree.
+uniforge_add_test(unit_io
+    LABEL unit
+    SOURCES
+        unit/io/LineReaderTest.cpp
+        unit/io/TextParseTest.cpp
+    LIBS uniforge_core)
+target_compile_definitions(unit_io PRIVATE
+    UNIFORGE_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
+
 # The CLI regenerates the committed FEA evidence byte for byte (golden files in golden/fea/).
 add_test(NAME integration.cli_fea_matches_golden
     COMMAND "${CMAKE_COMMAND}"

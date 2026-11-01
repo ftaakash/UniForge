@@ -20,3 +20,7 @@
 *.pdf binary
 *.ico binary
 *.mp4 binary
+
+# Parser fixtures are compared byte for byte: CRLF, BOM and binary-STL cases must survive
+# checkout unchanged, so no end-of-line conversion at all.
+tests/fixtures/** -text

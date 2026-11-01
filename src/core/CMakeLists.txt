@@ -5,6 +5,9 @@ add_library(uniforge_core STATIC
     common/CsvWriter.cpp
     common/MetaJson.cpp
     common/SvgPlot.cpp
+    io/ImportErrors.cpp
+    io/LineReader.cpp
+    io/TextParse.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp

@@ -14,9 +14,18 @@ namespace uniforge {
 // Uses the C locale's '.' decimal point (the core never calls setlocale).
 [[nodiscard]] std::string formatFullPrecision(double value);
 
+// Shortest text that reads back to the same double (std::to_chars): "0.005", "1e-05", "188.2".
+// Also exact on every platform, and easier to read than %.17g. -0 is written as 0.
+[[nodiscard]] std::string formatShortest(double value);
+
+enum class CsvNumberFormat {
+    FullPrecision, // formatFullPrecision: evidence files (17 significant digits)
+    Shortest       // formatShortest: sample data meant to be read by people
+};
+
 // Builds a plain ASCII CSV (comma separator, LF line ends, header row, no quoting) in memory
 // and saves it atomically. Evidence files must be byte-identical on rerun, so numbers are
-// always written with formatFullPrecision.
+// written with formatFullPrecision by default (or formatShortest when asked; both round-trip).
 //
 //     CsvWriter csv({"x_m", "T_C"});
 //     csv.beginRow(); csv.add(0.5); csv.add(188.0);
@@ -27,7 +36,8 @@ namespace uniforge {
 // building code stays free of error checks.
 class CsvWriter {
 public:
-    explicit CsvWriter(std::vector<std::string> columns);
+    explicit CsvWriter(std::vector<std::string> columns,
+                       CsvNumberFormat format = CsvNumberFormat::FullPrecision);
 
     void beginRow();
     void add(double value);
@@ -46,6 +56,7 @@ private:
     void finishRow();
     void fail(ErrorCode code, std::string message);
 
+    CsvNumberFormat format_ = CsvNumberFormat::FullPrecision;
     std::size_t columns_ = 0;
     std::size_t rows_ = 0;
     std::size_t cellsInRow_ = 0;
