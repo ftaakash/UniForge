@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="13">
+  <title>UniForge Task E block diagram: host PC, powered USB hub, NUCLEO-F446RE, Basys 3, J-Link EDU Mini</title>
+  <style>
+    .bg { fill: #FFFFFF; }
+    .box { fill: #F5F7FA; stroke: #59616E; stroke-width: 1.5; }
+    .sub { fill: #FFFFFF; stroke: #9AA1AC; stroke-width: 1; }
+    .dom33 { fill: none; stroke: #0E7490; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .dom5 { fill: none; stroke: #B45309; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .t { fill: #1A1E24; }
+    .t2 { fill: #59616E; font-size: 11.5px; }
+    .h { fill: #1A1E24; font-weight: 600; font-size: 14px; }
+    .usb { stroke: #59616E; stroke-width: 3; fill: none; }
+    .data { stroke: #2563EB; stroke-width: 2.5; fill: none; }
+    .dbg { stroke: #7C3AED; stroke-width: 2.5; fill: none; stroke-dasharray: 7 4; }
+    .pwr { stroke: #B45309; stroke-width: 2.5; fill: none; }
+    .gnd { stroke: #15803D; stroke-width: 2.5; fill: none; stroke-dasharray: 2 3; }
+    .lbl-data { fill: #2563EB; font-size: 11.5px; }
+    .lbl-dbg { fill: #7C3AED; font-size: 11.5px; }
+    .lbl-pwr { fill: #B45309; font-size: 11.5px; }
+    .lbl-gnd { fill: #15803D; font-size: 11.5px; }
+    .lbl-33 { fill: #0E7490; font-size: 11.5px; }
+    .warn { fill: #B91C1C; font-size: 11.5px; font-weight: 600; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #111317; }
+      .box { fill: #181B21; stroke: #9AA3B2; }
+      .sub { fill: #20242C; stroke: #5E6573; }
+      .dom33 { stroke: #39C5CF; }
+      .dom5 { stroke: #D29922; }
+      .t, .h { fill: #E7EAF0; }
+      .t2 { fill: #9AA3B2; }
+      .usb { stroke: #9AA3B2; }
+      .data { stroke: #5B95FF; }
+      .dbg { stroke: #A78BFA; }
+      .pwr { stroke: #D29922; }
+      .gnd { stroke: #3FB950; }
+      .lbl-data { fill: #5B95FF; }
+      .lbl-dbg { fill: #A78BFA; }
+      .lbl-pwr { fill: #D29922; }
+      .lbl-gnd { fill: #3FB950; }
+      .lbl-33 { fill: #39C5CF; }
+      .warn { fill: #F85149; }
+    }
+  </style>
+  <rect class="bg" x="0" y="0" width="1000" height="640"/>
+  <text class="h" x="20" y="28">UniForge Task E: target integration (design only; the app uses software mocks, no hardware is accessed)</text>
+
+  <!-- Host + hub -->
+  <rect class="box" x="20" y="60" width="170" height="120" rx="6"/>
+  <text class="h" x="35" y="84">Host PC (Win 11)</text>
+  <text class="t2" x="35" y="104">UniForge DeviceManager</text>
+  <text class="t2" x="35" y="120">ST-LINK / VCP drivers</text>
+  <text class="t2" x="35" y="136">Vivado hw_server (JTAG)</text>
+  <text class="t2" x="35" y="152">FTDI VCP · J-Link software</text>
+  <text class="t2" x="35" y="168">ground reference (0 V)</text>
+
+  <rect class="box" x="20" y="250" width="170" height="90" rx="6"/>
+  <text class="h" x="35" y="274">Powered USB hub</text>
+  <text class="t2" x="35" y="294">one host, one ground</text>
+  <text class="t2" x="35" y="310">own supply: boards do not</text>
+  <text class="t2" x="35" y="326">share one port's budget (UA)</text>
+  <path class="usb" d="M105 180 V250"/>
+  <text class="t2" x="112" y="220">USB 2.0</text>
+
+  <!-- NUCLEO-F446RE -->
+  <rect class="box" x="300" y="50" width="400" height="230" rx="6"/>
+  <text class="h" x="315" y="72">ST NUCLEO-F446RE (MB1136)</text>
+  <rect class="dom5" x="312" y="82" width="150" height="186" rx="4"/>
+  <text class="lbl-pwr" x="318" y="98">5 V domain (U5V)</text>
+  <rect class="sub" x="322" y="106" width="130" height="94" rx="4"/>
+  <text class="t" x="330" y="124">ST-LINK/V2-1</text>
+  <text class="t2" x="330" y="140">CN1 USB Mini-B</text>
+  <text class="t2" x="330" y="156">debug + VCP + MSC</text>
+  <text class="t2" x="330" y="172">≤ 300 mA (JP1 off)</text>
+  <text class="t2" x="330" y="188">JP5 1-2 = U5V</text>
+  <rect class="sub" x="322" y="210" width="130" height="50" rx="4"/>
+  <text class="t" x="330" y="230">CN2 jumpers</text>
+  <text class="t2" x="330" y="248">ON: ST-LINK owns SWD</text>
+
+  <rect class="dom33" x="480" y="82" width="208" height="186" rx="4"/>
+  <text class="lbl-33" x="486" y="98">3.3 V domain (LD39050, ≤ 500 mA)</text>
+  <rect class="sub" x="490" y="106" width="188" height="94" rx="4"/>
+  <text class="t" x="498" y="124">STM32F446RE (Cortex-M4)</text>
+  <text class="t2" x="498" y="140">VDD 1.7–3.6 V · FT I/O</text>
+  <text class="t2" x="498" y="156">SWDIO PA13 · SWCLK PA14</text>
+  <text class="t2" x="498" y="172">USART2 PA2/PA3 (SB13/14)</text>
+  <text class="t2" x="498" y="188">±25 mA/pin · 120 mA total</text>
+  <rect class="sub" x="490" y="210" width="188" height="50" rx="4"/>
+  <text class="t" x="498" y="228">CN7 morpho</text>
+  <text class="t2" x="498" y="246">13 SWDIO · 15 SWCLK · 14 RST</text>
+  <text class="t2" x="498" y="258">16 +3.3V · 20 GND</text>
+  <path class="data" d="M452 166 H490"/>
+  <path class="dbg" d="M452 140 H490"/>
+
+  <!-- Basys 3 -->
+  <rect class="box" x="300" y="320" width="400" height="200" rx="6"/>
+  <text class="h" x="315" y="342">Digilent Basys 3 (Artix-7 XC7A35T)</text>
+  <rect class="dom5" x="312" y="352" width="150" height="156" rx="4"/>
+  <text class="lbl-pwr" x="318" y="368">5 V in (JP2: USB / EXT)</text>
+  <rect class="sub" x="322" y="376" width="130" height="120" rx="4"/>
+  <text class="t" x="330" y="394">FTDI FT2232HQ</text>
+  <text class="t2" x="330" y="410">J4 micro-USB "PROG"</text>
+  <text class="t2" x="330" y="426">ch A: USB-JTAG</text>
+  <text class="t2" x="330" y="442">ch B: USB-UART</text>
+  <text class="t2" x="330" y="458">independent channels</text>
+  <text class="t2" x="330" y="474">J6 EXT 4.5–5.5 V, ≥ 1 A</text>
+  <rect class="dom33" x="480" y="352" width="208" height="156" rx="4"/>
+  <text class="lbl-33" x="486" y="368">3.3 V I/O · 1.8 V aux · 1.0 V core</text>
+  <rect class="sub" x="490" y="376" width="188" height="70" rx="4"/>
+  <text class="t" x="498" y="394">Artix-7 FPGA</text>
+  <text class="t2" x="498" y="410">TAP: TCK TMS TDI TDO</text>
+  <text class="t2" x="498" y="426">UART B18/A18 · XADC temp</text>
+  <text class="t2" x="498" y="442">DONE LED after config</text>
+  <rect class="sub" x="490" y="454" width="188" height="44" rx="4"/>
+  <text class="t" x="498" y="472">Pmod JA/JB/JC/JXADC</text>
+  <text class="warn" x="498" y="490">max 3.4 V: never 5 V</text>
+  <path class="dbg" d="M452 422 H490"/>
+  <path class="data" d="M452 440 H490"/>
+
+  <!-- J-Link -->
+  <rect class="box" x="780" y="50" width="200" height="150" rx="6"/>
+  <text class="h" x="795" y="72">SEGGER J-Link EDU Mini</text>
+  <text class="t2" x="795" y="92">USB-C, USB-powered, 30 mA</text>
+  <text class="t2" x="795" y="108">no target supply (N/A)</text>
+  <text class="t2" x="795" y="124">VIF 1.8 V / 3.3 V from VTref</text>
+  <text class="t2" x="795" y="140">9-pin 0.05" FTSH target cable</text>
+  <text class="t2" x="795" y="156">SWD/JTAG ≤ 4 MHz</text>
+  <text class="t2" x="795" y="172">debug probe: drives the</text>
+  <text class="t2" x="795" y="188">target's port, no compute</text>
+
+  <!-- USB host links (data + debug share one cable each) -->
+  <path class="usb" d="M190 280 H250 V150 H322"/>
+  <text class="t2" x="194" y="140">SWD+VCP</text>
+  <path class="usb" d="M190 310 H250 V420 H322"/>
+  <text class="t2" x="140" y="438">JTAG+UART+5V</text>
+  <path class="usb" d="M190 330 H230 V600 H992 V125 H980"/>
+  <text class="t2" x="800" y="594">USB-C: J-Link (debug only)</text>
+
+  <!-- J-Link to Nucleo CN7 -->
+  <path class="dbg" d="M780 130 H740 V232 H678"/>
+  <path class="pwr" d="M678 250 H750 V165 H780"/>
+  <path class="gnd" d="M678 262 H760 V185 H780"/>
+  <text class="lbl-dbg" x="785" y="222">SWDIO/SWCLK/nRST → CN7-13/15/14</text>
+  <text class="lbl-pwr" x="785" y="238">VTref ← CN7-16 +3.3V (sense)</text>
+  <text class="lbl-gnd" x="785" y="254">GND 3/5 → CN7-20 (first)</text>
+
+  <!-- Ownership note -->
+  <rect class="sub" x="300" y="535" width="400" height="48" rx="4"/>
+  <text class="t" x="310" y="554">Ownership: CN2 ON → ST-LINK drives PA13/PA14.</text>
+  <text class="t" x="310" y="572">CN2 OFF → J-Link may drive them via CN7. Never both.</text>
+
+  <!-- Legend -->
+  <rect class="box" x="780" y="320" width="200" height="200" rx="6"/>
+  <text class="h" x="795" y="342">Legend</text>
+  <path class="usb" d="M795 362 H835"/><text class="t" x="845" y="366">USB cable</text>
+  <path class="data" d="M795 386 H835"/><text class="t" x="845" y="390">data (UART/VCP)</text>
+  <path class="dbg" d="M795 410 H835"/><text class="t" x="845" y="414">debug (SWD/JTAG)</text>
+  <path class="pwr" d="M795 434 H835"/><text class="t" x="845" y="438">power / sense</text>
+  <path class="gnd" d="M795 458 H835"/><text class="t" x="845" y="462">ground</text>
+  <rect class="dom5" x="795" y="474" width="40" height="14"/><text class="t" x="845" y="486">5 V domain</text>
+  <rect class="dom33" x="795" y="496" width="40" height="14"/><text class="t" x="845" y="508">3.3 V domain</text>
+
+  <text class="t2" x="20" y="630">Sources: ST UM1724 Rev 17, ST DS10693 Rev 11, Digilent Basys 3 Reference Manual, SEGGER J-Link EDU Mini spec + KB. UA = unverified assumption. See embedded_design.md.</text>
+</svg>
