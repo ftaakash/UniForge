@@ -5,6 +5,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Phase 4: Visual views (Tasks B and C UI)
+- Geometry view (Task B): STL and nodal-CSV file fields (native Open dialog, Explorer
+  drag-drop), "Load samples" for both files in `data/`, imports on the job thread with
+  progress and cancel; a failed or cancelled import keeps the previous model and shows the
+  parser's message + hint (with line number) in an alert. Show mesh / points, point size [px],
+  `◇ SYNTHETIC DATA` chip, NodeInspector (id, x/y/z [m], T [°C]), import summary, badges
+  STL valid / CSV valid / non-finite rejected.
+- 3D viewport (`render/`): offscreen D3D11 target shown with `ImGui::Image`, MSAA 4× when the
+  device supports it (also on WARP); flat-shaded mesh with optional wireframe; instanced
+  camera-facing point quads coloured with an inferno 1D texture; z-up orbit camera (LMB orbit,
+  MMB / Shift+LMB pan, wheel zoom to the cursor, `F` fit = bbox sphere in the narrower FOV,
+  `R` reset, `W` wireframe); axes triad, legend `T [°C]` (min/max + 5 ticks), bbox dimensions;
+  CPU picking of the nearest node within 6 px with a highlight ring. Mesh and points are
+  recentred on their bbox in double before the float conversion; GPU resources are rebuilt
+  after a device loss. Shaders are fxc-compiled at build time.
+- Thermal Analysis view (Task C): parameters with ranges, brief defaults and ↺ reset; mesh
+  checkboxes 10/20/40/80; RunBar (`Ctrl+Enter` / `Esc`); ImPlot tabs T vs x (Okabe–Ito colour
+  and marker fixed per N, exact solution dashed on top), max midpoint error vs h (log–log with a
+  dashed slope-2 guide) and midpoint errors along x; convergence table (mono, right-aligned,
+  sortable, `Ctrl+C` TSV, pass column); Export ▾ convergence / nodal / midpoint CSV (atomic,
+  `%.17g`) and the current plot as PNG; badges midpoint error = qh²/8k (≤ 1e-9 °C), order ≈ 2
+  (± 0.01), energy balance (≤ 1e-9 W), T_max @ x* (within h/2, nodal error ≤ 1e-9 °C), each
+  with measured value and tolerance in the tooltip.
+- Overview: rows A–F; A, B and C show live status, the rest "Pending".
+- Widgets (`ui/widgets/`): VerificationBadge, InlineAlert, ParamField, FileField, RunBar,
+  DataTable, ExportMenu, ColorLegend, NodeInspector, Viewport3D; `ui/Format` (spec §8.3) and
+  `ui/ThemeViz` (data-viz colour tokens).
+- Tests: 34 new (210 in total): number formatting, camera fit/orbit/pan/zoom maths, picking
+  (radius, nearest, depth tie-break, behind camera), PNG encoder, and the UI-less import →
+  render-model pipeline and study job/exports (`integration_views`).
+- Not done: Overview "Run all self-checks" (cut), screenshots (see `docs/demo/phase4/README.md`).
+
 ### Phase 3: Importers (Task B data side)
 - `core/io`: `LineReader` (fixed 64 KB buffer, LF/CRLF, UTF-8 BOM, progress = bytes read / size,
   cancellation and byte limit checked per buffer refill, line-length limit), locale-independent

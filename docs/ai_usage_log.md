@@ -281,6 +281,77 @@ misplaced function); the build or a parse error caught both, and the files were 
 
 ---
 
+## 2026-11-02: Visual views, Tasks B and C UI (Phase 4)
+
+### Prompts (representative)
+1. "Implement Phase 4 (visual views) of UniForge, following
+   `docs/design/UniForge_Final_Build_Spec.md` … render module (Camera, MeshRenderer,
+   PointCloudRenderer, Picking, axes triad, offscreen target, MSAA 4× if supported, works on
+   WARP), Geometry view, Thermal view, Overview live cards, widgets from §8.4, `ui/Format.hpp`
+   with unit tests, tests for camera fit and picking, manual checklist + screenshots."
+2. Parallel-work rules for the night: own branch and worktree, small additive edits to shared
+   files, commit per scope without waiting for review, no push/tag/merge, no AI attribution.
+
+### Outputs
+- `src/app/render/`: `RenderMath.hpp`, `Camera` (orbit / pan / zoom-to-cursor / fit / reset),
+  `Picking` (CPU screen-space nearest within 6 px, depth tie-break), `SceneRenderer` (offscreen
+  MSAA target resolved for `ImGui::Image`, flat-shaded mesh + wireframe pass, instanced point
+  quads with an inferno 1D texture), `PngWriter` (stored-deflate PNG, no dependency).
+- `src/app/shaders/scene_{mesh,points}_{vs,ps}.hlsl` (fxc via `cmake/Shaders.cmake`).
+- `src/app/services/`: `GeometryModel` (import → recentred float arrays, UI-less),
+  `ThermalStudy` (study job + three CSV exports); `ResultStore` slots `geometryMesh`,
+  `geometryPoints`, `thermal`.
+- `src/app/platform/`: `FileDialog` (IFileOpenDialog / IFileSaveDialog), `ScreenCapture`
+  (back-buffer region → PNG between render and Present).
+- `src/app/ui/`: `Format` (spec §8.3), `ThemeViz` (series colours, mesh/pick colours, inferno),
+  widgets `Forms` (VerificationBadge, InlineAlert, ParamField, FileField, RunBar), `DataViews`
+  (DataTable, ExportMenu, ColorLegend, NodeInspector), `Viewport3D`.
+- `src/app/views/GeometryView`, `ThermalView`; Overview rows A–F with live status for A, B, C.
+- Small additive edits to `App.cpp/.hpp` (drag-drop, capture hook, device generation),
+  `AppContext.hpp`, `AppShell.cpp`, CMake lists.
+- Tests: `tests/unit/ui/FormatTest.cpp`, `tests/unit/render/{Camera,Picking,PngWriter}Test.cpp`,
+  `tests/integration/GeometryPipelineTest.cpp`.
+
+### Verification
+- Release build with `/W4 /WX`: no warnings. `ctest --preset windows-release`: 210/210 pass
+  (176 existing + 34 new: 10 Format, 7 Camera, 6 Picking, 3 PngWriter, 8 pipeline/study).
+- Camera tests check maths, not only "no crash": all 8 bbox corners on screen after fit, the
+  target projects to the viewport centre after orbit, a 40 px pan moves the anchor exactly
+  40 px, and the world point under the cursor stays at the same pixel after a zoom.
+- Pipeline test: a 10 µm triangle 1 km from the origin keeps its size in float only because
+  of the recentring (it would collapse without it).
+- `tools/package.ps1 -SkipBuild` passes: UniForge.exe imports only OS DLLs, hygiene clean,
+  ZIP 4.9 MB, `data/` in the package (needed by "Load samples").
+- App started with `--force-warp --theme=light`: log shows the WARP backend and launch-to-ready
+  0.047 s, no errors. **Not done:** interactive check and screenshots: the request to control
+  the app window was declined in this session, so the 3D view, picking, plots and exports have
+  not been looked at on screen yet (checklist in `docs/demo/phase4/README.md`).
+
+### Incorrect / unsuitable suggestions and how they were caught
+| # | Suggestion / action | Problem | How caught | Resolution |
+|---|---|---|---|---|
+| 1 | Running the MSBuild step through Git Bash with `/m /v:minimal` | MSYS path conversion turned `/m` into `M:/`, so MSBuild only printed its usage text; the "build" built nothing | Reading the log tail (`Switch: M:/`) | Builds run from PowerShell |
+| 2 | A `perl` one-liner inserting `std::wstring path(len, L'\0')` into `App.cpp`, then a `sed` "fix" | perl dropped the escape (empty character constant, C2137); the sed replacement used `\0`, which sed reads as "the whole match", and pasted the line into itself three times | Compiler error, then reading the file | Exact-text edit; duplicate block deleted |
+| 3 | `clang-format` over `App.hpp` with `#include <shellapi.h>` | It sorted `<shellapi.h>` into the standard-header block above `<windows.h>`; with lean `windows.h` that breaks `HDROP` | Reading the diff before building | `App.hpp` takes the `WPARAM`; only `App.cpp` includes `shellapi.h` |
+| 4 | One large bash heredoc writing five test files | Shell quote mismatch: nothing was written, but the command looked like it might have | `ls` of the test folders | Files written one by one |
+
+### Deviations from the spec for me to confirm
+- "Run all self-checks" on Overview not built (cut-list item 1). 200 % DPI not checked.
+- The "Non-finite rejected" badge passes when an import succeeded (every value was checked
+  finite while parsing) or when the last import was rejected as `NonFinite`; otherwise pending.
+- Plot PNG export captures the plot's screen region from the back buffer (exact on-screen look,
+  current window size); PNGs are uncompressed-deflate, so a few MB.
+- Thermal CSV exports from the UI are long tables over all N (`N,x_m,…`); the per-N evidence files
+  stay with `uniforge_cli fea`.
+- The camera is z-up (CAD convention); the inferno colours come from a CC0 polynomial fit, not
+  the matplotlib table.
+- `AppContext` gained `gfx`, `window`, `droppedFiles`; `RuntimeInfo` gained `deviceGeneration`.
+
+### My decisions
+- _To fill after review._
+
+---
+
 ## Entry template
 
 ```markdown
