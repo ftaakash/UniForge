@@ -7,20 +7,16 @@
 #include "app/ui/widgets/StatusBar.hpp"
 #include "app/ui/widgets/Widgets.hpp"
 #include "app/views/AboutView.hpp"
+#include "app/views/BackpropView.hpp"
 #include "app/views/GeometryView.hpp"
 #include "app/views/HardwareView.hpp"
 #include "app/views/OverviewView.hpp"
 #include "app/views/PerformanceView.hpp"
-#include "app/views/PlaceholderView.hpp"
 #include "app/views/ThermalView.hpp"
 
 namespace uniforge::ui {
 
 namespace {
-
-std::unique_ptr<views::View> placeholder(views::PlaceholderView::Text text) {
-    return std::make_unique<views::PlaceholderView>(text);
-}
 
 int index(ViewId id) {
     return static_cast<int>(id);
@@ -34,12 +30,7 @@ AppShell::AppShell() {
     views_[index(ViewId::Thermal)] = std::make_unique<views::ThermalView>();
     views_[index(ViewId::Performance)] = std::make_unique<views::PerformanceView>();
     views_[index(ViewId::Hardware)] = std::make_unique<views::HardwareView>();
-    views_[index(ViewId::Backprop)] = placeholder(
-        {"Backprop", "Task F",
-         "Hand-derived gradients of a one-neuron network, checked by central differences.",
-         "No backprop check yet",
-         "Forward pass, analytic vs numeric gradients (ε = 1e-6, |Δ| ≤ 1e-5) and the 100-step "
-         "loss curve arrive in Phase 7."});
+    views_[index(ViewId::Backprop)] = std::make_unique<views::BackpropView>();
     views_[index(ViewId::About)] = std::make_unique<views::AboutView>();
 }
 

@@ -85,6 +85,7 @@ add_executable(UniForge WIN32
     views/AboutView.cpp
     views/GeometryView.cpp
     views/HardwareView.cpp
+    views/BackpropView.cpp
     views/OverviewView.cpp
     views/PerformanceView.cpp
     views/PlaceholderView.cpp
