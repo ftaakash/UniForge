@@ -85,6 +85,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   retry trail, "Design notes →").
 - Tests: 23 new (199 in total): `unit_hw`, `negative_hw` (ManualClock, instant) and
   `DeviceManager.*`.
+### Phase 7: Backpropagation (Task F)
+- `core/ml`: `Params`, `Grads`, `Forward`, `forward` (z = wx + b, h = tanh z, ŷ = vh + c,
+  J = ½e²), hand-derived `backward` (dc = e, dv = e·h, db = e·v·(1 − h²), dw = db·x; no
+  autodiff), `sgdStep` (simultaneous update), `centralDiff` (ε = 1e-6, per-parameter pass at
+  |Δ| ≤ 1e-5, NaN fails), `train` (steps + 1 losses), `BackpropProblem::validate()`.
+- Measured: h = ŷ = 0.462117, e = −1.537883, J = 1.182542; dw = db = −1.209464,
+  dv = −0.710682, dc = −1.537883; max |analytic − numeric| = 1.13e-10; after one update
+  w = 0.620946, b = 0.120946, v = 1.071068, c = 0.153788. Loss decreases at every one of the
+  100 steps, 1.182542 → 1.70e-20, with the per-step ratio settling at 0.634606.
+- `uniforge_cli backprop`: `results/csv/backprop_gradients.csv`, `backprop_update.csv`,
+  `loss_curve.csv` (+ `.meta.json`), `results/plots/loss_curve.svg`, `loss_curve_logy.svg`;
+  prints the tables, a loss summary and PASS/FAIL checks. `all` now runs `fea` + `backprop` +
+  `gen-samples`.
+- Backprop view: inputs with validation and reset to the brief, forward / gradients / update
+  cards, ImPlot loss curve with log-y toggle, explanation computed from the run, badges
+  "4/4 FD checks", "Update matches brief", "Loss non-increasing".
+- `SvgPlot`: log axes spanning more than 4 decades keep powers of ten only (thinned to ≤ ~10
+  labels); plots up to 4 decades are byte-identical to before.
+- Docs: `docs/backprop.md` (derivation, FD error budget, measured loss curve: rate, tanh
+  saturation), `docs/appendix_handwritten/CHECKLIST.md` and a placeholder README (scans to
+  come from me).
+- Tests: 17 new (193 in total): `numerical_ml` (11), `negative_ml` (4), SvgPlot wide log axis,
+  `integration.cli_backprop_matches_golden` (CSVs = `tests/golden/backprop/`, `backprop` and
+  `all` byte-identical).
 
 ### Phase 3: Importers (Task B data side)
 - `core/io`: `LineReader` (fixed 64 KB buffer, LF/CRLF, UTF-8 BOM, progress = bytes read / size,

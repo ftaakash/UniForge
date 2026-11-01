@@ -20,7 +20,7 @@ numerics, file processing and concurrency are written in C++17.
 | Thermal FEA | C | Steady 1D rod solver with two-node linear elements, verified against the analytical solution | Solver, CLI evidence: Phase 2; Thermal view (plots, table, export, badges): Phase 4 |
 | Multicore | D | Serial vs bounded-thread-pool batch solves with a reproducible benchmark | Worker pool, benchmark, `bench` CLI, Performance view: Phase 5 (report provisional, see [docs/performance.md](docs/performance.md)) |
 | Embedded design | E | MCU / FPGA / JTAG integration design and simulated C++ device adapters | Design doc (cited pin/voltage table, block diagram), simulated adapters, Hardware view: Phase 6 |
-| Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by finite differences | Phase 7 |
+| Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by finite differences | Core, CLI evidence, view: Phase 7; handwritten appendix: to add |
 
 ## Run the packaged app (no build needed)
 
@@ -70,7 +70,8 @@ writable. The command-line tool uses the same C++ core as the GUI:
 | `uniforge_cli inspect FILE...` | Nothing: imports `.stl` / `.csv` files with the GUI's parsers and prints the summary and warnings, or the error with its code, line and hint (exit code 1 if a file is rejected) |
 | `uniforge_cli import-bench [--sizes N,...] [--out DIR]` | `DIR/benchmarks/import_limits.md`, `.csv` (+ `.meta.json`): parse time and peak memory for generated STL/CSV files of 10 k, 100 k, 1 M elements and at the import limits. Writes up to ~0.5 GB of temporary files (one at a time, in the system temp folder) and deletes them. Machine-specific, so not part of `all` |
 | `uniforge_cli bench [--quick \| --report] [--seed S] [--cases C] [--elements N] [--workers 1,2,4] [--status TEXT] [--out DIR]` | Task D benchmark: `DIR/benchmarks/bench_<UTC date>.{md,csv,json}` + `.meta.json` + `_timing/_speedup/_efficiency.svg`. Serial vs parallel batch of rod solves, 1 warm-up + 5 timed reps per p (capped at the logical CPU count), median/min/max, speedup, efficiency, max \|ΔT\| serial vs parallel. `--report` (default): 10 000 cases × 8 000 elements, seed 20261101, T1 ≈ 1 s on an i5-14600K, needs ~1.3 GB RAM; `--quick`: 500 × 1 000. Exit code 3 if agreement fails. Machine-specific; the committed report is regenerated with `tools/bench_report.ps1` |
-| `uniforge_cli all [--out DIR] [--data DATA]` | `fea` + `gen-samples` + a quick bench into `DIR/benchmarks/quick/` |
+| `uniforge_cli backprop [--out DIR]` | Backprop (Task F), brief values: `DIR/csv/backprop_gradients.csv` (analytic vs central FD, ε = 1e-6, pass at ≤ 1e-5), `backprop_update.csv` (one simultaneous step), `loss_curve.csv` (steps 0–100), each with a `.meta.json` sidecar, and `DIR/plots/loss_curve.svg`, `loss_curve_logy.svg` ([docs/backprop.md](docs/backprop.md)) |
+| `uniforge_cli all [--out DIR] [--data DATA]` | `fea` + `backprop` + `gen-samples` + a quick bench into `DIR/benchmarks/quick/` |
 
 `DIR` defaults to `results`, `DATA` to `data`. CSVs, SVGs and sample files are byte-identical on
 every run (only the sidecars carry a timestamp). The tool prints PASS/FAIL verification checks;
@@ -180,6 +181,7 @@ docs/           design documents, thermal_fea.md, AI-use and effort logs, demo s
 
 - [Final build specification](docs/design/UniForge_Final_Build_Spec.md)
 - [Thermal FEA: formulation, verification, debugging log](docs/thermal_fea.md)
+- [Backpropagation: derivation and measured loss curve](docs/backprop.md) and the [handwritten-appendix checklist](docs/appendix_handwritten/CHECKLIST.md)
 - [Sample data provenance](data/PROVENANCE.md) and [measured import limits](results/benchmarks/import_limits.md)
 - [Dependencies and licences](DEPENDENCIES.md)
 - [AI-use log](docs/ai_usage_log.md)
