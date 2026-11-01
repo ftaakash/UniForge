@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configure (preset windows-msvc)
         run: cmake --preset windows-msvc
@@ -40,7 +40,7 @@ jobs:
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/package.ps1 -SkipBuild
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: CandidateID_Workbench
           path: dist/CandidateID_Workbench.zip
@@ -48,7 +48,7 @@ jobs:
 
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ctest-junit
           path: build/ctest-junit.xml
