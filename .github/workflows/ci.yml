@@ -1,5 +1,5 @@
 # Continuous integration (spec §10). Phase 1: Windows build, tests and package.
-# The Linux sanitizer jobs (ASan/UBSan, TSan) and the lint job are added in Phase 5.
+# Phase 5: Linux core + tests under ASan/UBSan and TSan (GCC 13). The lint job comes later.
 name: CI
 
 on:
@@ -53,3 +53,61 @@ jobs:
           name: ctest-junit
           path: build/ctest-junit.xml
           if-no-files-found: ignore
+
+  # Core + CLI + tests on Linux (no GUI): checks GCC portability with -Werror and runs the suite
+  # under AddressSanitizer + UndefinedBehaviorSanitizer.
+  linux-asan:
+    name: Linux / GCC 13 ASan + UBSan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CC: gcc-13
+      CXX: g++-13
+      ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+      UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Lower ASLR entropy (sanitizer runtimes fail with the 24.04 default)
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Configure (preset linux-asan)
+        run: cmake --preset linux-asan
+
+      - name: Build
+        run: cmake --build --preset linux-asan --parallel
+
+      - name: Test
+        run: ctest --preset linux-asan --parallel 4
+
+  # The multicore code (WorkerPool, runners, benchmark) and JobRunner under ThreadSanitizer.
+  linux-tsan:
+    name: Linux / GCC 13 TSan (perf + services)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CC: gcc-13
+      CXX: g++-13
+      TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Lower ASLR entropy (sanitizer runtimes fail with the 24.04 default)
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Configure (preset linux-tsan)
+        run: cmake --preset linux-tsan
+
+      - name: Build perf and services tests
+        run: cmake --build --preset linux-tsan --parallel --target unit_perf numerical_perf unit_services
+
+      - name: Test
+        run: ctest --preset linux-tsan --parallel 4 -R "^(WorkerPool|Runners|Benchmark|BenchmarkReportIO|JobRunner|LogSink)\."
