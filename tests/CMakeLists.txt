@@ -52,6 +52,13 @@ uniforge_add_test(unit_io
 target_compile_definitions(unit_io PRIVATE
     UNIFORGE_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
 
+uniforge_add_test(negative_io
+    LABEL negative
+    SOURCES negative/io/ImportFixtureTest.cpp
+    LIBS uniforge_core)
+target_compile_definitions(negative_io PRIVATE
+    UNIFORGE_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
+
 # The CLI regenerates the committed FEA evidence byte for byte (golden files in golden/fea/).
 add_test(NAME integration.cli_fea_matches_golden
     COMMAND "${CMAKE_COMMAND}"
