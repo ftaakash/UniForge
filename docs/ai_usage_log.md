@@ -63,6 +63,73 @@ The full list of 12 is in `UniForge_UI_Design_System.md` Part 1 and its applicat
 
 ---
 
+## 2026-11-01: Walking skeleton and packaging (Phase 1)
+
+### Prompts (representative)
+1. "Implement Phase 1 (walking skeleton + packaging) of UniForge … following
+   `docs/design/UniForge_Final_Build_Spec.md` … Do not add features from later phases." The brief
+   listed the scope (vendoring, Win32/D3D11 with WARP fallback, theme/fonts/AppShell, JobRunner,
+   Launch.exe, read-only fallback, `package.ps1`, CI, JobRunner tests, docs) and the done criteria.
+2. Commit rules: nothing is committed until I have reviewed the diff.
+
+### Outputs
+- `third_party/` (ImGui 1.93.0-docking, ImPlot 1.1, GoogleTest 1.18.0, Inter, JetBrains Mono),
+  `LICENSES/`, `DEPENDENCIES.md`, `third_party/patches/imgui_impl_dx11_precompiled_shaders.patch`.
+- `src/app/platform/` (Win32Window, D3D11Context, Paths, LaunchTiming, SystemTheme, Resources, Text),
+  `src/app/ui/` (Theme, Fonts, GlyphRanges, AppShell, widgets), `src/app/views/`,
+  `src/app/services/` (JobRunner, ResultStore, LogSink, DemoJob), `src/core/common/`
+  (CancelToken, Progress), `src/launcher/Launch.cpp`.
+- `tools/package.ps1`, `tools/hygiene_scan.ps1`, `.vscode/`, `tools/package/vscode/`,
+  `.github/workflows/ci.yml`, tests under `tests/unit/`.
+
+### Verification
+- Release build with `/W4 /WX`: no warnings. `ctest --preset windows-release`: 13/13 pass; the
+  JobRunner suite was also run 20 times in a row (`--repeat until-fail:20`) to look for races.
+- `tools/package.ps1`: `dumpbin /dependents` shows only Windows DLLs (`Launch.exe`: KERNEL32,
+  USER32; `UniForge.exe`: KERNEL32, USER32, GDI32, ADVAPI32, SHELL32, ole32, IMM32, d3d11,
+  dwmapi; no VC++ runtime, no `d3dcompiler_47.dll`). Hygiene scan clean; ZIP 3.2 MB.
+- The hygiene scan was tested on a planted file with a profile path, an e-mail address and an
+  `api_key = "…"` line: all three were reported and the script exited 1.
+- Extracted the ZIP to a folder whose path contains spaces, `ü`, `ï` and CJK characters and
+  started `Launch.exe`: launch-to-ready 0.139 s from Launch.exe, 0.085 s from UniForge.exe
+  (`logs/launch.log`).
+- `--force-warp`: WARP device ("Microsoft Basic Render Driver"), status-bar warning shown.
+- Read-only package folder (write denied with `icacls`): logs went to `%LOCALAPPDATA%\UniForge`,
+  the warning was logged and shown in the status bar.
+- Renamed `app\` and started `Launch.exe`: the dialog shows the path tried, "The system cannot
+  find the path specified. (error 3)" and the re-extract hint. The non-zero exit code is from
+  reading the code; I could not close the dialog from a script to observe it.
+- Demo job, driven by keyboard and checked with window screenshots: progress and stage update
+  while the UI keeps rendering; cancel stopped the job 13 ms after the request (log); a run that
+  completed (run #2) stayed the published result after the next run (#3) was cancelled.
+- Windows Sandbox (GPU disabled, no VC++ runtime), ZIP extracted to `Desktop\UniForge test ünï`:
+  started with no SmartScreen prompt, ready in 0.090 s from Launch.exe (0.070 s from UniForge.exe);
+  every view opened; demo run completed in 2.22 s; the next run was cancelled 26 ms after the
+  request and the completed result stayed. Screenshots and `launch.log` in `docs/demo/phase1/`.
+  This run surfaced finding 7 below.
+- Not verified: DPI change between monitors (single monitor); the finding-7 fix in a no-GPU
+  Sandbox (a later Sandbox session passed the real GPU through despite `VGpu=Disable`, and my
+  forced restarts of the Sandbox left a broken session that logged off).
+
+### Incorrect / unsuitable suggestions and how they were caught
+| # | What the AI produced | Problem | How it was caught | Resolution |
+|---|---|---|---|---|
+| 1 | `JobRunner::finish()` marked the runner idle, then wrote the job's final log line | A thread that saw "idle" (UI, tests, shutdown) could read the log before the line existed | New test `JobRunner.ExceptionFailsJobAndKeepsPreviousResult` failed | Log first, then publish the idle state |
+| 2 | Device-loss recovery called only `ImGui_ImplDX11_Shutdown()` + `Init()` | In the docking branch the DX11 shutdown calls `DestroyPlatformWindows()`, which also frees the Win32 backend's main-viewport data; the next frame crashed with an access violation | Running the packaged app with `--simulate-device-lost` (Windows Application log: 0xc0000005) | Restart both backends (Win32 + DX11) around the device re-creation; re-tested in Debug and Release |
+| 3 | Keep the stock ImGui DX11 backend: `d3dcompiler_47.dll` ships with Windows, so the DLL check would still pass | Contradicts spec decision D3 (shaders precompiled with fxc) and keeps a run-time shader compiler dependency | My review against the spec | Rejected: small documented patch + fxc build step |
+| 4 | Spec §8.2 wording "glyph ranges … atlas rebuilt on DPI change" applied literally | Since ImGui 1.92 glyphs are rasterised on demand and `GlyphRanges` is ignored by modern backends, so the literal implementation would do nothing | Reading the vendored `imgui_draw.cpp` | Glyph list kept as a contract, checked at start-up and by a unit test against the TTF files; DPI change compacts the glyph cache |
+| 5 | clang-format run with the Phase 0 config | `IncludeBlocks: Regroup` sorted `<shellapi.h>`/`<shlobj.h>` before `<windows.h>` | Reading the reformatted includes before building | Added `IncludeCategories` so `<windows.h>` sorts first |
+| 7 | Software rendering detected only when the *hardware* device request failed | In Windows Sandbox with no GPU driver the hardware request succeeds on the "Microsoft Basic Render Driver" (software), so the app showed "D3D11 HW" and no "Software rendering" warning | Windows Sandbox clean-machine run (GPU disabled), log line `render backend: D3D11 HW · Microsoft Basic Render Driver` | The adapter is now checked (`DXGI_ADAPTER_FLAG_SOFTWARE`, or vendor 0x1414 / device 0x8C) and reported as software rendering. Re-test in a no-GPU Sandbox still pending: the second Sandbox session ignored `VGpu=Disable` and got the real GPU |
+| 6 | First hygiene-scan path rule | Flagged the bare example "`C:\Users`" quoted in a Phase 0 design doc | Package run failed on it | Rule now needs two path segments (any real profile path still matches); design doc left unchanged as evidence |
+
+Two edits made with shell `sed`/`perl` one-liners corrupted files (a stray control character, a
+misplaced function); the build or a parse error caught both, and the files were rewritten.
+
+### My decisions
+- _To fill after review._
+
+---
+
 ## Entry template
 
 ```markdown
