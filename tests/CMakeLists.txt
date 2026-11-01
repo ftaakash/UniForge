@@ -19,6 +19,7 @@ uniforge_add_test(unit_common
         unit/common/CsvWriterTest.cpp
         unit/common/MetaJsonTest.cpp
         unit/common/ResultTest.cpp
+        unit/common/RngTest.cpp
         unit/common/SvgPlotTest.cpp
     LIBS uniforge_core)
 
@@ -125,3 +126,17 @@ if(UNIFORGE_BUILD_APP)
             unit/ui/FormatTest.cpp
         LIBS uniforge_viewcore)
 endif()
+# Multicore batch (Task D): Rng/batch/pool units, serial == parallel agreement, benchmark protocol.
+uniforge_add_test(unit_perf
+    LABEL unit
+    SOURCES
+        unit/perf/BatchGeneratorTest.cpp
+        unit/perf/WorkerPoolTest.cpp
+    LIBS uniforge_core)
+
+uniforge_add_test(numerical_perf
+    LABEL numerical
+    SOURCES
+        numerical/perf/BenchmarkTest.cpp
+        numerical/perf/RunnerAgreementTest.cpp
+    LIBS uniforge_core)
