@@ -7,8 +7,10 @@ add_library(uniforge_core STATIC
     common/MetaJson.cpp
     common/Rng.cpp
     common/SvgPlot.cpp
+    hw/Adapters.cpp
     hw/Clock.cpp
     hw/DeviceStateMachine.cpp
+    hw/MockAdapter.cpp
     hw/MockTransport.cpp
     hw/RetryPolicy.cpp
     io/ImportErrors.cpp
