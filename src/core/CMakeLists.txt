@@ -6,6 +6,9 @@ add_library(uniforge_core STATIC
     common/MetaJson.cpp
     common/SvgPlot.cpp
     thermal/Assembler.cpp
-    thermal/RodProblem.cpp)
+    thermal/DirichletBC.cpp
+    thermal/RodProblem.cpp
+    thermal/RodSolver.cpp
+    thermal/ThomasSolver.cpp)
 target_include_directories(uniforge_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
 uniforge_target_defaults(uniforge_core)
