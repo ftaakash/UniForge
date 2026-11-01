@@ -2,8 +2,11 @@
 
 #include <filesystem>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "core/common/Result.hpp"
+#include "core/common/SvgPlot.hpp"
 #include "core/perf/Benchmark.hpp"
 
 namespace uniforge::perf {
@@ -28,7 +31,13 @@ struct ReportProvenance {
 // bench_<date>.md: human-readable report with the same numbers and the method notes.
 [[nodiscard]] std::string benchmarkMarkdown(const BenchmarkReport& r, const ReportProvenance& prov);
 
-// Writes <dir>/<stem>.{json,csv,md} and <stem>.meta.json (spec §9 sidecar), each atomically.
+// SVG plots of the report, as (file suffix, spec): "_timing.svg" (median, min, max and ideal
+// T1/p), "_speedup.svg" (measured vs ideal = p) and "_efficiency.svg".
+[[nodiscard]] std::vector<std::pair<std::string, PlotSpec>> benchmarkPlots(
+    const BenchmarkReport& r);
+
+// Writes <dir>/<stem>.{json,csv,md}, the three <stem>_*.svg plots and <stem>.meta.json
+// (spec §9 sidecar), each atomically.
 Result<void> saveBenchmarkReport(const BenchmarkReport& r, const ReportProvenance& prov,
                                  const std::filesystem::path& dir, const std::string& stem);
 

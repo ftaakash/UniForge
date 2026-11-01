@@ -155,7 +155,8 @@ TEST(BenchmarkReportIO, WritesAllFourFiles) {
     std::error_code ec;
     std::filesystem::remove_all(dir, ec);
     ASSERT_TRUE(saveBenchmarkReport(r.value(), prov, dir, "bench_test").ok());
-    for (const char* ext : {".json", ".csv", ".md", ".meta.json"}) {
+    for (const char* ext : {".json", ".csv", ".md", ".meta.json", "_timing.svg", "_speedup.svg",
+                            "_efficiency.svg"}) {
         EXPECT_TRUE(std::filesystem::exists(dir / (std::string("bench_test") + ext))) << ext;
     }
     std::stringstream text;

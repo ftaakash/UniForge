@@ -8,6 +8,7 @@
 #include "core/common/AtomicFile.hpp"
 #include "core/common/CsvWriter.hpp"
 #include "core/common/MetaJson.hpp"
+#include "core/common/SvgPlot.hpp"
 
 namespace uniforge::perf {
 
@@ -244,6 +245,53 @@ std::string benchmarkMarkdown(const BenchmarkReport& r, const ReportProvenance& 
     return m;
 }
 
+std::vector<std::pair<std::string, PlotSpec>> benchmarkPlots(const BenchmarkReport& r) {
+    std::vector<double> p, median, lo, hi, ideal, speedup, efficiency;
+    for (const BenchRow& row : r.rows) {
+        p.push_back(static_cast<double>(row.workers));
+        median.push_back(row.median);
+        lo.push_back(row.min);
+        hi.push_back(row.max);
+        ideal.push_back(r.rows.front().median / row.workers);
+        speedup.push_back(row.speedup);
+        efficiency.push_back(row.efficiency * 100.0);
+    }
+    const std::string workload = " (" + std::to_string(r.cfg.cases) + " cases x " +
+                                 std::to_string(r.cfg.elements) + " elements)";
+
+    PlotSpec timing;
+    timing.title = "Batch compute time vs workers" + workload;
+    timing.xLabel = "workers p";
+    timing.yLabel = "compute time (s)";
+    timing.series.push_back({"median of 5", p, median, plotcolor::kSeries[0], true, false,
+                             PlotMarker::Circle, 2.0});
+    timing.series.push_back(
+        {"min", p, lo, plotcolor::kSeries[1], true, false, PlotMarker::Triangle, 1.0});
+    timing.series.push_back(
+        {"max", p, hi, plotcolor::kSeries[2], true, false, PlotMarker::Square, 1.0});
+    timing.series.push_back(
+        {"ideal T1/p", p, ideal, plotcolor::kReference, true, true, PlotMarker::None, 1.5});
+
+    PlotSpec speed;
+    speed.title = "Speedup T1/Tp" + workload;
+    speed.xLabel = "workers p";
+    speed.yLabel = "speedup (x)";
+    speed.series.push_back({"measured (medians)", p, speedup, plotcolor::kSeries[0], true, false,
+                            PlotMarker::Circle, 2.0});
+    speed.series.push_back(
+        {"ideal = p", p, p, plotcolor::kReference, true, true, PlotMarker::None, 1.5});
+
+    PlotSpec eff;
+    eff.title = "Parallel efficiency speedup/p" + workload;
+    eff.xLabel = "workers p";
+    eff.yLabel = "efficiency (%)";
+    eff.series.push_back({"measured", p, efficiency, plotcolor::kSeries[0], true, false,
+                          PlotMarker::Circle, 2.0});
+    eff.series.push_back({"ideal 100 %", p, std::vector<double>(p.size(), 100.0),
+                          plotcolor::kReference, true, true, PlotMarker::None, 1.5});
+    return {{"_timing.svg", timing}, {"_speedup.svg", speed}, {"_efficiency.svg", eff}};
+}
+
 Result<void> saveBenchmarkReport(const BenchmarkReport& r, const ReportProvenance& prov,
                                  const std::filesystem::path& dir, const std::string& stem) {
     auto csv = benchmarkCsv(r);
@@ -258,6 +306,13 @@ Result<void> saveBenchmarkReport(const BenchmarkReport& r, const ReportProvenanc
     }
     if (auto w = writeFileAtomic(dir / (stem + ".md"), benchmarkMarkdown(r, prov)); !w) {
         return w;
+    }
+    // A single p (e.g. only the serial baseline) has nothing to plot against.
+    for (const auto& [suffix, spec] : r.rows.size() < 2 ? decltype(benchmarkPlots(r)){}
+                                                         : benchmarkPlots(r)) {
+        if (auto w = saveSvgPlot(spec, dir / (stem + suffix)); !w) {
+            return w;
+        }
     }
 
     MetaJson params;
