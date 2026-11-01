@@ -7,7 +7,9 @@ function(uniforge_target_defaults target)
     if(MSVC)
         # /utf-8: source and execution charset (unit glyphs such as degree signs).
         # /permissive- and /Zc:__cplusplus: standard conformance.
-        target_compile_options(${target} PRIVATE /utf-8 /permissive- /Zc:__cplusplus /EHsc)
+        # Wrapped in COMPILE_LANGUAGE:CXX so rc.exe (resource scripts) never sees them.
+        target_compile_options(${target} PRIVATE
+            "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/permissive-;/Zc:__cplusplus;/EHsc>")
         target_compile_definitions(${target} PRIVATE
             UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
     endif()

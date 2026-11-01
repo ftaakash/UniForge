@@ -2,9 +2,9 @@
 
 function(uniforge_enable_warnings target)
     if(MSVC)
-        target_compile_options(${target} PRIVATE /W4)
+        target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
         if(UNIFORGE_WARNINGS_AS_ERRORS)
-            target_compile_options(${target} PRIVATE /WX)
+            target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/WX>)
         endif()
     else()
         target_compile_options(${target} PRIVATE
