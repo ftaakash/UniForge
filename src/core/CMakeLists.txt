@@ -13,6 +13,9 @@ add_library(uniforge_core STATIC
     io/TextParse.cpp
     io/ThermalCsvParser.cpp
     perf/BatchGenerator.cpp
+    perf/ParallelRunner.cpp
+    perf/SerialRunner.cpp
+    perf/WorkerPool.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp
@@ -23,3 +26,7 @@ add_library(uniforge_core STATIC
     thermal/ThomasSolver.cpp)
 target_include_directories(uniforge_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
 uniforge_target_defaults(uniforge_core)
+
+# The worker pool uses std::thread (pthreads on Linux).
+find_package(Threads REQUIRED)
+target_link_libraries(uniforge_core PUBLIC Threads::Threads)
