@@ -1,0 +1,30 @@
+# Build trees
+/build/
+/out/
+/dist/
+/Testing/
+CMakeUserPresets.json
+
+# IDE / editor state
+.vs/
+*.user
+*.suo
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+# Runtime artefacts written by the app
+logs/
+imgui.ini
+*.dmp
+*.tmp
+
+# Packaging outputs
+*.zip
+*.bundle
+
+# OS noise
+Thumbs.db
+Desktop.ini
+.DS_Store

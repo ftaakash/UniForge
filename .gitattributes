@@ -1,0 +1,22 @@
+# Normalise text to LF in the repository so evidence files are byte-identical across machines.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Engineering data and results are text, compared byte-for-byte in tests
+*.stl text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+*.svg text eol=lf
+
+# Binary assets
+*.ttf binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.ico binary
+*.mp4 binary
