@@ -10,5 +10,5 @@ add_subdirectory(app/services)
 
 if(UNIFORGE_BUILD_APP)
     add_subdirectory(app)
-
+    add_subdirectory(launcher)
 endif()
