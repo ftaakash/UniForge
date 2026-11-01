@@ -69,6 +69,17 @@ add_test(NAME integration.cli_fea_matches_golden
         -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/cli_golden.cmake")
 set_tests_properties(integration.cli_fea_matches_golden PROPERTIES LABELS integration)
 
+# Simulated devices (Task E): ManualClock keeps these instant and deterministic.
+uniforge_add_test(unit_hw
+    LABEL unit
+    SOURCES unit/hw/HwAdapterTest.cpp
+    LIBS uniforge_core)
+
+uniforge_add_test(negative_hw
+    LABEL negative
+    SOURCES negative/hw/HwRecoveryTest.cpp
+    LIBS uniforge_core)
+
 uniforge_add_test(unit_services
     LABEL unit
     SOURCES
