@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstdint>
+#include <filesystem>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "app/platform/D3D11Context.hpp"
 #include "app/platform/LaunchTiming.hpp"
@@ -24,6 +27,7 @@ struct RuntimeInfo {
     platform::LaunchTiming launch;
     bool launchMeasured = false; // set at the first successful Present
     unsigned logicalCpus = 0;
+    std::uint64_t deviceGeneration = 0; // +1 each time the D3D device is recreated
 };
 
 // Everything a view may use. Views run on the UI thread only.
@@ -32,7 +36,11 @@ struct AppContext {
     JobRunner& jobs;
     ResultStore& results;
     const RuntimeInfo& runtime;
-    std::optional<ViewId> navigateTo; // set by a view to switch views after this frame
+    std::optional<ViewId> navigateTo;      // set by a view to switch views after this frame
+    platform::D3D11Context* gfx = nullptr; // UI thread only: offscreen 3D rendering
+    HWND window = nullptr;                 // owner for native file dialogs
+    // Files dropped on the window this frame (Explorer drag-drop); the visible view takes them.
+    std::vector<std::filesystem::path> droppedFiles;
 };
 
 } // namespace uniforge

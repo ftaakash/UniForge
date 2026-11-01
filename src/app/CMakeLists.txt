@@ -62,9 +62,11 @@ add_executable(UniForge WIN32
     main.cpp
     App.cpp
     platform/D3D11Context.cpp
+    platform/FileDialog.cpp
     platform/LaunchTiming.cpp
     platform/Paths.cpp
     platform/Resources.cpp
+    platform/ScreenCapture.cpp
     platform/SystemTheme.cpp
     platform/Text.cpp
     platform/Win32Window.cpp
@@ -73,9 +75,12 @@ add_executable(UniForge WIN32
     ui/Fonts.cpp
     ui/Theme.cpp
     ui/ThemeViz.cpp
+    ui/widgets/DataViews.cpp
+    ui/widgets/Forms.cpp
     ui/widgets/LogPanel.cpp
     ui/widgets/NavRail.cpp
     ui/widgets/StatusBar.cpp
+    ui/widgets/Viewport3D.cpp
     ui/widgets/Widgets.cpp
     views/AboutView.cpp
     views/OverviewView.cpp

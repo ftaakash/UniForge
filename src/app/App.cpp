@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdio>
 #include <fstream>
+#include <shellapi.h> // DragQueryFileW (after windows.h, which App.hpp includes)
 #include <thread>
 
 #include <imgui.h>
@@ -12,6 +13,7 @@
 
 #include "app/BuildInfo.hpp"
 #include "app/platform/Paths.hpp"
+#include "app/platform/ScreenCapture.hpp"
 #include "app/platform/SystemTheme.hpp"
 #include "app/platform/Text.hpp"
 #include "app/ui/Fonts.hpp"
@@ -95,6 +97,10 @@ bool App::startServices() {
 bool App::startWindowAndDevice() {
     platform::Win32Window::Callbacks callbacks;
     callbacks.preTranslate = [this](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+        if (msg == WM_DROPFILES) {
+            takeDroppedFiles(wParam);
+            return true;
+        }
         return imguiStarted_ && ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam) != 0;
     };
     callbacks.onResize = [this](UINT w, UINT h) {
@@ -114,6 +120,7 @@ bool App::startWindowAndDevice() {
         fatal("Could not initialise Direct3D 11.\n\n" + error);
         return false;
     }
+    DragAcceptFiles(window_.handle(), TRUE); // STL/CSV drag-drop onto the Geometry view
     runtime_.render = gfx_.info();
     log_.info("render backend: " + runtime_.render.describe());
     if (runtime_.render.software()) {
@@ -185,6 +192,9 @@ void App::frame() {
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
     AppContext ctx{log_, jobs_, results_, runtime_, std::nullopt};
+    ctx.gfx = &gfx_;
+    ctx.window = window_.handle();
+    ctx.droppedFiles.swap(droppedFiles_);
     shell_.draw(ctx);
     ImGui::Render();
 
@@ -192,6 +202,9 @@ void App::frame() {
     const float clear[4] = {bg.x, bg.y, bg.z, 1.0f};
     gfx_.beginFrame(clear);
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    if (auto capture = platform::takeCaptureRequest()) { // plot PNG export: this exact frame
+        platform::runCapture(gfx_.device(), gfx_.context(), *capture);
+    }
     auto result = gfx_.present();
     ++frames_;
 
@@ -228,6 +241,7 @@ void App::recoverDevice() {
     ImGui_ImplWin32_Init(window_.handle());
     ImGui_ImplDX11_Init(gfx_.device(), gfx_.context());
     runtime_.render = gfx_.info();
+    ++runtime_.deviceGeneration; // views rebuild their own GPU resources
     log_.info("render backend after recovery: " + runtime_.render.describe());
 }
 
@@ -247,6 +261,18 @@ void App::recordFirstPresent() {
                   << " backend=" << (runtime_.render.software() ? "WARP" : "HW") << " adapter=\""
                   << runtime_.render.adapter << "\"\n";
     }
+}
+
+void App::takeDroppedFiles(WPARAM wParam) {
+    const auto drop = reinterpret_cast<HDROP>(wParam);
+    const UINT count = DragQueryFileW(drop, 0xFFFFFFFF, nullptr, 0);
+    for (UINT i = 0; i < count; ++i) {
+        const UINT len = DragQueryFileW(drop, i, nullptr, 0);
+        std::wstring path(len, L' ');
+        DragQueryFileW(drop, i, path.data(), len + 1);
+        droppedFiles_.emplace_back(path);
+    }
+    DragFinish(drop);
 }
 
 void App::fatal(const std::string& what) {

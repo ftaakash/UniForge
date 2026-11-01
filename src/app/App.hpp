@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
+#include <vector>
 
 #include "app/AppContext.hpp"
 #include "app/platform/D3D11Context.hpp"
@@ -35,6 +37,7 @@ private:
     void applyTheme();
     void recordFirstPresent();
     void fatal(const std::string& what);
+    void takeDroppedFiles(WPARAM drop); // WM_DROPFILES wParam (an HDROP)
 
     platform::LaunchOptions options_;
     RuntimeInfo runtime_;
@@ -56,6 +59,7 @@ private:
     bool themePending_ = false;
     bool simulatedLossDone_ = false;
     std::uint64_t frames_ = 0;
+    std::vector<std::filesystem::path> droppedFiles_; // WM_DROPFILES, handed to the next frame
 };
 
 } // namespace uniforge
