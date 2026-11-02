@@ -22,6 +22,7 @@ struct LaunchOptions {
     std::optional<std::int64_t> launchT0; // --launch-t0=<QPC>
     bool forceWarp = false;               // --force-warp: skip the hardware device
     bool simulateDeviceLost = false;      // --simulate-device-lost: exercise recovery once
+    bool simulateCrash = false;           // --simulate-crash: exercise the crash handler
     std::optional<bool> forceDark;        // --theme=light|dark (default: follow Windows)
     std::vector<std::string> unknown;     // ignored arguments, logged
 };

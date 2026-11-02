@@ -55,6 +55,7 @@ software rasteriser) when no hardware Direct3D 11 device is available. The statu
 | `--launch-t0=<QPC>` | Passed by `Launch.exe` to measure launch-to-ready |
 | `--force-warp` | Skip the hardware device and use WARP (tests the clean-machine path) |
 | `--simulate-device-lost` | Treat one Present as `DXGI_ERROR_DEVICE_REMOVED` (tests recovery) |
+| `--simulate-crash` | Raise an unhandled exception after start-up (tests the crash handler: `logs/crash_<pid>.txt` + message box) |
 | `--theme=light` / `--theme=dark` | Override the Windows app-mode theme |
 
 ## Regenerate the evidence (`app\uniforge_cli.exe`)

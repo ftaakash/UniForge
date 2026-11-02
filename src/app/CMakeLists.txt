@@ -61,6 +61,7 @@ configure_file(app.rc.in "${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc" @ONLY)
 add_executable(UniForge WIN32
     main.cpp
     App.cpp
+    platform/CrashHandler.cpp
     platform/D3D11Context.cpp
     platform/FileDialog.cpp
     platform/LaunchTiming.cpp

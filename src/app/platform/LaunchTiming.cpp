@@ -45,6 +45,8 @@ LaunchOptions parseCommandLine() {
             options.forceWarp = true;
         } else if (arg == "--simulate-device-lost") {
             options.simulateDeviceLost = true;
+        } else if (arg == "--simulate-crash") {
+            options.simulateCrash = true;
         } else if (startsWith(arg, "--theme=", value) && (value == "light" || value == "dark")) {
             options.forceDark = (value == "dark");
         } else {

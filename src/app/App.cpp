@@ -12,6 +12,7 @@
 #include <implot.h>
 
 #include "app/BuildInfo.hpp"
+#include "app/platform/CrashHandler.hpp"
 #include "app/platform/Paths.hpp"
 #include "app/platform/ScreenCapture.hpp"
 #include "app/platform/SystemTheme.hpp"
@@ -59,6 +60,10 @@ int App::run() {
     startImGui();
     window_.show();
     log_.info("ui ready, entering frame loop");
+    if (options_.simulateCrash) {
+        log_.warn("--simulate-crash: raising an unhandled exception");
+        platform::simulateCrash();
+    }
 
     while (window_.pumpMessages()) {
         frame();
@@ -74,6 +79,7 @@ bool App::startServices() {
     runtime_.logicalCpus = std::thread::hardware_concurrency();
 
     const auto& paths = runtime_.paths;
+    platform::installCrashHandler(paths.logsDir);
     const bool logOpen = log_.openFile(paths.logsDir / L"uniforge.log");
     log_.info(std::string("UniForge ") + build::kVersion + " (commit " + build::kGitCommit +
               ") starting");
