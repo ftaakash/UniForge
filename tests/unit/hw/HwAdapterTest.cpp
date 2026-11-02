@@ -150,7 +150,8 @@ TEST(HwTelemetry, DeterministicForASeed) {
         for (const auto& d : devices) {
             EXPECT_TRUE(d->connect().ok());
             for (int i = 0; i < 20; ++i) {
-                for (const Telemetry& s : d->readTelemetry().value()) {
+                const std::vector<Telemetry> batch = d->readTelemetry().value();
+                for (const Telemetry& s : batch) {
                     values.push_back(s.value);
                 }
             }

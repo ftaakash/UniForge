@@ -80,7 +80,9 @@ TEST_P(RodSolverMeshes, ThomasMatchesDenseGaussianElimination) {
 }
 
 INSTANTIATE_TEST_SUITE_P(BriefMeshes, RodSolverMeshes, ::testing::Values(1, 2, 10, 20, 40, 80),
-                         [](const auto& info) { return "N" + std::to_string(info.param); });
+                         [](const auto& paramInfo) {
+                             return "N" + std::to_string(paramInfo.param);
+                         });
 
 TEST(RodSolver, PeakIs188Point2AtX0Point42) {
     const TemperaturePeak exact = exactPeak(briefProblem(10));
