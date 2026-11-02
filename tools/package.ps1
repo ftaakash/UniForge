@@ -8,7 +8,7 @@
       2. run the test suite (ctest --preset windows-release)
       3. stage dist\<CandidateId>_Workbench\ with Launch.exe, app\UniForge.exe,
          app\uniforge_cli.exe, regenerate_evidence.cmd, sources, docs, results, licences and
-         the ZIP-specific .vscode configuration
+         the ZIP-specific .vscode configuration, plus git\UniForge.bundle and git\git_log.txt
       4. check with dumpbin /dependents that the executables import only Windows DLLs
       5. run tools\hygiene_scan.ps1 on the staged folder
       6. zip the staged folder
@@ -141,6 +141,27 @@ try {
     $vscode = Join-Path $Stage '.vscode'
     New-Item -ItemType Directory -Path $vscode -Force | Out-Null
     Copy-Item -Path (Join-Path $Root 'tools\package\vscode\*.json') -Destination $vscode
+
+    # Full history for the evaluator (spec §11): a bundle of main and the phase tags, and a
+    # readable log. `git clone git\UniForge.bundle UniForge` restores the repository offline.
+    Write-Step 'Git bundle and log'
+    $gitDir = Join-Path $Stage 'git'
+    New-Item -ItemType Directory -Path $gitDir -Force | Out-Null
+    $bundle = Join-Path $gitDir 'UniForge.bundle'
+    # git reports progress on stderr; with 'Stop', Windows PowerShell 5.1 turns that into an error.
+    $ErrorActionPreference = 'Continue'
+    & git -C $Root bundle create $bundle HEAD main --tags 2>&1 | Out-Null
+    $created = $LASTEXITCODE
+    & git -C $Root bundle verify $bundle 2>&1 | Out-Null
+    $verified = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    if ($created -ne 0) { throw 'git bundle failed (is this a git checkout with a main branch?).' }
+    if ($verified -ne 0) { throw 'git bundle verify failed.' }
+    $log = & git -C $Root log --date=iso-strict --format='%h  %ad  %an  %s' --decorate=no
+    $tags = & git -C $Root tag -n1 --sort=creatordate
+    (@('UniForge commit history (git log, newest first)', '') + $log + @('', 'Tags', '') + $tags) |
+        Set-Content -LiteralPath (Join-Path $gitDir 'git_log.txt') -Encoding utf8
+    Write-Host ("    {0} commits, {1} tags" -f $log.Count, @($tags).Count)
 
     Write-Step 'Check executable dependencies (dumpbin /dependents)'
     $dumpbin = Get-Dumpbin
