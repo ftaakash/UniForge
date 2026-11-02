@@ -54,10 +54,10 @@ TEST(BackpropGradCheck, AllFourParametersPassCentralDifferences) {
     EXPECT_EQ(check.eps, 1e-6);
     EXPECT_EQ(check.tolerance, 1e-5);
     for (int i = 0; i < kParamCount; ++i) {
-        EXPECT_TRUE(check.passEach[static_cast<std::size_t>(i)]) << kParamNames[i];
-        EXPECT_LE(get(check.absDiff, i), 1e-5) << kParamNames[i];
+        EXPECT_TRUE(check.passEach[static_cast<std::size_t>(i)]) << kParamNames[static_cast<std::size_t>(i)];
+        EXPECT_LE(get(check.absDiff, i), 1e-5) << kParamNames[static_cast<std::size_t>(i)];
         // Much tighter in practice: O(ε²) truncation plus ~1e-10 round-off.
-        EXPECT_LE(get(check.absDiff, i), 1e-8) << kParamNames[i];
+        EXPECT_LE(get(check.absDiff, i), 1e-8) << kParamNames[static_cast<std::size_t>(i)];
     }
     EXPECT_TRUE(check.pass);
 }
@@ -69,7 +69,7 @@ TEST(BackpropGradCheck, PassesAwayFromTheBriefPoint) {
     const GradCheck check = centralDiff(p, -1.3, 0.8);
     EXPECT_TRUE(check.pass);
     for (int i = 0; i < kParamCount; ++i) {
-        EXPECT_LE(get(check.absDiff, i), 1e-8) << kParamNames[i];
+        EXPECT_LE(get(check.absDiff, i), 1e-8) << kParamNames[static_cast<std::size_t>(i)];
     }
 }
 

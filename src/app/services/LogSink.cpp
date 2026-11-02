@@ -35,7 +35,7 @@ std::string formatTimestampUtc(std::chrono::system_clock::time_point t) {
 #else
     gmtime_r(&tt, &utc);
 #endif
-    char buf[40];
+    char buf[64]; // room for any int fields: GCC checks the worst case (-Wformat-truncation)
     std::snprintf(buf, sizeof buf, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ", utc.tm_year + 1900,
                   utc.tm_mon + 1, utc.tm_mday, utc.tm_hour, utc.tm_min, utc.tm_sec,
                   static_cast<int>(millis));
