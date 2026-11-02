@@ -1,5 +1,6 @@
 #include "app/ui/widgets/Forms.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 
@@ -233,11 +234,19 @@ RunBarAction runBar(const JobSnapshot& job, const char* jobName, const char* run
             action = RunBarAction::Run;
         }
     }
+    // In a narrow panel the bar wraps to its own line and shrinks to fit; a bar wider than
+    // the panel gets clipped and loses its "100 %" label.
     ImGui::SameLine(0.0f, t.size.space12);
+    float barWidth = ImGui::GetContentRegionAvail().x;
+    if (barWidth < 120.0f * t.dpiScale) {
+        ImGui::NewLine();
+        barWidth = ImGui::GetContentRegionAvail().x;
+    }
+    barWidth = std::min(barWidth, 220.0f * t.dpiScale);
     const float fraction = mine ? static_cast<float>(job.fraction) : 0.0f;
     char overlay[32];
     std::snprintf(overlay, sizeof overlay, "%.0f %%", fraction * 100.0f);
-    ImGui::ProgressBar(fraction, ImVec2(220.0f * t.dpiScale, 0.0f), overlay);
+    ImGui::ProgressBar(fraction, ImVec2(barWidth, 0.0f), overlay);
     if (mine && running) {
         ImGui::SameLine(0.0f, t.size.space12);
         ImGui::AlignTextToFramePadding();

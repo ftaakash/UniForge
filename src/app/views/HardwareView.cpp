@@ -171,9 +171,11 @@ void HardwareView::drawDeviceCard(int index, const DeviceSnapshot& d, bool busy)
             const bool numeric = tm.channel != "idcode" && tm.channel != "done";
             if (numeric && c < d.history.size() && d.history[c].size() > 1) {
                 const std::vector<float>& h = d.history[c];
+                ImGui::PushID(static_cast<int>(c));
                 ImGui::PlotLines("##spark", h.data(), static_cast<int>(h.size()), 0, nullptr,
                                  FLT_MAX, FLT_MAX,
                                  ImVec2(ImGui::GetContentRegionAvail().x, 28.0f * t.dpiScale));
+                ImGui::PopID();
             }
         }
     }
