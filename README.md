@@ -200,6 +200,7 @@ docs/           report/, design/, task notes (thermal_fea, performance, embedded
 - **[Report (PDF, 5 pages)](docs/report/report.pdf)**, [ownership statement](docs/ownership.md),
   [walkthrough for the verification discussion](docs/walkthrough.md), [demo script](docs/demo_script.md)
 - [Screenshots of every view](docs/demo/screenshots/) and [edge-case runs](results/edge_cases.md)
+- Demo video: `RA2311042010060_Demo.mp4` (submitted alongside the ZIP; 57 MB, too large for the repository), recorded from the packaged app following the demo script
 - [Final build specification](docs/design/UniForge_Final_Build_Spec.md)
 - [Thermal FEA: formulation, verification, debugging log](docs/thermal_fea.md)
 - [Multicore performance analysis](docs/performance.md) and [embedded integration design](docs/embedded_design.md)

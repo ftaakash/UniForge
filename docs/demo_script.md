@@ -1,6 +1,7 @@
 # Demo script (3–5 minutes)
 
-Recorded from the extracted package `RA2311042010060_Workbench`. Screen at 100 % scaling;
+The recording is submitted as `RA2311042010060_Demo.mp4` next to the ZIP (not in the repository:
+57 MB). Recorded from the extracted package `RA2311042010060_Workbench`. Screen at 100 % scaling;
 1600 × 1000 window. Times are targets.
 
 ## Before recording
