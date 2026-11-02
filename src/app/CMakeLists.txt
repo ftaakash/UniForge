@@ -89,7 +89,6 @@ add_executable(UniForge WIN32
     views/BackpropView.cpp
     views/OverviewView.cpp
     views/PerformanceView.cpp
-    views/PlaceholderView.cpp
     views/ThermalView.cpp
     app.manifest
     "${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc"

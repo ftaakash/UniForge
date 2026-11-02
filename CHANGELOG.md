@@ -14,6 +14,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   spaces and non-ASCII characters (ready in 0.122 s), `--force-warp`, a read-only package folder
   (logs fall back to `%LOCALAPPDATA%\UniForge`), the simulated crash, and `uniforge_cli all`
   into a non-ASCII output folder.
+- Overview: rows D–F now show live status (D: last benchmark pass/fail and speedup; E: the
+  simulated-device notice; F: the brief's gradient check, computed on the spot) instead of
+  "Pending · Phase 5/6/7". The unused `PlaceholderView` is removed.
 - Not done (cut for the deadline): 200 % DPI and full keyboard pass, high-contrast check.
 
 ### Integration (Phases 4–7)

@@ -12,6 +12,8 @@
 #include "app/services/ResultStore.hpp"
 #include "app/ui/Theme.hpp"
 #include "app/ui/widgets/Widgets.hpp"
+#include "core/ml/GradientCheck.hpp"
+#include "core/perf/Benchmark.hpp"
 
 namespace uniforge::views {
 
@@ -42,7 +44,8 @@ constexpr TaskRow kTasks[] = {
      ViewId::Backprop},
 };
 
-// Live status where the task has data in this session, "Pending" otherwise.
+// Live status: A-D from this session's results ("Pending" until there are some), E the
+// simulated-device notice, F the brief's gradient check computed on the spot.
 void drawTaskStatus(const AppContext& ctx, const TaskRow& row) {
     switch (row.view) {
     case ViewId::About:
@@ -80,6 +83,32 @@ void drawTaskStatus(const AppContext& ctx, const TaskRow& row) {
             return;
         }
         ui::statusLabel(ui::Status::Pending, "Pending", "run the study");
+        return;
+    }
+    case ViewId::Performance: {
+        const auto bench = ctx.results.benchmark.get();
+        if (bench && !bench->rows.empty()) {
+            const perf::BenchRow& last = bench->rows.back();
+            const bool pass = bench->agreementPass && bench->orderPreserved;
+            char detail[96];
+            std::snprintf(detail, sizeof detail, "speedup %.2f at p = %d, serial = parallel",
+                          last.speedup, last.workers);
+            ui::statusLabel(pass ? ui::Status::Success : ui::Status::Error, pass ? "Pass" : "Fail",
+                            detail);
+            return;
+        }
+        ui::statusLabel(ui::Status::Pending, "Pending", "run a benchmark");
+        return;
+    }
+    case ViewId::Hardware:
+        ui::statusLabel(ui::Status::Simulated, "Simulated", "3 mock devices, no hardware needed");
+        return;
+    case ViewId::Backprop: {
+        // The brief's check is a few microseconds of work, so it runs live here.
+        const ml::BackpropProblem brief;
+        const ml::GradCheck check = ml::centralDiff(brief.init, brief.x, brief.y);
+        ui::statusLabel(check.pass ? ui::Status::Success : ui::Status::Error,
+                        check.pass ? "Pass" : "Fail", "analytic = central differences, 4/4");
         return;
     }
     default:
