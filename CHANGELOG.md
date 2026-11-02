@@ -5,37 +5,61 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Phase 4: Visual views (Tasks B and C UI)
-- Geometry view (Task B): STL and nodal-CSV file fields (native Open dialog, Explorer
-  drag-drop), "Load samples" for both files in `data/`, imports on the job thread with
-  progress and cancel; a failed or cancelled import keeps the previous model and shows the
-  parser's message + hint (with line number) in an alert. Show mesh / points, point size [px],
-  `◇ SYNTHETIC DATA` chip, NodeInspector (id, x/y/z [m], T [°C]), import summary, badges
-  STL valid / CSV valid / non-finite rejected.
-- 3D viewport (`render/`): offscreen D3D11 target shown with `ImGui::Image`, MSAA 4× when the
-  device supports it (also on WARP); flat-shaded mesh with optional wireframe; instanced
-  camera-facing point quads coloured with an inferno 1D texture; z-up orbit camera (LMB orbit,
-  MMB / Shift+LMB pan, wheel zoom to the cursor, `F` fit = bbox sphere in the narrower FOV,
-  `R` reset, `W` wireframe); axes triad, legend `T [°C]` (min/max + 5 ticks), bbox dimensions;
-  CPU picking of the nearest node within 6 px with a highlight ring. Mesh and points are
-  recentred on their bbox in double before the float conversion; GPU resources are rebuilt
-  after a device loss. Shaders are fxc-compiled at build time.
-- Thermal Analysis view (Task C): parameters with ranges, brief defaults and ↺ reset; mesh
-  checkboxes 10/20/40/80; RunBar (`Ctrl+Enter` / `Esc`); ImPlot tabs T vs x (Okabe–Ito colour
-  and marker fixed per N, exact solution dashed on top), max midpoint error vs h (log–log with a
-  dashed slope-2 guide) and midpoint errors along x; convergence table (mono, right-aligned,
-  sortable, `Ctrl+C` TSV, pass column); Export ▾ convergence / nodal / midpoint CSV (atomic,
-  `%.17g`) and the current plot as PNG; badges midpoint error = qh²/8k (≤ 1e-9 °C), order ≈ 2
-  (± 0.01), energy balance (≤ 1e-9 W), T_max @ x* (within h/2, nodal error ≤ 1e-9 °C), each
-  with measured value and tolerance in the tooltip.
-- Overview: rows A–F; A, B and C show live status, the rest "Pending".
-- Widgets (`ui/widgets/`): VerificationBadge, InlineAlert, ParamField, FileField, RunBar,
-  DataTable, ExportMenu, ColorLegend, NodeInspector, Viewport3D; `ui/Format` (spec §8.3) and
-  `ui/ThemeViz` (data-viz colour tokens).
-- Tests: 34 new (210 in total): number formatting, camera fit/orbit/pan/zoom maths, picking
-  (radius, nearest, depth tie-break, behind camera), PNG encoder, and the UI-less import →
-  render-model pipeline and study job/exports (`integration_views`).
-- Not done: Overview "Run all self-checks" (cut), screenshots (see `docs/demo/phase4/README.md`).
+### Integration (Phases 4–7)
+- All four phase branches merged. `AppShell` registers every view; the CLI `all` runs fea,
+  backprop, gen-samples and a quick bench and returns the worst exit code.
+- Fixed: Hardware telemetry sparklines shared one ImGui ID, which triggered Dear ImGui's
+  "conflicting ID" error when a device was connected.
+- Fixed: the run bar's progress bar was wider than narrow panels and lost its label (a blank
+  blue bar after a Thermal study). It now shrinks to fit and wraps when there is no room.
+- Fixed: `tests/CMakeLists.txt` lost a closing line in the merge.
+- Package renamed to `RA2311042010060_Workbench.zip`; licence holder set to Aakash G S.
+
+### Phase 7: Backpropagation (Task F)
+- `core/ml`: `Params`, `Grads`, `Forward`, `forward` (z = wx + b, h = tanh z, ŷ = vh + c,
+  J = ½e²), hand-derived `backward` (dc = e, dv = e·h, db = e·v·(1 − h²), dw = db·x; no
+  autodiff), `sgdStep` (simultaneous update), `centralDiff` (ε = 1e-6, per-parameter pass at
+  |Δ| ≤ 1e-5, NaN fails), `train` (steps + 1 losses), `BackpropProblem::validate()`.
+- Measured: h = ŷ = 0.462117, e = −1.537883, J = 1.182542; dw = db = −1.209464,
+  dv = −0.710682, dc = −1.537883; max |analytic − numeric| = 1.13e-10; after one update
+  w = 0.620946, b = 0.120946, v = 1.071068, c = 0.153788. Loss decreases at every one of the
+  100 steps, 1.182542 → 1.70e-20, with the per-step ratio settling at 0.634606.
+- `uniforge_cli backprop`: `results/csv/backprop_gradients.csv`, `backprop_update.csv`,
+  `loss_curve.csv` (+ `.meta.json`), `results/plots/loss_curve.svg`, `loss_curve_logy.svg`;
+  prints the tables, a loss summary and PASS/FAIL checks. `all` now runs `fea` + `backprop` +
+  `gen-samples`.
+- Backprop view: inputs with validation and reset to the brief, forward / gradients / update
+  cards, ImPlot loss curve with log-y toggle, explanation computed from the run, badges
+  "4/4 FD checks", "Update matches brief", "Loss non-increasing".
+- `SvgPlot`: log axes spanning more than 4 decades keep powers of ten only (thinned to ≤ ~10
+  labels); plots up to 4 decades are byte-identical to before.
+- Docs: `docs/backprop.md` (derivation, FD error budget, measured loss curve: rate, tanh
+  saturation), `docs/appendix_handwritten/CHECKLIST.md` and a placeholder README (scans to
+  come from me).
+- Tests: 17 new (193 in total): `numerical_ml` (11), `negative_ml` (4), SvgPlot wide log axis,
+  `integration.cli_backprop_matches_golden` (CSVs = `tests/golden/backprop/`, `backprop` and
+  `all` byte-identical).
+
+### Phase 6: Embedded integration (Task E)
+- `docs/embedded_design.md` + `docs/embedded_block_diagram.svg` (light/dark): interface and
+  pin-voltage table for NUCLEO-F446RE, Basys 3 and J-Link EDU Mini, every value cited to the
+  vendor document (ST UM1724 Rev 17, ST DS10693 Rev 11, Digilent Basys 3 reference manual,
+  SEGGER EDU Mini specification and knowledge base) with unverified assumptions marked; why a
+  JTAG probe is not a compute board; the ST-LINK vs external-probe ownership conflict (CN2
+  jumpers); safe integration plan; limitations. All three boards kept. The EDU Mini's 9-pin
+  0.05" connector, 1.8/3.3 V interface and Cortex-M scope make the Nucleo's STM32F446 its target.
+- `core/hw`: `IDeviceAdapter`, `MockTransport` (seed, latency, jitter, `FailMode` None /
+  TimeoutOnce / TimeoutAlways / Disconnect), `DeviceStateMachine`, `RetryPolicy` (250 ms, 3
+  retries at 100/200/400 ms, "recovered after n retries" or Faulted with a hint), injectable
+  `SystemClock` / `ManualClock`, `McuAdapter` (vdd_V, die_temp_C), `FpgaAdapter` (xadc_temp_C,
+  done), `JtagAdapter` (vtref_V, idcode), `discoverDevices()`. Every adapter is `simulated`.
+- `DeviceManager` service (own thread, 10 Hz tick, command queue, 12 s telemetry ring buffers)
+  and the Hardware view (simulated banner, Discover, three DeviceCards with SIMULATED chip, state,
+  capabilities, telemetry + sparkline, Connect/Disconnect, Inject timeout, Retry/Reset fault,
+  retry trail, "Design notes →").
+- Tests: 23 new (199 in total): `unit_hw`, `negative_hw` (ManualClock, instant) and
+  `DeviceManager.*`.
+
 ### Phase 5: Multicore (Task D)
 - `core/common/Rng`: `std::mt19937_64` with UniForge's own [a, b) mapping (top 53 bits × 2⁻⁵³),
   so batches are identical on MSVC and GCC; pinned test vectors.
@@ -68,49 +92,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CI: `linux-asan` (GCC 13, ASan + UBSan, full suite) and `linux-tsan` (perf + services tests)
   on ubuntu-24.04.
 - Tests: 39 new (215 in total): `unit_perf`, `numerical_perf` and Rng tests in `unit_common`.
-### Phase 6: Embedded integration (Task E)
-- `docs/embedded_design.md` + `docs/embedded_block_diagram.svg` (light/dark): interface and
-  pin-voltage table for NUCLEO-F446RE, Basys 3 and J-Link EDU Mini, every value cited to the
-  vendor document (ST UM1724 Rev 17, ST DS10693 Rev 11, Digilent Basys 3 reference manual,
-  SEGGER EDU Mini specification and knowledge base) with unverified assumptions marked; why a
-  JTAG probe is not a compute board; the ST-LINK vs external-probe ownership conflict (CN2
-  jumpers); safe integration plan; limitations. All three boards kept. The EDU Mini's 9-pin
-  0.05" connector, 1.8/3.3 V interface and Cortex-M scope make the Nucleo's STM32F446 its target.
-- `core/hw`: `IDeviceAdapter`, `MockTransport` (seed, latency, jitter, `FailMode` None /
-  TimeoutOnce / TimeoutAlways / Disconnect), `DeviceStateMachine`, `RetryPolicy` (250 ms, 3
-  retries at 100/200/400 ms, "recovered after n retries" or Faulted with a hint), injectable
-  `SystemClock` / `ManualClock`, `McuAdapter` (vdd_V, die_temp_C), `FpgaAdapter` (xadc_temp_C,
-  done), `JtagAdapter` (vtref_V, idcode), `discoverDevices()`. Every adapter is `simulated`.
-- `DeviceManager` service (own thread, 10 Hz tick, command queue, 12 s telemetry ring buffers)
-  and the Hardware view (simulated banner, Discover, three DeviceCards with SIMULATED chip, state,
-  capabilities, telemetry + sparkline, Connect/Disconnect, Inject timeout, Retry/Reset fault,
-  retry trail, "Design notes →").
-- Tests: 23 new (199 in total): `unit_hw`, `negative_hw` (ManualClock, instant) and
-  `DeviceManager.*`.
-### Phase 7: Backpropagation (Task F)
-- `core/ml`: `Params`, `Grads`, `Forward`, `forward` (z = wx + b, h = tanh z, ŷ = vh + c,
-  J = ½e²), hand-derived `backward` (dc = e, dv = e·h, db = e·v·(1 − h²), dw = db·x; no
-  autodiff), `sgdStep` (simultaneous update), `centralDiff` (ε = 1e-6, per-parameter pass at
-  |Δ| ≤ 1e-5, NaN fails), `train` (steps + 1 losses), `BackpropProblem::validate()`.
-- Measured: h = ŷ = 0.462117, e = −1.537883, J = 1.182542; dw = db = −1.209464,
-  dv = −0.710682, dc = −1.537883; max |analytic − numeric| = 1.13e-10; after one update
-  w = 0.620946, b = 0.120946, v = 1.071068, c = 0.153788. Loss decreases at every one of the
-  100 steps, 1.182542 → 1.70e-20, with the per-step ratio settling at 0.634606.
-- `uniforge_cli backprop`: `results/csv/backprop_gradients.csv`, `backprop_update.csv`,
-  `loss_curve.csv` (+ `.meta.json`), `results/plots/loss_curve.svg`, `loss_curve_logy.svg`;
-  prints the tables, a loss summary and PASS/FAIL checks. `all` now runs `fea` + `backprop` +
-  `gen-samples`.
-- Backprop view: inputs with validation and reset to the brief, forward / gradients / update
-  cards, ImPlot loss curve with log-y toggle, explanation computed from the run, badges
-  "4/4 FD checks", "Update matches brief", "Loss non-increasing".
-- `SvgPlot`: log axes spanning more than 4 decades keep powers of ten only (thinned to ≤ ~10
-  labels); plots up to 4 decades are byte-identical to before.
-- Docs: `docs/backprop.md` (derivation, FD error budget, measured loss curve: rate, tanh
-  saturation), `docs/appendix_handwritten/CHECKLIST.md` and a placeholder README (scans to
-  come from me).
-- Tests: 17 new (193 in total): `numerical_ml` (11), `negative_ml` (4), SvgPlot wide log axis,
-  `integration.cli_backprop_matches_golden` (CSVs = `tests/golden/backprop/`, `backprop` and
-  `all` byte-identical).
+
+### Phase 4: Visual views (Tasks B and C UI)
+- Geometry view (Task B): STL and nodal-CSV file fields (native Open dialog, Explorer
+  drag-drop), "Load samples" for both files in `data/`, imports on the job thread with
+  progress and cancel; a failed or cancelled import keeps the previous model and shows the
+  parser's message + hint (with line number) in an alert. Show mesh / points, point size [px],
+  `◇ SYNTHETIC DATA` chip, NodeInspector (id, x/y/z [m], T [°C]), import summary, badges
+  STL valid / CSV valid / non-finite rejected.
+- 3D viewport (`render/`): offscreen D3D11 target shown with `ImGui::Image`, MSAA 4× when the
+  device supports it (also on WARP); flat-shaded mesh with optional wireframe; instanced
+  camera-facing point quads coloured with an inferno 1D texture; z-up orbit camera (LMB orbit,
+  MMB / Shift+LMB pan, wheel zoom to the cursor, `F` fit = bbox sphere in the narrower FOV,
+  `R` reset, `W` wireframe); axes triad, legend `T [°C]` (min/max + 5 ticks), bbox dimensions;
+  CPU picking of the nearest node within 6 px with a highlight ring. Mesh and points are
+  recentred on their bbox in double before the float conversion; GPU resources are rebuilt
+  after a device loss. Shaders are fxc-compiled at build time.
+- Thermal Analysis view (Task C): parameters with ranges, brief defaults and ↺ reset; mesh
+  checkboxes 10/20/40/80; RunBar (`Ctrl+Enter` / `Esc`); ImPlot tabs T vs x (Okabe–Ito colour
+  and marker fixed per N, exact solution dashed on top), max midpoint error vs h (log–log with a
+  dashed slope-2 guide) and midpoint errors along x; convergence table (mono, right-aligned,
+  sortable, `Ctrl+C` TSV, pass column); Export ▾ convergence / nodal / midpoint CSV (atomic,
+  `%.17g`) and the current plot as PNG; badges midpoint error = qh²/8k (≤ 1e-9 °C), order ≈ 2
+  (± 0.01), energy balance (≤ 1e-9 W), T_max @ x* (within h/2, nodal error ≤ 1e-9 °C), each
+  with measured value and tolerance in the tooltip.
+- Overview: rows A–F; A, B and C show live status, the rest "Pending".
+- Widgets (`ui/widgets/`): VerificationBadge, InlineAlert, ParamField, FileField, RunBar,
+  DataTable, ExportMenu, ColorLegend, NodeInspector, Viewport3D; `ui/Format` (spec §8.3) and
+  `ui/ThemeViz` (data-viz colour tokens).
+- Tests: 34 new (210 in total): number formatting, camera fit/orbit/pan/zoom maths, picking
+  (radius, nearest, depth tie-break, behind camera), PNG encoder, and the UI-less import →
+  render-model pipeline and study job/exports (`integration_views`).
+- Not done: Overview "Run all self-checks" (cut), screenshots (see `docs/demo/phase4/README.md`).
 
 ### Phase 3: Importers (Task B data side)
 - `core/io`: `LineReader` (fixed 64 KB buffer, LF/CRLF, UTF-8 BOM, progress = bytes read / size,

@@ -24,7 +24,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$CandidateId = 'CandidateID',
+    [string]$CandidateId = 'RA2311042010060',
     [switch]$SkipBuild
 )
 

@@ -18,9 +18,9 @@
       "name": "Run packaged (dist)",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/CandidateID_Workbench/Launch.exe",
+      "program": "${workspaceFolder}/dist/RA2311042010060_Workbench/Launch.exe",
       "args": [],
-      "cwd": "${workspaceFolder}/dist/CandidateID_Workbench",
+      "cwd": "${workspaceFolder}/dist/RA2311042010060_Workbench",
       "stopAtEntry": false,
       "console": "internalConsole"
     }

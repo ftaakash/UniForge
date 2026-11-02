@@ -42,8 +42,8 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v7
         with:
-          name: CandidateID_Workbench
-          path: dist/CandidateID_Workbench.zip
+          name: RA2311042010060_Workbench
+          path: dist/RA2311042010060_Workbench.zip
           if-no-files-found: error
 
       - name: Upload test report

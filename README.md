@@ -24,7 +24,7 @@ numerics, file processing and concurrency are written in C++17.
 
 ## Run the packaged app (no build needed)
 
-1. Extract `CandidateID_Workbench.zip` anywhere (paths with spaces or non-ASCII characters are fine).
+1. Extract `RA2311042010060_Workbench.zip` anywhere (paths with spaces or non-ASCII characters are fine).
 2. Double-click `Launch.exe`.
 
 No installer, administrator rights, internet connection, VC++ redistributable or GPU driver is
@@ -131,10 +131,10 @@ The executables land in `build/windows-msvc/bin/Release/`. Run one test label wi
 powershell -ExecutionPolicy Bypass -File tools/package.ps1
 ```
 
-This configures, builds Release, runs the tests, stages `dist/CandidateID_Workbench/`, checks with
+This configures, builds Release, runs the tests, stages `dist/RA2311042010060_Workbench/`, checks with
 `dumpbin /dependents` that the executables import only Windows DLLs, runs the hygiene scan
 (`tools/hygiene_scan.ps1`: absolute paths, e-mail addresses, secrets) and writes
-`dist/CandidateID_Workbench.zip`. The repository's VS Code configuration has "Run packaged (dist)"
+`dist/RA2311042010060_Workbench.zip`. The repository's VS Code configuration has "Run packaged (dist)"
 to start that staged copy.
 
 Linux (core library and tests only, used by CI from Phase 5):

@@ -10,7 +10,7 @@
     and path checks (they carry upstream author contacts) but are still checked for secrets.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tools\hygiene_scan.ps1 -Path dist\CandidateID_Workbench
+    powershell -ExecutionPolicy Bypass -File tools\hygiene_scan.ps1 -Path dist\RA2311042010060_Workbench
 #>
 [CmdletBinding()]
 param(

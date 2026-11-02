@@ -35,8 +35,8 @@
     {
       "label": "Run packaged (dist)",
       "type": "process",
-      "command": "${workspaceFolder}/dist/CandidateID_Workbench/Launch.exe",
-      "options": { "cwd": "${workspaceFolder}/dist/CandidateID_Workbench" },
+      "command": "${workspaceFolder}/dist/RA2311042010060_Workbench/Launch.exe",
+      "options": { "cwd": "${workspaceFolder}/dist/RA2311042010060_Workbench" },
       "problemMatcher": []
     }
   ]

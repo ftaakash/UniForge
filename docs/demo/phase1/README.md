@@ -21,7 +21,7 @@ driver (it renders with WARP), so it is a good stand-in for the evaluator's clea
 
 1. Enable it once: *Turn Windows features on or off → Windows Sandbox*, then restart.
 2. Build the package: `powershell -ExecutionPolicy Bypass -File tools\package.ps1`.
-3. Start *Windows Sandbox*, copy `dist\CandidateID_Workbench.zip` into it (copy/paste works).
+3. Start *Windows Sandbox*, copy `dist\RA2311042010060_Workbench.zip` into it (copy/paste works).
 4. In the Sandbox, extract the ZIP (right-click → *Extract All*) and double-click `Launch.exe`.
    If SmartScreen appears: *More info → Run anyway* (note it).
 5. Check and screenshot:
