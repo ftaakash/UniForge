@@ -170,5 +170,6 @@ add_test(NAME integration.cli_backprop_matches_golden
         "-DCLI=$<TARGET_FILE:uniforge_cli>"
         "-DGOLDEN_DIR=${CMAKE_CURRENT_SOURCE_DIR}/golden/backprop"
         "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli_backprop_$<CONFIG>"
+        "-DBYTE_EXACT=$<BOOL:${MSVC}>"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/backprop_golden.cmake")
 set_tests_properties(integration.cli_backprop_matches_golden PROPERTIES LABELS integration)

@@ -4,6 +4,10 @@
 #   3. the backprop CSVs and SVGs of run 1 and run 2 are identical (only .meta.json differ)
 # Run by CTest as: cmake -DCLI=... -DGOLDEN_DIR=... -DWORK_DIR=... -P backprop_golden.cmake
 
+# BYTE_EXACT=ON (MSVC builds, where the committed evidence was produced): step 2 compares bytes.
+# Elsewhere the CSVs hold tanh() values printed with %.17g, and glibc's tanh may differ from
+# MSVC's in the last bit, so step 2 is skipped there; numerical_ml checks the values to 1e-6 on
+# every platform, and step 3 still requires identical output from both commands.
 foreach(var CLI GOLDEN_DIR WORK_DIR)
     if(NOT DEFINED ${var})
         message(FATAL_ERROR "backprop_golden.cmake: -D${var}=... is required")
@@ -32,6 +36,9 @@ if(NOT golden_count EQUAL 3)
 endif()
 
 set(failures "")
+if(NOT BYTE_EXACT)
+    set(golden_files "")
+endif()
 foreach(name IN LISTS golden_files)
     execute_process(
         COMMAND "${CMAKE_COMMAND}" -E compare_files "${GOLDEN_DIR}/${name}" "${WORK_DIR}/run1/csv/${name}"
@@ -57,6 +64,9 @@ endforeach()
 
 if(failures)
     message(FATAL_ERROR "Backprop evidence check failed:\n${failures}")
+endif()
+if(NOT BYTE_EXACT)
+    set(golden_count "0 (byte comparison is MSVC-only)")
 endif()
 message(STATUS "Backprop evidence OK: ${golden_count} CSVs match golden files; "
                "${generated_count} CSV/SVG files identical in `backprop` and `all`")
