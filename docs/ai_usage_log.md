@@ -655,6 +655,44 @@ Tool: Claude Code (Claude Opus 5.5).
 
 ---
 
+## 2026-11-02: Delivery (Phase 9)
+Tool: Claude Code (Claude Opus 5.5).
+
+### Prompts (representative)
+- "Works, start Phase 8/9."
+
+### Outputs
+- `docs/report/report.html` → `report.pdf`, `docs/ownership.md`, `docs/walkthrough.md`,
+  `docs/demo_script.md`, the README rewrite, `tools/build_report.ps1`, the git bundle step in
+  `tools/package.ps1`.
+- Screenshots in `docs/demo/screenshots/`: the AI drove the packaged app through each view
+  (load samples, run the study, run the report benchmark, connect devices and inject a timeout)
+  and captured the window.
+
+### Verification
+- Every number in the report was checked against the committed evidence files
+  (`results/csv/convergence.csv`, `results/benchmarks/*.md`, `backprop_gradients.csv`,
+  `loss_curve.csv`). The page count is checked by `build_report.ps1` (5 of at most 6 pages).
+- The PDF contains no local paths (checked with grep).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first report draft printed at 8 pages, over the 6-page limit, because of full-width
+  screenshots and forced page breaks. Rebuilt with paired figures: 5 pages.
+- The first draft said "no exceptions cross module boundaries". This was removed because it
+  was not checked against the code.
+- While taking the screenshots, the Overview still showed rows D–F as "Pending · Phase 5/6/7".
+  Phase 4 wrote that before those views existed. It now shows live status (Phase 8 commit).
+- A `sed` replacement containing `\U` upper-cased part of a comment in `package.ps1` (GNU sed
+  case conversion). It was caught on review and fixed before commit.
+
+### My decisions
+- Kept the report to the brief's sections, and referenced the detailed notes rather than
+  repeating them.
+- Screenshots use the light theme, as the spec says, and show real runs, not mock-ups.
+- I record the demo and fill in the effort hours myself.
+
+---
+
 ## Entry template
 
 ```markdown

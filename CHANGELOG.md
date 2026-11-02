@@ -3,7 +3,19 @@
 All notable changes are recorded here, one section per development phase.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.0.0] - 2026-11-02
+
+### Phase 9: Delivery
+- Report `docs/report/report.pdf` (5 pages, A4), built from `docs/report/report.html` with
+  headless Edge by `tools/build_report.ps1`: design choices, import limits, FEA verification,
+  benchmark and its analysis, embedded design, backprop check, tests, limitations, AI use.
+- `docs/ownership.md` (original vs reused work, AI assistance), `docs/walkthrough.md` (where is X,
+  how to change Y, how to rerun Z, numbers to know), `docs/demo_script.md` (4-minute demo).
+- Screenshots of every view from the packaged app in `docs/demo/screenshots/`.
+- README rewritten for the release: status, evidence per task, package contents, limitations,
+  documentation index.
+- `package.ps1` adds `git/UniForge.bundle` (verified with `git bundle verify`) and
+  `git/git_log.txt` to the package.
 
 ### Phase 8: Hardening (trimmed)
 - Crash handler (`platform/CrashHandler`): an unhandled SEH exception or `std::terminate`

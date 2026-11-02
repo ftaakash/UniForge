@@ -13,5 +13,8 @@ the end of each working session; planned hours come from the build specification
 | 2026-11-02 | 5 Multicore | Rng + batch generator, worker pool and runners, benchmark harness + system info, `bench` CLI, Performance view, 39 tests, Linux sanitizer CI, provisional report, performance.md; review | 5 | _to fill_ |
 | 2026-11-02 | 6 Embedded | Datasheet research (UM1724, DS10693, Basys 3 RM, SEGGER), design doc + block diagram, core/hw mocks + retry policy, DeviceManager + Hardware view, 23 tests | 4 | _to fill_ |
 | 2026-11-02 | 7 Backprop | core/ml (forward, backward, update, FD check, trainer), value/FD/update/loss tests, CLI backprop + golden test, Backprop view, backprop.md, appendix checklist; review; handwritten appendix | 2.5 | _to fill_ |
+| 2026-11-02 | Integration | Merge of Phases 4–7, manual test of the package, three UI fixes, Candidate ID, CHANGELOG/AI-log order; review | – | _to fill_ |
+| 2026-11-02 | 8 Hardening (trimmed) | Crash handler, edge-case runs (Unicode path, read-only folder, WARP, crash), Overview live status | 3.5 | _to fill_ |
+| 2026-11-02 | 9 Delivery | Screenshots, report (5 pages), ownership statement, walkthrough, demo script, README, git bundle, final package; demo recording | 5 | _to fill_ |
 
 **Running total:** _to fill_ h
