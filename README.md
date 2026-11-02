@@ -22,7 +22,7 @@ numerics, file processing and concurrency are written in C++17.
 | Thermal FEA | C | Steady 1D rod solver with two-node linear elements, verified against the analytical solution (midpoint error = qh²/8k, order 2) | [thermal_fea.md](docs/thermal_fea.md), `results/csv/`, `results/plots/` |
 | Multicore | D | Serial vs bounded-thread-pool batch solves; speedup 2.00 / 4.00 at p = 2 / 4, results bitwise equal | [performance.md](docs/performance.md), `results/benchmarks/` |
 | Embedded design | E | NUCLEO-F446RE / Basys 3 / J-Link EDU Mini integration design with a cited pin/voltage table; simulated C++ adapters with retry and recovery | [embedded_design.md](docs/embedded_design.md) |
-| Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by central differences (\|diff\| ≈ 1e-10) | [backprop.md](docs/backprop.md), [handwritten appendix](docs/appendix_handwritten/) |
+| Backpropagation | F | Hand-derived gradients for a one-neuron network, checked by central differences (\|diff\| ≈ 1e-10) | [backprop.md](docs/backprop.md), [handwritten appendix](docs/appendix_handwritten/handwritten_appendix.pdf) |
 
 ## Run the packaged app (no build needed)
 
