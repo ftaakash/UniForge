@@ -614,8 +614,12 @@ git worktree. Nothing reached `main` until I had reviewed it.
   was clipped. I found it on screen. Fix: the bar shrinks to the free width and wraps to its
   own line when there is no room.
 
+- **Hardware view (Disconnect):** the button flickered and ignored my first click. The device
+  thread set `busy` during every 10 Hz telemetry tick, which disabled the action buttons about
+  10 times a second. I found it on screen. Fix: only user commands set `busy`.
+
 ### My decisions
-- Found the two defects above by testing the package myself, and held the push until they
+- Found the three defects above by testing the package myself, and held the push until they
   were fixed.
 - Set the Candidate ID (`RA2311042010060`) used for the package name, and the licence holder
   name.

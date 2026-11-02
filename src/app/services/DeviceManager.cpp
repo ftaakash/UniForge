@@ -48,17 +48,21 @@ void DeviceManager::threadMain() {
             }
             work.swap(queue_);
         }
-        busy_.store(true, std::memory_order_release);
-        for (const Pending& p : work) {
-            execute(p);
-            publish(); // show each command's outcome before the next one
+        // busy covers user commands only. Marking the 10 Hz telemetry tick busy as well made
+        // the action buttons flicker and swallowed clicks that landed during a tick.
+        if (!work.empty()) {
+            busy_.store(true, std::memory_order_release);
+            for (const Pending& p : work) {
+                execute(p);
+                publish(); // show each command's outcome before the next one
+            }
+            busy_.store(false, std::memory_order_release);
         }
         if (std::chrono::steady_clock::now() >= nextTick) {
             tick();
             publish();
             nextTick = std::chrono::steady_clock::now() + tickPeriod_;
         }
-        busy_.store(false, std::memory_order_release);
     }
 }
 

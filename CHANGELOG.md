@@ -12,6 +12,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   "conflicting ID" error when a device was connected.
 - Fixed: the run bar's progress bar was wider than narrow panels and lost its label (a blank
   blue bar after a Thermal study). It now shrinks to fit and wraps when there is no room.
+- Fixed: the device thread marked itself busy during every 10 Hz telemetry tick, so the
+  Hardware action buttons flickered and a Disconnect click could be ignored. Only user
+  commands set busy now.
 - Fixed: `tests/CMakeLists.txt` lost a closing line in the merge.
 - Package renamed to `RA2311042010060_Workbench.zip`; licence holder set to Aakash G S.
 
