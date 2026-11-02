@@ -613,7 +613,6 @@ git worktree. Nothing reached `main` until I had reviewed it.
   progress bar had a fixed 220 px width, wider than the parameters panel, so the "100 %" label
   was clipped. I found it on screen. Fix: the bar shrinks to the free width and wraps to its
   own line when there is no room.
-
 - **Hardware view (Disconnect):** the button flickered and ignored my first click. The device
   thread set `busy` during every 10 Hz telemetry tick, which disabled the action buttons about
   10 times a second. I found it on screen. Fix: only user commands set `busy`.
@@ -624,6 +623,35 @@ git worktree. Nothing reached `main` until I had reviewed it.
 - Set the Candidate ID (`RA2311042010060`) used for the package name, and the licence holder
   name.
 - Kept the CHANGELOG newest-first and this log in date order.
+
+---
+
+## 2026-11-02: Hardening, trimmed (Phase 8)
+Tool: Claude Code (Claude Opus 5.5).
+
+### Prompts (representative)
+- "Works, start Phase 8/9" (after confirming the Disconnect fix in the packaged app).
+
+### Outputs
+- `src/app/platform/CrashHandler.{hpp,cpp}`, the `--simulate-crash` option and its README
+  row.
+- `tools/edge_case_runs.ps1` and its output `results/edge_cases.md`.
+
+### Verification
+- The package passes its dependency check with an unchanged import list: the crash handler
+  uses only `KERNEL32` and `USER32`. 289/289 tests pass.
+- `edge_case_runs.ps1`: 5/5 pass (see `results/edge_cases.md`).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first read-only test denied `W,D,DC` with inheritance on the package copy. Windows then
+  refused to start `Launch.exe` at all ("Access is denied"), so the test did not show the
+  fallback. Now it denies only creating files and folders in the package folder, which is what
+  a read-only share or media looks like to the app.
+
+### My decisions
+- Phase 8 is trimmed for the deadline: crash handler and edge-case runs are in; the 200 % DPI,
+  keyboard and high-contrast pass is cut and listed as a limitation.
+- Crash report as text instead of a minidump, so the package keeps its OS-only DLL list.
 
 ---
 

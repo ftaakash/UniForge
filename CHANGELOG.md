@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Phase 8: Hardening (trimmed)
+- Crash handler (`platform/CrashHandler`): an unhandled SEH exception or `std::terminate`
+  writes `logs/crash_<pid>.txt` (version, commit, UTC time, exception code, address) and shows
+  a message box naming the file. No minidump, so no `dbghelp.dll` import. `--simulate-crash`
+  exercises it.
+- `tools/edge_case_runs.ps1` → `results/edge_cases.md`, all pass: Launch.exe from a path with
+  spaces and non-ASCII characters (ready in 0.122 s), `--force-warp`, a read-only package folder
+  (logs fall back to `%LOCALAPPDATA%\UniForge`), the simulated crash, and `uniforge_cli all`
+  into a non-ASCII output folder.
+- Not done (cut for the deadline): 200 % DPI and full keyboard pass, high-contrast check.
+
 ### Integration (Phases 4–7)
 - All four phase branches merged. `AppShell` registers every view; the CLI `all` runs fea,
   backprop, gen-samples and a quick bench and returns the worst exit code.
