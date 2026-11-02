@@ -72,8 +72,7 @@
 <div>
 <ul>
   <li><b>Errors are values.</b> Every fallible call returns <code>Result&lt;T&gt;</code> with an
-  <code>ErrorCode</code>, a message and a hint (for files: the line number). No exceptions cross
-  module boundaries.</li>
+  <code>ErrorCode</code>, a message and a hint (for files: the line number).</li>
   <li><b>Robust delivery.</b> Paths with spaces and non-ASCII characters work; a read-only install
   folder moves logs to <code>%LOCALAPPDATA%</code>; a crash handler writes
   <code>logs/crash_&lt;pid&gt;.txt</code>. All three were tested on the package
