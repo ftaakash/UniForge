@@ -25,3 +25,12 @@ Phases 4–7 ran at the same time in four parallel sessions, so their shared 4.4
 The difference comes mainly from AI-assisted code generation (see `ai_usage_log.md`) and from
 running Phases 4–7 in parallel. Not included: reading the brief before the first session, and
 writing the handwritten appendix by hand.
+
+## V2 (Assignment Extension Notice)
+
+Planned hours come from the V2 build specification §13 (`docs/design/v2/UniForge_V2_Build_Spec.md`).
+Actual hours are filled in from the session timestamps when each phase is reviewed.
+
+| Date | Phase | Work | Planned h | Actual h | Window (IST) |
+|---|---|---|---:|---:|---|
+| 2026-11-15 | V2-0 Design | Notice analysis, plan, design review, system design, merged build spec, figure tokens, branch | 1–2 | to fill | to fill |

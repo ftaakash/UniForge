@@ -693,6 +693,60 @@ Tool: Claude Code (Claude Opus 5.5).
 
 ---
 
+## 2026-11-15: V2 analysis, design review, system design and build spec (Phase V2-0)
+
+The company sent an Assignment Extension Notice asking for a V2: three different solver types on
+a thermal analysis of a more complex 3D object, delivered as one PDF report without source code.
+
+### Prompts (representative)
+1. Plan V2 from the notice and the v1 repository; write an analysis and plan; do not build anything.
+2. `/design:design-system`: "analyse the V2 plan, suggest amendments if necessary, evaluate its
+   effectiveness on cost and robustness: time, memory, iteration count, and how each one copes
+   with mesh size and with hard-to-solve (badly conditioned) setups."
+3. "Fold them in" (apply the review's amendments to the plan).
+4. `/engineering:system-design` on the revised plan: module boundaries, interfaces, data models,
+   harness and report pipeline, with an alternative design to compare.
+5. "Merge into build spec", then "Start V2-0".
+
+### Outputs (files)
+- `docs/design/v2/UniForge_V2_Analysis_and_Plan.md` (revision 2, amendments A1–A15 marked inline)
+- `docs/design/v2/UniForge_V2_Design_Review.md` (16 issues, amendments A1–A15, figure tokens)
+- `docs/design/v2/UniForge_V2_System_Design.md` (Design A vs Design B)
+- `docs/design/v2/UniForge_V2_Build_Spec.md` (merged specification the V2 build follows)
+- `docs/report_v2/figure_tokens.md` (shared figure style, amendment A13)
+
+### My edits
+- Chose to fold in all review amendments, to run the system-design pass, and to merge the three
+  documents into one build spec. The choices among the adopted defaults (spec §0.2) and the
+  deadline are still open.
+
+### Verification (tests run, numbers checked, manual checks)
+- No code yet, so nothing was run. Every number in the V2 documents is either copied from v1
+  files (e.g. 13.7 h actual vs 46 h planned, heat-sink volume 2.416e-5 m³, peak 188.2 °C) or
+  tagged [EST] (estimate, to be measured). Every unchecked fact or citation is tagged [VERIFY].
+  Neither tag may reach the PDF.
+- Checked mechanically that the merged spec contains every requirement, amendment, hypothesis,
+  experiment and figure ID from the three source documents, and no e-mail address.
+
+### Incorrect / unsuitable suggestions and how they were caught
+The review pass (`/design:design-system`) found 16 issues in the AI-written plan. The five rated high:
+
+| # | Unsuitable suggestion | Why it was wrong | Resolution |
+|---|---|---|---|
+| I1 | Refine the mesh by integer factors r = 1, 2, 3 | DOF grows ×8, ×27, so the direct solver would get only two data points before its memory wall; no slope or crossover could be fitted | Geometric ladder s_k = s₀·2^(−k/3), DOF doubles per step (A1) |
+| I2 | Stop iterative solvers on a relative residual of 1e-10 | The convection-only heat sink is near-singular; a small residual does not bound the error, and the mean temperature converges last | Time-to-accuracy against a reference, energy imbalance and condition estimate per solve (A2, A3) |
+| I3 | Assemble through COO triplets | ~3 GB plus a sort buffer at 3 × 10⁶ cells [EST]: assembly, not the solvers, would set peak memory | Assemble straight into CSR from the grid's known pattern (A4) |
+| I5 | No machine-time budget | The experiment campaign would probably take longer than the coding | Caps, repetition policy, dry run, one overnight batch (A6) |
+| I11 | Verify the 3D FEA before any sparse solver exists | Verification would be limited to meshes the dense oracle can handle | Build Jacobi-PCG first (A10) |
+
+Also: the plan's hypothesis that "on the cube all solvers look alike" is probably false for the
+slender v1 bar (quasi-1D, where the direct solver should win clearly); E0 now compares the bar with
+a true cube (A11). The system-design pass found that v1's `perf::WorkerPool` starts and joins new
+threads on every `run()` call, which suits the v1 batch but would distort solver timings; V2 uses
+a persistent kernel pool instead.
+
+---
+
 ## Entry template
 
 ```markdown
