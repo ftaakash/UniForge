@@ -604,6 +604,14 @@ Citation style: IEEE (as the routing table suggests); final list built with the 
 
 ---
 
+**Recorded 2026-11-18:** you asked to continue building without waiting for D1 and to take the
+recommended default for every open decision. Adopted: D1 not given (build proceeds; cut list only
+if a deadline needs it), D2 G1 HS-7, D3 no Eigen, D4 T3, D5 CPU rasteriser, D6 18–25 pages,
+D7 yes, D8 no GUI view unless time remains, D9 branch `v2`, D10 the caps, D11 bar and cube,
+D12 still needed before the overnight batch. The build follows `UniForge_V2_Build_Spec.md`.
+
+---
+
 ## Appendix A: AI-use log entry (draft, to be added to `UniForge/docs/ai_usage_log.md` at V2-0 commit)
 
 **2026-11-15: V2 requirements analysis and plan (Phase V2-0)**

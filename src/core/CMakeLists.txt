@@ -29,6 +29,10 @@ add_library(uniforge_core STATIC
     ml/GradientCheck.cpp
     ml/TinyNet.cpp
     ml/Trainer.cpp
+    sparse/CsrMatrix.cpp
+    sparse/KernelPool.cpp
+    sparse/SparseOps.cpp
+    sparse/VectorOps.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp

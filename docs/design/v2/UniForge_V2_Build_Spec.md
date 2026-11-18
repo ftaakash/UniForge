@@ -55,6 +55,19 @@ design notation for this spec; none of it goes into the PDF.
 | D-19 | Repo layout | Same repo, **branch `v2`** | New repo |
 | D-20 | Official batch | Refuses a dirty git tree | Allow |
 
+### 0.2a Recorded 2026-11-18: defaults adopted, build started
+
+You asked (through the planning session) to continue building V2 without waiting for the
+deadline and to take the recommended defaults for every decision still open. Recorded:
+
+| Decision | Adopted |
+|---|---|
+| D-8 … D-20 (§0.2) | All defaults as listed above |
+| Plan D1 / spec D-21 (deadline) | **Not given; build proceeds.** The cut list (§16, K13) is applied only if a deadline arrives that needs it |
+| Plan D3 / spec D-22 (Eigen download) | **No** (default: optional, not downloaded) |
+| Plan D8 / spec D-23 (Solver Lab GUI view) | **Not built** unless time remains after V2-10 |
+| Commits | **One commit per phase** on branch `v2` (replaces the example multi-commit lists in §13), annotated tag `v2-phase-N`; nothing goes to `main` before your review |
+
 ### 0.3 Needed from you
 
 | Item | When |

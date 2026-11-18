@@ -747,6 +747,56 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-18: Sparse kernels (Phase V2-1)
+
+### Prompts (representative)
+1. (Relayed from the planning session) "continue building v2": start Phase V2-1 without waiting
+   for the deadline, take the recommended defaults for the open decisions and record them in the
+   plan, one commit per phase on branch `v2`, stop for review at the end of each phase.
+
+### Outputs (files, functions)
+- `src/core/sparse/CsrMatrix.*`: `CsrPattern`, `CsrMatrix` (32-bit columns, 64-bit row
+  offsets), `fromTriplets`, `buildPattern`, `validate`, `isSymmetric`, `toDense`.
+- `src/core/sparse/KernelPool.*`: persistent thread pool; fixed 4096-row chunks independent of
+  the thread count; per-chunk partial results combined in chunk order.
+- `src/core/sparse/VectorOps.*`: `dot`, `sum`, `norm2`, `normInf`, `maxAbsDiff`, `axpy`,
+  `xpay`, `multiplyPointwise`, `spmv`, `residual`, `diagonal`.
+- `src/core/sparse/SparseOps.*`: `transpose` (counting sort), `multiply` (Gustavson SpGEMM with a
+  symbolic pass for exact allocation).
+- `tests/unit/sparse/*`: 29 tests (CTest target `unit_sparse`, label `unit`).
+- Spec §0.2a and plan §9: the adopted defaults and the one-commit-per-phase rule.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC 19.44, warnings as errors: Release and Debug builds clean; **318/318 tests pass in
+  both** (289 from v1 + 29 new).
+- Determinism: reductions and every kernel give bit-identical results for 1, 2, 3, 7 and 20
+  threads. The test data mixes magnitudes 1e-8 … 1e8 and the test first asserts that a plain
+  left-to-right sum differs from the chunked sum, so the check cannot pass by luck.
+- SpMV, residual, transpose and SpGEMM agree with dense references; a Galerkin product PᵀKP of a
+  symmetric K is symmetric; SpGEMM allocates exactly nnz(C).
+- 20 000 back-to-back pool calls without deadlock; an exception in one chunk is rethrown after
+  the other chunks finish and the pool stays usable.
+- clang-format 19 check passes on the new files.
+- **Not run:** the Linux GCC 13 ASan/TSan jobs (they run in CI after a push). GCC's stricter
+  warnings (-Wconversion, -Wsign-conversion, -Wshadow) were checked by reading, not by compiling.
+- Not measured yet: the pool's per-call overhead (planned for V2-8 with the other timing checks).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first draft of `KernelPool::reduceMax` combined partial maxima with `std::max`, which
+  silently drops a NaN (`max(x, NaN)` returns `x`). A NaN temperature would then hide behind a
+  finite maximum. Caught while writing the kernels; `reduceMax` and `normInf` now propagate NaN,
+  and `VectorOps.NormInfPropagatesNaN` tests it.
+- The first draft of the Galerkin test called a dense-multiply helper with a vector where it
+  takes a matrix (it would not have compiled); caught on review before the first build and
+  replaced by two separate dense checks (K·P, then Pᵀ(K·P)).
+- The build logs of the first build were written into the worktree root, where `.gitignore`
+  does not cover `*.log`; deleted before staging, later logs go to `build/`.
+
+---
+
 ## Entry template
 
 ```markdown

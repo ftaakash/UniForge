@@ -146,6 +146,16 @@ uniforge_add_test(unit_perf
         unit/perf/WorkerPoolTest.cpp
     LIBS uniforge_core)
 
+# V2 sparse kernels (build spec §5.5): CSR storage, persistent kernel pool, SpGEMM.
+uniforge_add_test(unit_sparse
+    LABEL unit
+    SOURCES
+        unit/sparse/CsrMatrixTest.cpp
+        unit/sparse/KernelPoolTest.cpp
+        unit/sparse/SparseOpsTest.cpp
+        unit/sparse/VectorOpsTest.cpp
+    LIBS uniforge_core)
+
 uniforge_add_test(numerical_perf
     LABEL numerical
     SOURCES
