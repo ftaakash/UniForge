@@ -797,6 +797,59 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-18: Geometry and mesher (Phase V2-2)
+
+### Prompts (representative)
+1. "Start V2-2" (after approving and pushing V2-1, whose CI run passed on Windows and Linux
+   ASan/TSan).
+
+### Outputs (files, functions)
+- `src/core/fem3d/Design.*`: `Box`, `Material`, `FaceBc`, `Design`, `validate`; factories
+  `makeV1Bar` (L0a), `makeCube` (L0b), `makePlate` (L1), `makeFinnedPlate` (L2), `makeHS7` (L3),
+  `makePinFin` (L4) with `HeatSinkParams` / `PinFinParams`.
+- `src/core/fem3d/HexMesh.*`: `buildAxis` (mandatory lines, fixed layers, graded gaps),
+  `buildMesh` (cell ownership, compact node numbering, boundary faces with box/side, statistics),
+  `extractSurface` (outward triangles), cell/face helpers.
+- `tests/unit/fem3d/*`: 19 tests (CTest target `unit_fem3d`).
+- Spec §3.1 (ladder clarified: the die is the heat source at L1–L3, the TIM only at L3) and
+  §3.4 (measured mesh sizes replace the estimate).
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **337/337 tests pass in both**.
+- Hand-checked numbers used by the tests: v1 bar at s = 10 mm has 100 cells, 404 nodes and
+  402 boundary faces; HS-7 aluminium volume 2.416e-5 m³ (equal to v1's heat-sink STL); HS-7
+  convective area 1840 + 800 + 7 × 2264 = 18 488 mm², reproduced by the mesh at two spacings.
+- Mesh volume equals the design volume to 1e-10 relative for all six ladder objects; the
+  surface is watertight (every boundary edge in exactly two faces) with outward normals; the
+  divergence-theorem volume of the exported surface equals the design volume; the STL parses
+  with the v1 importer (no degenerate facets, expected bounding box).
+- Grading: no cell larger than s and no neighbour ratio above 1.5 on every HS-7 axis, with 1
+  and 2 TIM cells, at two spacings.
+- Measured mesh sizes along the ladder s = 1.0 … 0.198 mm: 56 015 … 3 759 720 nodes, meshing in
+  ≤ 0.3 s (recorded in spec §3.4; measured with a temporary test that was then removed).
+- **Not run:** Linux CI (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The spec's DOF table (an AI estimate, tagged [EST]) was 16–60 % low: it ignored the extra
+  cells that grading next to the 0.1 mm TIM and the fins adds. Replaced by measured values.
+- The spec described ladder level L2 as "single material", which contradicts the die being the
+  heat source; clarified in the spec.
+- First draft of the axis builder found the cell count of a gap by increasing n one at a time,
+  each step O(n): an absurd spacing (1 µm on the 1 m bar) would have hung for hours before the
+  size limit was checked. Caught on review: the count is now found by doubling and bisection,
+  and `buildMesh` refuses an oversized grid before generating any line
+  (`HexMesh.RefusesAbsurdSpacings`).
+- First draft of the design test indexed the HS-7 boxes as if the fins came right after the base;
+  the factory adds TIM and die first. Caught on review; the test now asserts the box name.
+- Two first-run test failures were tolerances tighter than floating-point rounding (cube volume
+  off by 1.2e-12 relative, a grade ratio of 1 + 7e-14 on equal cells); loosened to 1e-10 and
+  1e-9, not a mesher change.
+
+---
+
 ## Entry template
 
 ```markdown

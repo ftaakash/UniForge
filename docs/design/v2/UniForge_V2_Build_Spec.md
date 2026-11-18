@@ -146,7 +146,7 @@ size, conditioning and sparsity structure, and each solver family reacts to a di
 | **v1 bar** | L0a | LC0 | 1 m × 10 × 10 mm, k = 10 W/(m·K), q = 1e4 W/m³, T0 = 100 °C, TL = 20 °C, insulated sides; must reproduce v1's peak 188.2 °C at x = 0.42 m on the centre-line |
 | **cube** | L0b | LC0c | Same volume (≈ 46.4 mm edge), same k and q, Dirichlet on two opposite faces, insulated elsewhere |
 | plate | L1 | LC1 | HS-7 base plate + die, convection only |
-| fins | L2 | LC1 | Plate + 7 fins, single material |
+| fins | L2 | LC1 | Plate + die + 7 fins, no TIM (clarified in V2-2: the die is the heat source at L1–L3; the TIM is added only at L3) |
 | **HS-7** | L3 | LC1 | Full object below |
 | pin fins | L4 | LC1 | Pin array variant, e.g. 8 × 6 pins [EST layout] |
 
@@ -193,12 +193,22 @@ k constant per element (material).
 **Geometric ladder (A1):** s_k = 1.0 mm · 2^(−k/3) → s = 1.0, 0.79, 0.63, 0.50, 0.40, 0.31, 0.25,
 0.20 mm; DOF roughly doubles per step; ≥ 4 direct points before its wall, 8+ iterative points.
 
-| s (mm) | Cells [EST] | DOF [EST] | K bytes ≈ 328·n [EST] |
-|---|---:|---:|---:|
-| 1.0 | 2.5e4 | 3.5e4 | 11 MB |
-| 0.5 | 2.0e5 | 2.4e5 | 79 MB |
-| 0.25 | 1.6e6 | 1.7e6 | 0.56 GB |
-| 0.2 | 3.0e6 | 3.2e6 | 1.05 GB |
+**Measured** (V2-2 mesher, HS-7 with 1 TIM cell, grade ratio 1.5; meshing time ≤ 0.3 s per mesh).
+The DOF are 16–60 % above the earlier estimate because grading next to the 0.1 mm TIM and the
+fins adds cells; the step-to-step growth is 1.6–2.0×.
+
+| s (mm) | Grid cells | Active cells | Nodes = DOF | Max / mean aspect | K bytes ≈ 328·n [EST] |
+|---|---|---:|---:|---|---:|
+| 1.000 | 70 × 40 × 38 | 44 080 | 56 015 | 10.0 / 2.50 | 18 MB |
+| 0.794 | 83 × 52 × 45 | 75 192 | 93 921 | 7.94 / 1.88 | 31 MB |
+| 0.630 | 107 × 64 × 55 | 141 504 | 170 634 | 6.25 / 1.63 | 56 MB |
+| 0.500 | 127 × 80 × 66 | 241 600 | 285 532 | 5.00 / 1.39 | 94 MB |
+| 0.397 | 162 × 103 × 82 | 496 764 | 568 152 | 3.92 / 1.29 | 0.19 GB |
+| 0.315 | 203 × 128 × 101 | 912 384 | 1 022 979 | 3.13 / 1.18 | 0.34 GB |
+| 0.250 | 247 × 160 × 125 | 1 696 800 | 1 867 768 | 2.50 / 1.10 | 0.61 GB |
+| 0.198 | 317 × 203 × 157 | 3 484 283 | 3 759 720 | 1.98 / 1.10 | 1.23 GB |
+
+The maximum aspect ratio is the TIM cell (in-plane s over 0.1 mm thickness), as intended.
 
 ### 3.5 Assembly and boundary conditions
 

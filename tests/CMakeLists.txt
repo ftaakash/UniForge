@@ -156,6 +156,14 @@ uniforge_add_test(unit_sparse
         unit/sparse/VectorOpsTest.cpp
     LIBS uniforge_core)
 
+# V2 geometry and mesher (build spec §3.4): designs, graded tensor grid, surface, STL round trip.
+uniforge_add_test(unit_fem3d
+    LABEL unit
+    SOURCES
+        unit/fem3d/DesignTest.cpp
+        unit/fem3d/HexMeshTest.cpp
+    LIBS uniforge_core)
+
 uniforge_add_test(numerical_perf
     LABEL numerical
     SOURCES
