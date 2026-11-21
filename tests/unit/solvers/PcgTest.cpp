@@ -286,13 +286,15 @@ TEST(Pcg, MisuseIsAnError) {
     EXPECT_EQ(s->setup(rect, {}, pool, {}).error().code, ErrorCode::InvalidInput);
 }
 
-TEST(SolverFactory, PcgJacobiExistsOthersComeLater) {
-    auto pcg = makeSolver(SolverKind::PcgJacobi);
-    ASSERT_TRUE(pcg.ok());
-    EXPECT_EQ(pcg.value()->kind(), SolverKind::PcgJacobi);
+TEST(SolverFactory, BuiltKindsExistOthersComeLater) {
+    for (const SolverKind k :
+         {SolverKind::PcgJacobi, SolverKind::DirectND, SolverKind::DirectRCM}) {
+        auto s = makeSolver(k);
+        ASSERT_TRUE(s.ok()) << label(k);
+        EXPECT_EQ(s.value()->kind(), k);
+    }
     EXPECT_EQ(label(SolverKind::PcgJacobi), "PCG-J");
-    for (const SolverKind k : {SolverKind::DirectND, SolverKind::DirectRCM, SolverKind::PcgIc0,
-                               SolverKind::Amg, SolverKind::AmgPcg}) {
+    for (const SolverKind k : {SolverKind::PcgIc0, SolverKind::Amg, SolverKind::AmgPcg}) {
         auto r = makeSolver(k);
         ASSERT_FALSE(r.ok()) << label(k);
         EXPECT_EQ(r.error().code, ErrorCode::InvalidInput);

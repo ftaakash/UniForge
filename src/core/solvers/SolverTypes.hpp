@@ -101,6 +101,8 @@ struct CoordinateHint {
 struct SolverOptions {
     // Setup refuses (status OverBudget) when the solver's own memory would exceed this.
     std::size_t memoryBudgetBytes = std::numeric_limits<std::size_t>::max();
+    // Direct solver: leaf size below which nested dissection stops splitting a subgraph.
+    int dissectionLeafSize = 64;
 };
 
 class IterationObserver;
@@ -123,6 +125,14 @@ struct SetupReport {
     std::string detail;
     double seconds = 0.0;
     MemoryFootprint footprint;
+    // Time of each setup step, e.g. {"ordering", 0.12}, {"symbolic", 0.05}, {"numeric", 3.4}.
+    std::vector<std::pair<std::string, double>> phases;
+    // Factorisations (direct solver): entries of the factor L (diagonal included), the number the
+    // symbolic analysis predicted before allocating, and the floating-point operations of the
+    // numeric factorisation (Σ over columns of count²). 0 when not applicable.
+    std::int64_t factorNnz = 0;
+    std::int64_t predictedFactorNnz = 0;
+    double factorFlops = 0.0;
 };
 
 struct SolveReport {

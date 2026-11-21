@@ -956,6 +956,55 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-21: Sparse direct Cholesky (Phase V2-5) and the main README note
+
+### Prompts (representative)
+1. "Start V2-5".
+2. "Approve and push, also the update the status of v2 in the readme of the main branch"
+   (sent while V2-5 was still being measured; V2-5 was finished, fully tested, then pushed).
+
+### Outputs (files, functions)
+- `src/core/solvers/direct/Ordering.*`: `naturalOrdering`, `rcmOrdering`,
+  `nestedDissectionOrdering`, `makeOrdering`, `isValid`.
+- `src/core/solvers/direct/Cholesky.*`: `DirectCholesky` (ordering, symbolic with exact column
+  counts and budget check, up-looking numeric factorisation, triangular solves, factor access).
+- `SolverTypes.hpp`: setup report gains timed phases, predicted/actual nnz(L) and flops;
+  options gain the dissection leaf size. `makeSolver` builds DIRECT-ND and DIRECT-RCM.
+- Tests: `tests/unit/solvers/DirectTest.cpp` (10), one verification test (direct vs PCG-J on
+  the FE systems); 3D Laplacian and shuffle helpers.
+- Spec §5.2: preliminary measured fill and setup times; README and CHANGELOG on `v2`.
+- On `main`: a V2 status section in the README (commit `885d091`); v1 content unchanged.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **382/382 tests pass in both**.
+- L·Lᵀ equals P·K·Pᵀ to 1e-12 for all three orderings; the symbolic prediction of nnz(L) equals
+  the actual count in every test and in every measured HS-7 run.
+- Same solution as the dense oracle (1e-12 relative) for every ordering; on a 16³ grid nnz(L)
+  natural 990 991, RCM 596 204, ND 316 268.
+- On the FE systems both orderings match PCG-J to 3.8e-10 K (v1 bar, HS-7 at 2 mm) with
+  relative energy imbalance ≤ 3.5e-12.
+- Preliminary HS-7 ladder (single run, not the official protocol): table in spec §5.2. RCM is
+  refused as over budget at 568 152 DOF (≥ 707 M entries predicted, after 2.4 s); ND factors it
+  in 327.5 s.
+- **Not run:** Linux CI (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- My first threshold for the direct solve's true relative residual (1e-12) failed on HS-7:
+  measured 9.5e-12. Cholesky is backward stable, but the convection-only system is badly
+  conditioned (κ_est ~1e5), so this is the expected size, not a bug; threshold set to 1e-10
+  with the reason in a comment. This is the conditioning effect on direct accuracy predicted by
+  hypothesis H4.
+- A Python edit inserted `\n` into a C++ string literal as a real line break; the build failed
+  and the literal was fixed by hand.
+- Ordering expectation not borne out at small sizes: I expected nested dissection to be faster
+  as well as smaller; measured, its numeric phase is slower up to 170 k DOF (fewer flop/s on its
+  more scattered columns). Recorded as measured, not as the expectation.
+
+---
+
 ## Entry template
 
 ```markdown

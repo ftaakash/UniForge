@@ -338,6 +338,22 @@ factory makeSolver(kind) -> unique_ptr<LinearOperatorSolver>
 | Tests | vs dense oracle (v1 `tests/support/DenseGauss.hpp`); all orderings same solution; predicted nnz(L) = actual nnz(L) exactly; L·Lᵀ = P·K·Pᵀ on small cases |
 | Pictures | Density spy plots K, L(natural/RCM/ND) (A14); nnz(L) vs n; elimination-tree sketch |
 
+**Measured (V2-5, HS-7, Release, one thread, 8 GB budget; preliminary: not the official
+protocol of §7, single run, machine not checked idle):**
+
+| s (mm) | DOF | RCM nnz(L) | RCM setup | ND nnz(L) | ND setup |
+|---|---:|---:|---:|---:|---:|
+| 1.000 | 56 015 | 20 842 383 | 3.2 s | 16 585 484 | 4.7 s |
+| 0.794 | 93 921 | 44 149 272 | 8.2 s | 31 021 545 | 11.6 s |
+| 0.630 | 170 634 | 108 619 789 | 29.3 s | 69 330 210 | 38.7 s |
+| 0.500 | 285 532 | 252 590 859 | 124.9 s | 130 836 333 | 94.9 s |
+| 0.397 | 568 152 | OverBudget (≥ 707 M predicted, refused after 2.4 s) | – | 334 908 019 | 327.5 s |
+
+The symbolic prediction equalled the actual nnz(L) in every run. ND always has the smaller
+factor; it is slower than RCM up to 170 k DOF (its numeric phase runs at fewer flop/s), faster
+from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lies beyond
+0.57 M DOF and will be located in the official runs (V2-8).
+
 ### 5.3 Solver B: preconditioned conjugate gradient (`PCG-J`, `PCG-IC0`)
 
 | Aspect | Spec |

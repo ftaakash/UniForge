@@ -35,6 +35,8 @@ add_library(uniforge_core STATIC
     ml/TinyNet.cpp
     ml/Trainer.cpp
     solvers/Observers.cpp
+    solvers/direct/Cholesky.cpp
+    solvers/direct/Ordering.cpp
     solvers/SolverFactory.cpp
     solvers/krylov/Lanczos.cpp
     solvers/krylov/Pcg.cpp

@@ -3,6 +3,7 @@
 //   0.42 / 0.58 W through the ends), a manufactured solution with convection on every face
 //   (order 2), a single fin against 1D fin theory, and the energy balance of HS-7.
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <memory>
@@ -12,6 +13,7 @@
 
 #include "core/fem3d/Assembly.hpp"
 #include "core/fem3d/Post.hpp"
+#include "core/solvers/direct/Cholesky.hpp"
 #include "core/solvers/krylov/Pcg.hpp"
 
 using namespace uniforge::fem3d;
@@ -286,5 +288,45 @@ TEST(Verification, HeatSinkEnergyBalanceAndPlausibleTemperatures) {
     // Every node is above ambient (heat only flows out).
     for (const double v : r.T) {
         ASSERT_GT(v, 25.0);
+    }
+}
+
+// ---- Direct solver on the FE systems ---------------------------------------------------------
+
+TEST(Verification, DirectSolversAgreeWithPcgOnTheFeSystems) {
+    // The linear system has one solution: both direct orderings must reproduce the PCG-J result
+    // (solved to 1e-13) and balance the energy to round-off.
+    using uniforge::solvers::DirectCholesky;
+    using uniforge::solvers::Ordering;
+    for (const Design& d : {makeV1Bar(), makeHS7()}) {
+        const double s = d.ladderLevel == "L0a" ? 0.005 : 2e-3;
+        const Solved ref = solve(d, s);
+        for (const Ordering o : {Ordering::Rcm, Ordering::NestedDissection}) {
+            KernelPool pool(1);
+            DirectCholesky direct(SolverKind::DirectND, o);
+            auto su = direct.setup(ref.system.K, {}, pool, {});
+            ASSERT_TRUE(su.ok());
+            ASSERT_EQ(su.value().status, SolveStatus::Converged) << su.value().detail;
+            Vector T(ref.T.size(), 0.0);
+            SolveControl c;
+            c.residualSumMask = &ref.system.freeMask;
+            auto r = direct.solve(ref.system.f, T, c);
+            ASSERT_TRUE(r.ok());
+            double maxDiff = 0.0;
+            for (std::size_t i = 0; i < T.size(); ++i) {
+                maxDiff = std::max(maxDiff, std::fabs(T[i] - ref.T[i]));
+            }
+            const EnergyAudit a = energyAudit(d, ref.mesh, ref.system, T);
+            std::printf("[direct %s %s] DOF %zu, nnz(L) %lld, setup %.3f s, |T − T_pcg| %.2e K, "
+                        "rel. imbalance %.2e\n",
+                        d.name.c_str(), o == Ordering::Rcm ? "RCM" : "ND", T.size(),
+                        static_cast<long long>(su.value().factorNnz), su.value().seconds, maxDiff,
+                        a.relImbalance);
+            EXPECT_LT(maxDiff, 1e-6) << d.name;
+            EXPECT_LT(a.relImbalance, 1e-10) << d.name;
+            // Measured ~1e-11 on HS-7: Cholesky is backward stable, but the convection-only system
+            // is badly conditioned (κ_est ~1e5), so the relative residual sits above 1e-12.
+            EXPECT_LT(r.value().finalTrueRelResidual, 1e-10) << d.name;
+        }
     }
 }

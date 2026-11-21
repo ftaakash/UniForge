@@ -9,6 +9,20 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-5: Sparse direct Cholesky (`v2-phase-5`)
+- `src/core/solvers/direct/Ordering`: natural, reverse Cuthill–McKee (pseudo-peripheral start,
+  per component) and graph nested dissection (middle-level separators of breadth-first level
+  structures, RCM on leaves); disconnected graphs handled.
+- `src/core/solvers/direct/Cholesky`: `DirectCholesky` with timed ordering, symbolic (elimination
+  tree, exact column counts, memory-budget check before allocating L) and numeric (up-looking)
+  phases; triangular solves; Breakdown on a non-positive pivot; `makeSolver` builds DIRECT-ND
+  and DIRECT-RCM.
+- Preliminary HS-7 measurements (spec §5.2): nnz(L) predicted exactly; ND gives the smaller
+  factor at every size and is faster from 285 k DOF; RCM exceeds 8 GB at 568 k DOF, ND factors
+  568 k DOF in 327 s.
+- Verification: both orderings reproduce PCG-J on the v1 bar and HS-7 to 3.8e-10 K.
+- 10 unit tests and 1 verification test.
+
 ### Phase V2-4: 3D finite elements and verification (`v2-phase-4`)
 - `src/core/fem3d/Element`: trilinear hexahedron stiffness and load as tensor products of 1D
   matrices (exact on boxes), bilinear face convection matrix and loads, Gauss quadrature for
