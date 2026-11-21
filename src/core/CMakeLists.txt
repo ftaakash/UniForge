@@ -13,8 +13,11 @@ add_library(uniforge_core STATIC
     hw/MockAdapter.cpp
     hw/MockTransport.cpp
     hw/RetryPolicy.cpp
+    fem3d/Assembly.cpp
     fem3d/Design.cpp
+    fem3d/Element.cpp
     fem3d/HexMesh.cpp
+    fem3d/Post.cpp
     io/ImportErrors.cpp
     io/LineReader.cpp
     io/StlParser.cpp

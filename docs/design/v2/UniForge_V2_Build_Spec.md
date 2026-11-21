@@ -215,6 +215,16 @@ The maximum aspect ratio is the TIM cell (in-plane s over 0.1 mm thickness), as 
 - **Straight into CSR (A4):** pattern from grid connectivity (≤ 27 neighbours per node), K allocated
   once, element matrices scattered via a local → CSR index map. No COO (which would need ~3 GB +
   sort buffer at 3 × 10⁶ cells [EST]). Assembly time and bytes reported separately.
+- **Measured (V2-4, HS-7, Release, one thread):** the matrix holds about 25.7 entries per row
+  (≤ 27 for interior nodes).
+
+  | s (mm) | DOF | nnz(K) | K bytes | Assembly time |
+  |---|---:|---:|---:|---:|
+  | 1.000 | 56 015 | 1 295 743 | 17.2 MB | 0.04 s |
+  | 0.500 | 285 532 | 6 915 070 | 90.0 MB | 0.25 s |
+  | 0.250 | 1 867 768 | 47 345 368 | 641.6 MB | 1.81 s |
+  | 0.198 | 3 759 720 | 96 545 752 | 1164.4 MB | 4.67 s |
+
 - **Dirichlet:** v1's symmetric elimination (`thermal/DirichletBC.cpp`) generalised to CSR; saved
   unconstrained rows give **reactions**.
 - **Convection:** face terms added to K and f.

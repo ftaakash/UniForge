@@ -160,8 +160,17 @@ uniforge_add_test(unit_sparse
 uniforge_add_test(unit_fem3d
     LABEL unit
     SOURCES
+        unit/fem3d/AssemblyTest.cpp
         unit/fem3d/DesignTest.cpp
+        unit/fem3d/ElementTest.cpp
         unit/fem3d/HexMeshTest.cpp
+    LIBS uniforge_core)
+
+# V2 verification ladder (build spec §3.6): patch test, v1 bar in 3D, manufactured solution,
+# fin theory, HS-7 energy balance.
+uniforge_add_test(numerical_fem3d
+    LABEL numerical
+    SOURCES numerical/fem3d/VerificationTest.cpp
     LIBS uniforge_core)
 
 # V2 solver interface and PCG (build spec §5.1, §5.3).

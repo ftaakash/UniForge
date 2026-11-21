@@ -9,6 +9,22 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-4: 3D finite elements and verification (`v2-phase-4`)
+- `src/core/fem3d/Element`: trilinear hexahedron stiffness and load as tensor products of 1D
+  matrices (exact on boxes), bilinear face convection matrix and loads, Gauss quadrature for
+  non-uniform sources and ambients.
+- `src/core/fem3d/Assembly`: pattern from grid connectivity, assembly straight into CSR,
+  convection, symmetric Dirichlet elimination with saved rows for reactions, assembly time and
+  matrix size. Measured on HS-7: 4.7 s and 1.16 GB for 3 759 720 DOF.
+- `src/core/fem3d/Post`: energy audit, reactions, peak temperature, trilinear sampling, L2 and
+  nodal error norms.
+- Verification (`tests/numerical/fem3d`, solved with PCG-J): harmonic trilinear patch test exact
+  with Dirichlet and with convection faces; the v1 bar in 3D reproduces 188.2 °C at 0.42 m and
+  0.42 / 0.58 W through the ends; a manufactured solution converges at order 2.00; a single fin
+  matches 1D fin theory (heat −0.005 %, tip within 0.03 K); HS-7 energy balance to 2e-12.
+- A deliberately broken Dirichlet elimination fails the patch, bar and fin tests.
+- 12 unit tests and 6 verification tests.
+
 ### Phase V2-3: Solver interface and Jacobi-PCG (`v2-phase-3`)
 - `src/core/solvers/`: two-phase solver interface (setup once, solve per load case); a method
   failure (breakdown, iteration or time cap, stagnation, over budget, cancelled) is a status,

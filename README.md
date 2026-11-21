@@ -37,17 +37,20 @@ works best in which scenario. The deliverable is a single PDF report. V2 is buil
 | V2-1 | Sparse kernels: CSR storage, persistent kernel pool with thread-count-independent reductions, SpMV, SpGEMM | `v2-phase-1` | Done |
 | V2-2 | Box designs (v1 bar, cube, plate, finned plate, HS-7, pin fin) and graded tensor-grid hex mesher | `v2-phase-2` | Done |
 | V2-3 | Solver interface and reports, observers, κ estimate, Jacobi-PCG, module-rule lint | `v2-phase-3` | Done |
-| V2-4 | Trilinear hex element, CSR assembly, boundary conditions, energy audit, verification | – | Next |
-| V2-5 … V2-7 | Direct Cholesky, IC(0), algebraic multigrid | – | Planned |
+| V2-4 | Trilinear hex element, CSR assembly, boundary conditions, energy audit, verification (patch test, v1 bar in 3D, manufactured solution, fin theory) | `v2-phase-4` | Done |
+| V2-5 | Direct Cholesky with RCM and nested-dissection orderings | – | Next |
+| V2-6 … V2-7 | IC(0), algebraic multigrid | – | Planned |
 | V2-8 … V2-10 | Experiment harness and official runs, figures, PDF report | – | Planned |
 
-So far 353 tests pass on Windows (Release and Debug); 64 of them are new in V2. Every phase tag
+So far 371 tests pass on Windows (Release and Debug); 82 of them are new in V2. The 3D model
+reproduces v1's bar result (188.2 °C at x = 0.42 m, 0.42 / 0.58 W through the ends) and
+converges at second order on a manufactured solution. Every phase tag
 also runs the Linux ASan/TSan CI. The V2 code lives in `src/core/sparse/`, `src/core/fem3d/`
 and `src/core/solvers/`; build and test it exactly like v1 (see [Build from source](#build-from-source)).
 To run only the V2 tests:
 
 ```bash
-ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Lanczos|Pcg|SolverFactory|v2_module_rules"
+ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|SolverFactory|v2_module_rules"
 ```
 
 No V2 numbers are final yet: values in the V2 documents marked [EST] are estimates and will be
@@ -205,7 +208,7 @@ src/core/       portable C++17 engineering core (standard library only): common/
                 importers), perf/ (batch generator, worker pool, runners, benchmark, SystemInfo),
                 hw/ (simulated device adapters, retry policy), ml/ (one-neuron backprop)
                 V2: sparse/ (CSR, kernel pool, SpMV, SpGEMM), fem3d/ (box designs, graded hex
-                mesher), solvers/ (solver interface, reports, observers, PCG)
+                mesher, Q1 element, CSR assembly, energy audit), solvers/ (solver interface, reports, observers, PCG)
 src/app/        UniForge.exe: platform/ (Win32, D3D11, crash handler), services/ (JobRunner,
                 LogSink, ResultStore, DeviceManager), render/ (3D viewport), ui/ (theme, fonts,
                 shell, widgets), views/, shaders/

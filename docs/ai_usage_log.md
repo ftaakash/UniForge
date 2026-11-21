@@ -902,6 +902,60 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-21: 3D finite elements and verification (Phase V2-4)
+
+### Prompts (representative)
+1. "update the repo" (clarified by a question: update the README/CHANGELOG on `v2`), then
+   "Push it" and "Start V2-4".
+
+### Outputs (files, functions)
+- `src/core/fem3d/Element.*`: Q1 hexahedron stiffness and loads as tensor products of the 1D
+  linear-element matrices; bilinear face convection matrix and loads; Gauss quadrature for
+  non-uniform source and ambient fields (used by the manufactured solution).
+- `src/core/fem3d/Assembly.*`: `LinearSystem`, `assemble` (pattern from grid connectivity, CSR
+  scatter, convection, symmetric Dirichlet elimination with saved rows for reactions, cost).
+- `src/core/fem3d/Post.*`: `energyAudit`, `reactions`, `peakTemperature`, `sampleTemperature`,
+  `errorNorms`.
+- Tests: `tests/unit/fem3d/ElementTest.cpp`, `AssemblyTest.cpp` (12), and
+  `tests/numerical/fem3d/VerificationTest.cpp` (6, label `numerical`).
+- Spec §3.5: measured assembly cost; README and CHANGELOG updated for V2-4.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **371/371 tests pass in both**.
+- Hand-checked element values: unit-conductivity cube stiffness diagonal h/3, edge 0, face and
+  body diagonals −h/12; ∫x·N over the unit cube 1/12 and 1/24; face mass h·A/9 and h·A/36.
+- Verification results (all from the test output, PCG-J at relative residual 1e-13):
+
+  | Check | Result |
+  |---|---|
+  | Patch test, harmonic trilinear field, Dirichlet / convection faces | nodal error < 1e-9 / < 1e-8 |
+  | v1 bar in 3D (s = 10 and 5 mm) | max nodal error 1.1e-11 / 6.6e-11 K; ends 0.4200000000 / 0.5800000000 W |
+  | Manufactured solution, 4 → 32 cells | RMS error 0.156 → 0.00248 K; observed order 1.999 (L2), 2.001 (nodal) |
+  | Single fin vs 1D fin theory | heat 3.01756 vs 3.01770 W (−0.005 %); tip 77.504 vs 77.481 °C |
+  | HS-7, s = 2 mm (13 200 DOF) | relative energy imbalance 1.9e-12; T_max 99.03 °C in the die; PCG-J 768 iterations, κ_est 1.37e5 |
+
+  (HS-7's T_max follows from the chosen inputs P = 30 W, h = 25 W/(m²·K); it is not a
+  validated prediction.)
+- Fault injection, as in v1 (deliberate, code restored afterwards): removing the column move
+  `f_j −= K_jd·T_d` from the Dirichlet elimination failed the patch, bar and fin tests; the bar's
+  energy audit showed an imbalance of 104–109 % and the ends carried −9.5 / −1.5 W. The two
+  convection-only tests (manufactured solution, HS-7) correctly still passed.
+- Assembly cost on HS-7 measured with a temporary test (removed): 4.67 s and 1.16 GB for
+  3 759 720 DOF, ~25.7 entries per row.
+- **Not run:** Linux CI (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first README test filter used `Element` as a pattern, which would also have matched v1's
+  `ElementMatrices.*` tests; changed to `Element\.` and checked that the filter selects exactly
+  the 82 V2 tests.
+- The first fin tolerances (1 % heat, 0.2 K tip) were much looser than the measured agreement;
+  tightened to 0.2 % and 0.1 K so the test can catch a real regression.
+
+---
+
 ## Entry template
 
 ```markdown
