@@ -13,6 +13,33 @@ numerics, file processing and concurrency are written in C++17.
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
+## V2 status (work in progress on branch [`v2`](https://github.com/ftaakash/UniForge/tree/v2))
+
+This branch (`main`) and the tag `v1.0.0` are the submitted v1 and stay unchanged apart from
+this note. V2 answers the Assignment Extension Notice: three different solver types applied to
+the same steady thermal analysis on a more complex 3D object, delivered as one PDF report.
+
+- **Object:** HS-7, a finned heat sink on a heated die with a thin thermal interface layer, plus
+  a complexity ladder from the v1 bar and a cube to a pin-fin variant.
+- **Solvers:** sparse direct Cholesky (RCM and nested-dissection orderings), preconditioned
+  conjugate gradients (Jacobi, IC(0)) and smoothed-aggregation algebraic multigrid, written from
+  scratch on shared, deterministic sparse kernels.
+- **Specification:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2/docs/design/v2/UniForge_V2_Build_Spec.md);
+  progress and build notes in the [`v2` README](https://github.com/ftaakash/UniForge/blob/v2/README.md).
+
+| Phase | Content | Status (2026-11-21) |
+|---|---|---|
+| V2-0 | Design documents and build specification | Done, tag `v2-phase-0` |
+| V2-1 | Sparse kernels (CSR, deterministic kernel pool, SpMV, SpGEMM) | Done, tag `v2-phase-1` |
+| V2-2 | Box designs and graded tensor-grid hex mesher | Done, tag `v2-phase-2` |
+| V2-3 | Solver interface, reports, Jacobi-PCG | Done, tag `v2-phase-3` |
+| V2-4 | 3D finite elements and verification (v1 bar reproduced in 3D, order-2 convergence, fin theory) | Done, tag `v2-phase-4` |
+| V2-5 | Sparse direct Cholesky | In progress |
+| V2-6 … V2-10 | IC(0), algebraic multigrid, experiments, figures, PDF report | Planned |
+
+Each phase tag runs the Windows and Linux (ASan/TSan) CI; V2-0 to V2-4 pass. No V2 results
+are final until the report is written.
+
 ## Features
 
 | Area | Task | What it does | Evidence |
