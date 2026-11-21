@@ -13,6 +13,46 @@ numerics, file processing and concurrency are written in C++17.
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
+## V2: three solvers on a 3D thermal problem (in progress, branch `v2`)
+
+PASS SCIENCE WORKS sent an Assignment Extension Notice: apply three different types of solver
+to the same thermal analysis, on a more complex 3D object than the v1 bar, and justify which
+works best in which scenario. The deliverable is a single PDF report. V2 is built on branch
+`v2` phase by phase; `main` and the `v1.0.0` tag stay as submitted.
+
+- **Object:** HS-7, a finned aluminium heat sink on a heated silicon die with a thin thermal
+  interface layer (dimensions from v1's `data/geometry/heatsink_fins.stl`), plus a complexity
+  ladder from the v1 bar and a cube up to a pin-fin variant.
+- **Solvers:** sparse direct Cholesky (RCM and nested-dissection orderings), preconditioned
+  conjugate gradients (Jacobi, IC(0)) and smoothed-aggregation algebraic multigrid, all written
+  from scratch on shared, deterministic sparse kernels.
+- **Plan and specification:** [V2 build specification](docs/design/v2/UniForge_V2_Build_Spec.md)
+  (merged from the [analysis and plan](docs/design/v2/UniForge_V2_Analysis_and_Plan.md), the
+  [design review](docs/design/v2/UniForge_V2_Design_Review.md) and the
+  [system design](docs/design/v2/UniForge_V2_System_Design.md)).
+
+| Phase | Content | Tag | Status |
+|---|---|---|---|
+| V2-0 | Design documents and build specification | `v2-phase-0` | Done |
+| V2-1 | Sparse kernels: CSR storage, persistent kernel pool with thread-count-independent reductions, SpMV, SpGEMM | `v2-phase-1` | Done |
+| V2-2 | Box designs (v1 bar, cube, plate, finned plate, HS-7, pin fin) and graded tensor-grid hex mesher | `v2-phase-2` | Done |
+| V2-3 | Solver interface and reports, observers, κ estimate, Jacobi-PCG, module-rule lint | `v2-phase-3` | Done |
+| V2-4 | Trilinear hex element, CSR assembly, boundary conditions, energy audit, verification | – | Next |
+| V2-5 … V2-7 | Direct Cholesky, IC(0), algebraic multigrid | – | Planned |
+| V2-8 … V2-10 | Experiment harness and official runs, figures, PDF report | – | Planned |
+
+So far 353 tests pass on Windows (Release and Debug); 64 of them are new in V2. Every phase tag
+also runs the Linux ASan/TSan CI. The V2 code lives in `src/core/sparse/`, `src/core/fem3d/`
+and `src/core/solvers/`; build and test it exactly like v1 (see [Build from source](#build-from-source)).
+To run only the V2 tests:
+
+```bash
+ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Lanczos|Pcg|SolverFactory|v2_module_rules"
+```
+
+No V2 numbers are final yet: values in the V2 documents marked [EST] are estimates and will be
+replaced by measurements before they reach the report.
+
 ## Features
 
 | Area | Task | What it does | Evidence |
@@ -164,6 +204,8 @@ src/core/       portable C++17 engineering core (standard library only): common/
                 CSV/SVG/JSON writers, Rng), thermal/ (1D FEA), io/ (line reader, STL and CSV
                 importers), perf/ (batch generator, worker pool, runners, benchmark, SystemInfo),
                 hw/ (simulated device adapters, retry policy), ml/ (one-neuron backprop)
+                V2: sparse/ (CSR, kernel pool, SpMV, SpGEMM), fem3d/ (box designs, graded hex
+                mesher), solvers/ (solver interface, reports, observers, PCG)
 src/app/        UniForge.exe: platform/ (Win32, D3D11, crash handler), services/ (JobRunner,
                 LogSink, ResultStore, DeviceManager), render/ (3D viewport), ui/ (theme, fonts,
                 shell, widgets), views/, shaders/
@@ -173,15 +215,17 @@ src/cli/        uniforge_cli.exe (headless evidence generator on the same core; 
 tests/          unit, numerical, negative and integration tests (GoogleTest + CTest labels),
                 fixtures/ (one malformed STL/CSV file per failure mode), golden/ (expected CLI
                 output)
+                and lint/ (V2 module dependency rules as a CTest check)
 data/           sample STL and SYNTHETIC CSV files, PROVENANCE.md
 results/        committed evidence: csv/ (with .meta.json sidecars), plots/, benchmarks/,
                 edge_cases.md
 tools/          package.ps1, hygiene_scan.ps1, bench_report.ps1, edge_case_runs.ps1,
                 build_report.ps1, ZIP-specific VS Code config and regenerate_evidence.cmd
                 wrapper (no backend logic)
-docs/           report/, design/, task notes (thermal_fea, performance, embedded_design,
-                backprop), ownership, walkthrough, demo script, AI-use and effort logs,
-                demo/screenshots/, appendix_handwritten/
+docs/           report/, design/ (v1 and design/v2/), task notes (thermal_fea, performance,
+                embedded_design, backprop), ownership, walkthrough, demo script, AI-use and
+                effort logs, demo/screenshots/, appendix_handwritten/, report_v2/ (V2 figure
+                tokens; the V2 report later)
 ```
 
 ## Known limitations
@@ -202,6 +246,7 @@ docs/           report/, design/, task notes (thermal_fea, performance, embedded
 - [Screenshots of every view](docs/demo/screenshots/) and [edge-case runs](results/edge_cases.md)
 - Demo video: `RA2311042010060_Demo.mp4` (submitted alongside the ZIP; 57 MB, too large for the repository), recorded from the packaged app following the demo script
 - [Final build specification](docs/design/UniForge_Final_Build_Spec.md)
+- [V2 build specification](docs/design/v2/UniForge_V2_Build_Spec.md) and the [V2 design documents](docs/design/README.md#v2-assignment-extension-notice-2026-11-15)
 - [Thermal FEA: formulation, verification, debugging log](docs/thermal_fea.md)
 - [Multicore performance analysis](docs/performance.md) and [embedded integration design](docs/embedded_design.md)
 - [Backpropagation: derivation and measured loss curve](docs/backprop.md) and the [handwritten-appendix checklist](docs/appendix_handwritten/CHECKLIST.md)

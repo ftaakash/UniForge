@@ -3,6 +3,46 @@
 All notable changes are recorded here, one section per development phase.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] - V2 (branch `v2`)
+
+V2 answers the Assignment Extension Notice: three solver types on a 3D thermal analysis of a
+more complex object, reported in one PDF. Specification:
+`docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
+
+### Phase V2-3: Solver interface and Jacobi-PCG (`v2-phase-3`)
+- `src/core/solvers/`: two-phase solver interface (setup once, solve per load case); a method
+  failure (breakdown, iteration or time cap, stagnation, over budget, cancelled) is a status,
+  misuse is an error. `makeSolver` builds PCG-J; the other kinds name the phase that adds them.
+- Solve report: solver time with observer time excluded, per-iteration timestamps, residual
+  history, SpMV count, bytes moved and SpMV-equivalents, κ estimate from the CG–Lanczos
+  tridiagonal, true residual and the masked residual sum (heat imbalance).
+- Observers `ErrorVsReference` (time-to-accuracy) and `Snapshot`.
+- PCG with identity (tests only) and Jacobi preconditioners; bit-identical for any thread count.
+- `tests/lint/module_rules.cmake`: CTest check that solvers, sparse and viz do not include fem3d.
+- 15 unit tests plus the lint check.
+
+### Phase V2-2: Geometry and mesher (`v2-phase-2`)
+- `src/core/fem3d/Design`: boxes with materials and per-face boundary conditions, validation,
+  and the ladder objects v1 bar (L0a), cube (L0b), plate (L1), finned plate (L2), HS-7 (L3) and
+  pin fin (L4).
+- `src/core/fem3d/HexMesh`: graded tensor-grid mesher (every box face is a grid line, neighbour
+  size ratio ≤ 1.5, fixed TIM layers), compact node numbering, boundary faces tagged with box
+  and side, outward surface triangles.
+- Measured HS-7 mesh sizes along the spacing ladder (56 015 … 3 759 720 nodes) recorded in the
+  build specification §3.4.
+- 19 unit tests, including exact volume and convective area, a watertight outward surface and
+  an STL round trip through the v1 importer.
+
+### Phase V2-1: Sparse kernels (`v2-phase-1`)
+- `src/core/sparse/`: CSR matrix and pattern (32-bit columns, 64-bit offsets) with validation;
+  persistent `KernelPool` whose fixed 4096-row chunks make reductions bit-identical for any
+  thread count; dot, norms, axpy, xpay, SpMV, residual; transpose and SpGEMM with exact allocation.
+- 29 unit tests.
+
+### Phase V2-0: Design (`v2-phase-0`)
+- `docs/design/v2/`: analysis and plan, design review (amendments A1–A15), system design
+  (Design A vs B) and the merged V2 build specification; `docs/report_v2/figure_tokens.md`.
+
 ## [1.0.0] - 2026-11-02
 
 ### Phase 9: Delivery
