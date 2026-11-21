@@ -34,10 +34,12 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-2 | Box designs and graded tensor-grid hex mesher | Done, tag `v2-phase-2` |
 | V2-3 | Solver interface, reports, Jacobi-PCG | Done, tag `v2-phase-3` |
 | V2-4 | 3D finite elements and verification (v1 bar reproduced in 3D, order-2 convergence, fin theory) | Done, tag `v2-phase-4` |
-| V2-5 | Sparse direct Cholesky | In progress |
-| V2-6 … V2-10 | IC(0), algebraic multigrid, experiments, figures, PDF report | Planned |
+| V2-5 | Sparse direct Cholesky (RCM and nested-dissection orderings) | Done, tag `v2-phase-5` |
+| V2-6 | IC(0) preconditioner | Next |
+| V2-7 … V2-10 | Algebraic multigrid, experiments, figures, PDF report | Planned |
 
-Each phase tag runs the Windows and Linux (ASan/TSan) CI; V2-0 to V2-4 pass. No V2 results
+Each phase tag runs the Windows and Linux (ASan/TSan) CI; V2-0 to V2-4 pass, V2-5 was just
+pushed. No V2 results
 are final until the report is written.
 
 ## Features
