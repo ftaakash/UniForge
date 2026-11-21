@@ -36,3 +36,4 @@ Actual hours are filled in from the session timestamps when each phase is review
 | 2026-11-15 | V2-0 Design | Notice analysis, plan, design review, system design, merged build spec, figure tokens, branch | 1–2 | to fill | to fill |
 | 2026-11-18 | V2-1 Sparse kernels | CSR storage, persistent kernel pool with deterministic reductions, vector kernels, SpMV, transpose, SpGEMM, 29 tests | 3–4 | to fill | to fill |
 | 2026-11-18 | V2-2 Geometry and mesher | Box designs L0a–L4, graded tensor-grid hex mesher, boundary faces, surface export, 19 tests, measured mesh sizes | 2–3 | to fill | to fill |
+| 2026-11-21 | V2-3 Solver interface and PCG-J | Solver types and reports, two-phase interface, observers, κ estimate, Jacobi-PCG, module-rule lint, 15 tests | 2–3 | to fill | to fill |

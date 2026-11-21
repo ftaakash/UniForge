@@ -164,6 +164,21 @@ uniforge_add_test(unit_fem3d
         unit/fem3d/HexMeshTest.cpp
     LIBS uniforge_core)
 
+# V2 solver interface and PCG (build spec §5.1, §5.3).
+uniforge_add_test(unit_solvers
+    LABEL unit
+    SOURCES
+        unit/solvers/LanczosTest.cpp
+        unit/solvers/PcgTest.cpp
+    LIBS uniforge_core)
+target_include_directories(unit_solvers PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}") # support/
+
+# V2 module dependency rules (build spec §4.2): e.g. solvers never include fem3d.
+add_test(NAME lint.v2_module_rules
+    COMMAND "${CMAKE_COMMAND}" "-DSRC=${PROJECT_SOURCE_DIR}/src/core"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/lint/module_rules.cmake")
+set_tests_properties(lint.v2_module_rules PROPERTIES LABELS unit)
+
 uniforge_add_test(numerical_perf
     LABEL numerical
     SOURCES

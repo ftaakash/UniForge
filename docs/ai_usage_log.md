@@ -850,6 +850,58 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-21: Solver interface and Jacobi-PCG (Phase V2-3)
+
+### Prompts (representative)
+1. "Start V2-3" (after approving and pushing V2-2, whose CI run passed on Windows and Linux).
+
+### Outputs (files, functions)
+- `src/core/solvers/SolverTypes.hpp`: `SolverKind` and `SolveStatus` with their labels,
+  `MemoryFootprint`, `CoordinateHint`, `SolverOptions`, `SolveControl`, `SetupReport`,
+  `SolveReport` (status, iterations, solver time with observer time excluded, SpMV count, bytes
+  moved and SpMV-equivalents, residual history, per-iteration timestamps, κ estimate, true
+  residual, masked residual sum).
+- `src/core/solvers/LinearSolver.hpp` + `SolverFactory.cpp`: the two-phase interface
+  (`setup` once, `solve` per load case) and `makeSolver` (PCG-J now; other kinds return an
+  error naming the phase that adds them).
+- `src/core/solvers/Observers.*`: `IterationObserver`, `ErrorVsReference`, `Snapshot`.
+- `src/core/solvers/krylov/Lanczos.*`: Sturm-bisection extreme eigenvalues of a symmetric
+  tridiagonal matrix; κ estimate from the CG coefficients.
+- `src/core/solvers/krylov/Preconditioner.*`, `Pcg.*`: preconditioner interface, identity
+  (plain CG, tests only) and Jacobi; PCG with Breakdown, MaxIterations, Stagnated, TimeCap,
+  Cancelled and OverBudget statuses.
+- `tests/unit/solvers/*`: 15 tests; `tests/lint/module_rules.cmake`: CTest check of the module
+  dependency rules (spec §4.2).
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **353/353 tests pass in both**.
+- PCG-J reproduces the dense solution of a 400-unknown 2D Laplacian to 1e-9 (relative); the
+  true residual after the solve is below 1e-11.
+- κ estimate on the 1D Laplacian (n = 200), where the closed form is known: between 0.9× and
+  1× of the exact value, as expected for a Lanczos lower bound.
+- Bit-identical iterates, iteration counts, residual histories and κ estimates for 1, 2, 3 and
+  8 threads (8100 unknowns, two kernel chunks).
+- Jacobi takes fewer than a third of plain CG's iterations on a badly scaled Laplacian
+  (scaling 1e-3 … 1e3).
+- Every failure status is produced by a constructed case (iteration cap, time cap 0, cancel,
+  stagnation window 2, 1-byte memory budget, indefinite matrix); misuse returns errors.
+- Module-rule lint: a deliberately added `#include "core/fem3d/..."` under `solvers/` made the
+  check fail (exit 1); removed, it passes.
+- **Not run:** Linux CI (after the push). Not measured: observer overhead and kernel-pool
+  overhead (V2-8).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first PCG test file named its helper struct `Run`. Inside a googletest `TEST` body that
+  name resolves to the fixture's inherited `testing::Test::Run()` member, so the build failed
+  with "undeclared identifier"; renamed to `Outcome` / `runSolver`.
+- The first observer test solved a 900-unknown system with the O(n³) dense oracle (~7e8
+  operations), which would be slow in Debug; reduced to 400 unknowns before the first build.
+
+---
+
 ## Entry template
 
 ```markdown

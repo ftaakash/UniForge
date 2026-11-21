@@ -31,6 +31,11 @@ add_library(uniforge_core STATIC
     ml/GradientCheck.cpp
     ml/TinyNet.cpp
     ml/Trainer.cpp
+    solvers/Observers.cpp
+    solvers/SolverFactory.cpp
+    solvers/krylov/Lanczos.cpp
+    solvers/krylov/Pcg.cpp
+    solvers/krylov/Preconditioner.cpp
     sparse/CsrMatrix.cpp
     sparse/KernelPool.cpp
     sparse/SparseOps.cpp
