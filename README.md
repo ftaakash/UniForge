@@ -27,7 +27,7 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 - **Specification:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2/docs/design/v2/UniForge_V2_Build_Spec.md);
   progress and build notes in the [`v2` README](https://github.com/ftaakash/UniForge/blob/v2/README.md).
 
-| Phase | Content | Status (2026-11-21) |
+| Phase | Content | Status (2026-11-22) |
 |---|---|---|
 | V2-0 | Design documents and build specification | Done, tag `v2-phase-0` |
 | V2-1 | Sparse kernels (CSR, deterministic kernel pool, SpMV, SpGEMM) | Done, tag `v2-phase-1` |
@@ -35,12 +35,14 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-3 | Solver interface, reports, Jacobi-PCG | Done, tag `v2-phase-3` |
 | V2-4 | 3D finite elements and verification (v1 bar reproduced in 3D, order-2 convergence, fin theory) | Done, tag `v2-phase-4` |
 | V2-5 | Sparse direct Cholesky (RCM and nested-dissection orderings) | Done, tag `v2-phase-5` |
-| V2-6 | IC(0) preconditioner | Next |
-| V2-7 … V2-10 | Algebraic multigrid, experiments, figures, PDF report | Planned |
+| V2-6 | IC(0) preconditioner with shift ladder (PCG-IC0) | Done, tag `v2-phase-6` |
+| V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG): all six solver variants built | Done, tag `v2-phase-7` |
+| V2-8 | Experiment harness (241 planned runs, one process per run, resumable) and dry run | In progress: harness and dry run done, official overnight batch pending |
+| V2-9 … V2-10 | Figures, PDF report | Planned |
 
-Each phase tag runs the Windows and Linux (ASan/TSan) CI; V2-0 to V2-4 pass, V2-5 was just
-pushed. No V2 results
-are final until the report is written.
+Each phase tag runs the Windows and Linux (ASan/TSan) CI. All pass except `v2-phase-5`, whose
+Linux build failed on a GCC 13 false-positive warning; the one-line fix is in the next commit and
+passed CI with `v2-phase-6`. No V2 results are final until the report is written.
 
 ## Features
 
