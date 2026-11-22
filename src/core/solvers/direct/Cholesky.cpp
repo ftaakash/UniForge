@@ -318,7 +318,9 @@ Result<SolveReport> DirectCholesky::solve(const Vector& f, Vector& x, const Solv
     sparse::residual(*pool_, K, x, f, r);
     const double normF = sparse::norm2(*pool_, f);
     rep.finalTrueRelResidual = normF > 0.0 ? sparse::norm2(*pool_, r) / normF : 0.0;
-    rep.residualHistory = {rep.finalTrueRelResidual};
+    // assign() rather than `= {value}`: GCC 13 with ASan/UBSan reports a false -Warray-bounds on
+    // the one-element initializer-list assignment (CI run of v2-phase-5).
+    rep.residualHistory.assign(1, rep.finalTrueRelResidual);
     if (control.residualSumMask != nullptr) {
         double sum = 0.0;
         for (std::size_t i = 0; i < n; ++i) {
