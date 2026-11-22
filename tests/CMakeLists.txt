@@ -177,6 +177,7 @@ uniforge_add_test(numerical_fem3d
 uniforge_add_test(unit_solvers
     LABEL unit
     SOURCES
+        unit/solvers/AmgTest.cpp
         unit/solvers/DirectTest.cpp
         unit/solvers/Ic0Test.cpp
         unit/solvers/LanczosTest.cpp

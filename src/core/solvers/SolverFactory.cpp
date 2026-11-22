@@ -1,6 +1,7 @@
 #include <string>
 
 #include "core/solvers/LinearSolver.hpp"
+#include "core/solvers/amg/Amg.hpp"
 #include "core/solvers/direct/Cholesky.hpp"
 #include "core/solvers/krylov/Ic0.hpp"
 #include "core/solvers/krylov/Pcg.hpp"
@@ -22,14 +23,14 @@ Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind) {
         return std::unique_ptr<LinearOperatorSolver>(
             std::make_unique<Pcg>(kind, std::make_unique<Ic0Preconditioner>()));
     case SolverKind::Amg:
+        return std::unique_ptr<LinearOperatorSolver>(std::make_unique<AmgSolver>());
     case SolverKind::AmgPcg:
-        break;
+        return std::unique_ptr<LinearOperatorSolver>(
+            std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>()));
     }
-    const char* phase = "V2-7";
     return makeError(ErrorCode::InvalidInput,
-                     std::string("Solver ") + std::string(label(kind)) +
-                         " is not built yet; it is added in phase " + phase + ".",
-                     "Use PCG-J, PCG-IC0 or a direct solver until then.");
+                     "Unknown solver kind " + std::to_string(static_cast<int>(kind)) + ".",
+                     "This is a programming error in the caller.");
 }
 
 } // namespace uniforge::solvers

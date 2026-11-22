@@ -40,3 +40,4 @@ Actual hours are filled in from the session timestamps when each phase is review
 | 2026-11-21 | V2-4 3D FEA and verification | Q1 element, CSR assembly, convection and Dirichlet, energy audit, post-processing, verification ladder, fault injection, 18 tests | 3–4 | to fill | to fill |
 | 2026-11-21 | V2-5 Direct Cholesky | RCM and nested-dissection orderings, symbolic with budget, up-looking Cholesky, ladder measurement, 11 tests; main README note | 4–6 | to fill | to fill |
 | 2026-11-22 | V2-6 IC(0) | IC(0) with shift ladder, PCG-IC0, positive-coupling element test, V2-5 Linux CI fix, 7 tests | 1 | to fill | to fill |
+| 2026-11-22 | V2-7 AMG | Strength, aggregation, smoothed prolongator, Galerkin hierarchy, symmetric V-cycle, AMG and AMG-PCG, diagnostics, 8 tests | 4–6 | to fill | to fill |

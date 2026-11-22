@@ -74,10 +74,9 @@ Result<SetupReport> Pcg::setup(const CsrMatrix& K, const CoordinateHint& /*hint*
         pre.seconds = secondsSince(t0);
         return pre;
     }
-    report.detail = pre.detail;
+    // Keep everything the preconditioner reported (IC(0) shift, AMG hierarchy, its phases).
+    report = std::move(pre);
     report.phases.emplace_back("preconditioner", secondsSince(tp));
-    report.preconditionerShift = pre.preconditionerShift;
-    report.preconditionerRetries = pre.preconditionerRetries;
     r_.assign(n, 0.0);
     z_.assign(n, 0.0);
     p_.assign(n, 0.0);

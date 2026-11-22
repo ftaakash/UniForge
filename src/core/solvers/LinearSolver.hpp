@@ -37,8 +37,7 @@ public:
     [[nodiscard]] virtual MemoryFootprint footprint() const = 0;
 };
 
-// Creates a solver of the given kind. Kinds not built yet return InvalidInput naming the phase
-// that adds them (V2-5 direct, V2-6 IC(0), V2-7 AMG).
+// Creates a solver of the given kind with default options (all six kinds exist since V2-7).
 [[nodiscard]] Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind);
 
 } // namespace uniforge::solvers

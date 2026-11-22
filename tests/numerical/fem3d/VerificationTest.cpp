@@ -13,6 +13,7 @@
 
 #include "core/fem3d/Assembly.hpp"
 #include "core/fem3d/Post.hpp"
+#include "core/solvers/amg/Amg.hpp"
 #include "core/solvers/direct/Cholesky.hpp"
 #include "core/solvers/krylov/Ic0.hpp"
 #include "core/solvers/krylov/Pcg.hpp"
@@ -375,5 +376,56 @@ TEST(Verification, PcgIc0AgreesWithPcgJacobiOnTheFeSystems) {
                     r.value().kappaEstimate, ref.report.kappaEstimate, maxDiff);
         EXPECT_LT(maxDiff, 1e-6) << d.name;
         EXPECT_LT(r.value().iterations, ref.report.iterations) << d.name;
+    }
+}
+
+// ---- AMG on the FE systems --------------------------------------------------------------------
+
+TEST(Verification, AmgAndAmgPcgAgreeWithPcgJacobiOnTheFeSystems) {
+    using uniforge::solvers::AmgPreconditioner;
+    using uniforge::solvers::AmgSolver;
+    for (const Design& d : {makeV1Bar(), makeHS7()}) {
+        const double s = d.ladderLevel == "L0a" ? 0.005 : 2e-3;
+        const Solved ref = solve(d, s);
+        for (const bool asPreconditioner : {false, true}) {
+            KernelPool pool(1);
+            std::unique_ptr<uniforge::solvers::LinearOperatorSolver> solver;
+            if (asPreconditioner) {
+                solver = std::make_unique<Pcg>(SolverKind::AmgPcg,
+                                               std::make_unique<AmgPreconditioner>());
+            } else {
+                solver = std::make_unique<AmgSolver>();
+            }
+            auto su = solver->setup(ref.system.K, {}, pool, {});
+            ASSERT_TRUE(su.ok());
+            ASSERT_EQ(su.value().status, SolveStatus::Converged) << su.value().detail;
+            Vector T(ref.T.size(), 0.0);
+            SolveControl c;
+            // Stand-alone AMG on HS-7 plateaus near 3e-12 (rounding floor, κ_est ~1e5), so it is
+            // asked for 1e-11; AMG-PCG reaches 1e-13 like the reference.
+            c.relTol = asPreconditioner ? 1e-13 : 1e-11;
+            c.maxIterations = 20000;
+            c.stagnationWindow = 0;
+            c.residualSumMask = &ref.system.freeMask;
+            auto r = solver->solve(ref.system.f, T, c);
+            ASSERT_TRUE(r.ok());
+            ASSERT_EQ(r.value().status, SolveStatus::Converged) << r.value().detail;
+            double maxDiff = 0.0;
+            for (std::size_t i = 0; i < T.size(); ++i) {
+                maxDiff = std::max(maxDiff, std::fabs(T[i] - ref.T[i]));
+            }
+            const EnergyAudit a = energyAudit(d, ref.mesh, ref.system, T);
+            std::printf("[%s %s] DOF %zu, levels %zu, op. complexity %.2f, %d iterations "
+                        "(PCG-J %d), setup %.3f s, |T − T_J| %.2e K, rel. imbalance %.2e\n",
+                        asPreconditioner ? "AMG-PCG" : "AMG", d.name.c_str(), T.size(),
+                        su.value().levels.size(), su.value().operatorComplexity,
+                        r.value().iterations, ref.report.iterations, su.value().seconds, maxDiff,
+                        a.relImbalance);
+            EXPECT_LT(maxDiff, 1e-6) << d.name;
+            EXPECT_LT(a.relImbalance, 1e-9) << d.name;
+            if (asPreconditioner) {
+                EXPECT_LT(r.value().iterations, ref.report.iterations) << d.name;
+            }
+        }
     }
 }

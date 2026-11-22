@@ -1051,6 +1051,57 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-22: Smoothed-aggregation AMG (Phase V2-7)
+
+### Prompts (representative)
+1. "Start V2-7".
+
+### Outputs (files, functions)
+- `src/core/solvers/amg/Amg.*`: `strongConnections`, `aggregate`, `tentativeProlongator`,
+  `smoothedProlongator`, `AmgHierarchy` (build, symmetric V-cycle, statistics, footprint),
+  `AmgPreconditioner` (AMG-PCG), `AmgSolver` (stand-alone AMG).
+- `SolverTypes.hpp`: AMG options (threshold, per-level decay, coarse size, levels, sweeps) and
+  hierarchy statistics in the setup report; `Pcg::setup` keeps the preconditioner's full report;
+  `makeSolver` builds all six variants.
+- Tests: `tests/unit/solvers/AmgTest.cpp` (7), a verification test (AMG and AMG-PCG vs PCG-J on
+  the bar and HS-7); the factory test now expects every kind.
+- Spec §5.4 (measured) and K2; README and CHANGELOG.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **397/397 tests pass in both**.
+- V2-6's CI run passed on all jobs, so the V2-5 Linux fix (`c0b2565`) is confirmed.
+- P·1 = 1 on a zero-row-sum matrix; coarse operators symmetric and factorisable; the V-cycle
+  preconditioner satisfies yᵀM⁻¹x = xᵀM⁻¹y and xᵀM⁻¹x > 0 on random vectors.
+- 3D Laplacian, stand-alone AMG to 1e-8: 15 / 16 / 16 / 19 cycles for 10³ / 16³ / 24³ / 32³
+  (mean factor 0.28–0.36). PCG on 24³ to 1e-10: Jacobi 109, IC(0) 39, AMG 11 iterations.
+- HS-7 at 2 mm: AMG-PCG 84 iterations to 1e-13 (PCG-IC0 117, PCG-J 800); stand-alone AMG
+  673 cycles to 1e-11; temperatures equal to PCG-J's within 3.4e-11 K, energy balanced to 2e-12.
+- **Not run:** Linux CI for this phase (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **Constant strength threshold.** My first version used θ = 0.08 on every level. The
+  mesh-independence test failed: cycles grew 16 → 30 → 56 → 89 from 10³ to 32³. A temporary
+  diagnostic showed the second-level aggregation discarding most coarse couplings; halving θ per
+  level (the schedule usually described for smoothed aggregation, [VERIFY] against Vaněk et al.)
+  restored 15–19 cycles. The decay is now an option with default 0.5.
+- **Isolated nodes pulled into aggregates.** The first aggregation added every strong neighbour
+  of a root, including isolated nodes (identity rows such as Dirichlet nodes); caught by the
+  aggregation test and fixed.
+- **Rounding asymmetry of the Galerkin product.** Pᵀ(A·P) failed an exact symmetry check on
+  entries that cancel; coarse operators are now averaged with their transpose, which keeps the
+  V-cycle exactly symmetric for CG.
+- **Divergence rule too eager.** "Residual grew three cycles in a row" fired on rounding noise
+  at ~3e-12 on HS-7; now it also requires the residual to be 10× above its best.
+- **The plan's expectation (H4) that AMG is robust to the TIM did not hold for stand-alone AMG:**
+  673 cycles on HS-7 against 56–62 on the same mesh without the TIM, not cured by θ or a second
+  sweep. Recorded as a finding (risk K2) instead of being tuned away; AMG-PCG remains the
+  fastest-converging Krylov variant.
+
+---
+
 ## Entry template
 
 ```markdown

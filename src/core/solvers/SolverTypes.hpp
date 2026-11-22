@@ -103,6 +103,13 @@ struct SolverOptions {
     std::size_t memoryBudgetBytes = std::numeric_limits<std::size_t>::max();
     // Direct solver: leaf size below which nested dissection stops splitting a subgraph.
     int dissectionLeafSize = 64;
+    // Smoothed-aggregation AMG (build spec §5.4).
+    double amgStrengthThreshold =
+        0.08;                      // j is a strong neighbour of i if |a_ij| ≥ θ·sqrt(a_ii·a_jj)
+    double amgStrengthDecay = 0.5; // θ on level l = amgStrengthThreshold · decay^l
+    int amgCoarseSize = 500;       // stop coarsening at this many rows (then direct solve)
+    int amgMaxLevels = 20;
+    int amgSweeps = 1; // Gauss–Seidel sweeps before and after the coarse correction
 };
 
 class IterationObserver;
@@ -137,6 +144,11 @@ struct SetupReport {
     // factorised) and how many shifts failed before it (build spec §5.3, amendment A7).
     double preconditionerShift = 0.0;
     int preconditionerRetries = 0;
+    // Multigrid hierarchy (AMG): rows and stored entries per level (level 0 = K), and
+    // operator complexity Σ nnz(A_l)/nnz(A_0) and grid complexity Σ rows(A_l)/rows(A_0).
+    std::vector<std::pair<Index, std::int64_t>> levels;
+    double operatorComplexity = 0.0;
+    double gridComplexity = 0.0;
 };
 
 struct SolveReport {

@@ -9,6 +9,21 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-7: Smoothed-aggregation AMG (`v2-phase-7`)
+- `src/core/solvers/amg/Amg`: strength of connection with a threshold halving per level,
+  three-phase greedy aggregation (isolated nodes left out), piecewise-constant tentative
+  prolongator, prolongator smoothing with the filtered matrix and a Gershgorin ω, Galerkin
+  coarse operators (symmetrised exactly), direct solve on the coarsest level, symmetric V(ν,ν)
+  cycle with forward/backward Gauss–Seidel. `AmgSolver` (stand-alone, AMG) and
+  `AmgPreconditioner` (AMG-PCG); `makeSolver` now builds all six variants.
+- Setup report gains rows and nnz per level and operator/grid complexity; the PCG setup report
+  carries the full preconditioner report.
+- Measured: h-independent stand-alone convergence on the 3D Laplacian (15–19 cycles from 10³ to
+  32³); on HS-7 at 2 mm AMG-PCG needs 84 iterations (PCG-IC0 117, PCG-J 800), while stand-alone
+  AMG needs 673 cycles because of the thin TIM.
+- 7 AMG tests (aggregation, constants preserved, Galerkin symmetry and definiteness, V-cycle
+  symmetry, size independence, AMG-PCG vs IC(0) and Jacobi, statuses) and 1 verification test.
+
 ### Phase V2-6: IC(0) preconditioner (`v2-phase-6`)
 - `src/core/solvers/krylov/Ic0`: incomplete Cholesky with zero fill on the lower-triangle
   pattern; shift ladder K + α·diag(K), α = 0, 1e-3, 1e-2, 1e-1, 1, with the α used and the

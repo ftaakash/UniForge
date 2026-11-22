@@ -382,6 +382,18 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 | Tests | P preserves constants; Kc symmetric positive definite; Galerkin vs dense Pᵀ K P on small cases; two-grid factor bound (< 0.5 target [EST]); same answer as reference |
 | Pictures | **Aggregates coloured on the HS-7 surface**; hierarchy table; convergence factor per cycle |
 
+**Measured (V2-7, preliminary, single runs):**
+- Strength threshold θ_l = 0.08·0.5^l (halving per level) is needed: with a constant θ the
+  stand-alone cycle count on the 3D Laplacian grew 16 → 30 → 56 → 89 from 10³ to 32³; with the
+  decay it is 15 → 16 → 16 → 19 (mean factor 0.28–0.36), operator complexity 1.5–1.6.
+- PCG iterations on a 24³ Laplacian (to 1e-10): Jacobi 109, IC(0) 39, AMG 11.
+- **HS-7 at 2 mm (13 200 DOF): the thin TIM is AMG's weak spot (risk K2 materialised).**
+  Stand-alone AMG needs 673 cycles to 1e-11 (plate without fins and TIM: 56 cycles to 1e-10;
+  fins without TIM: 62), and neither θ (0.08, 0.02, 0) nor a second smoothing sweep cures it
+  (two sweeps: 263 cycles). As a preconditioner it stays the best Krylov option: AMG-PCG 84
+  iterations vs PCG-IC0 117 and PCG-J 800 (to 1e-13). The report must show this honestly;
+  remedies (material-aware strength, semi-coarsening across the TIM) are out of V2 scope.
+
 ### 5.5 Shared kernels (`sparse`)
 
 - `KernelPool`: threads start once and park on a barrier (v1's `perf::WorkerPool` spawns threads
@@ -691,7 +703,7 @@ Solver Lab GUI view (D-23, ~4 h), transient explicit vs implicit (~5 h), nonline
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
 | K1 | Direct hits its wall too early | Medium | Medium | Geometric ladder, ND, symbolic budget; the wall is a result |
-| K2 | AMG weak on thin TIM | Medium | High | Strength threshold, SGS, AMG-PCG; time-boxed; report as finding |
+| K2 | AMG weak on thin TIM | **Occurred (V2-7)** | High | Stand-alone AMG 673 cycles on HS-7 at 2 mm; AMG-PCG still best Krylov (84 it); reported as a finding, not tuned away |
 | K3 | IC(0) breakdown | Medium (not seen at 2 mm) | Low | Shift ladder, recorded, finding H8 |
 | K4 | No clear separation | Low | High | E3 knobs and L4 force separation |
 | K5 | Timing noise / unfair comparison | Medium | High | Pinning, repetition policy, idle check, observer subtraction, time-to-accuracy |
