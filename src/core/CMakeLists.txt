@@ -47,6 +47,9 @@ add_library(uniforge_core STATIC
     sparse/KernelPool.cpp
     sparse/SparseOps.cpp
     sparse/VectorOps.cpp
+    study/Collect.cpp
+    study/Plan.cpp
+    study/Runner.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp

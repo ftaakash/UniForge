@@ -9,6 +9,21 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-8: Experiment harness (official runs pending)
+- `src/core/study/`: code-defined plan of E0–E8 (241 runs; dry run 85) with ids a child process
+  resolves on its own; one run (mesh, assembly, solver setup and timed solves with 5/3/1
+  repetitions by run time, error observer on the first, iteration history, energy audit) and
+  references (direct ND within 8 GB, else AMG-PCG to 1e-12); collect into experiment CSVs, E5
+  load cases (setup + k·solve) and E2 time-to-accuracy.
+- `uniforge_cli study plan | run | batch | collect`: one process per run, Windows Job Object
+  memory cap and timeout kill, single-thread runs pinned to a performance core, keep-awake, CPU
+  load before each run, resume after a crash, refuses a dirty tree for official runs.
+- Dry run (85 runs, all left a result) found that the direct solvers returned a 2e13 °C
+  "solution" on the singular all-insulated case; `DirectCholesky` now reports Breakdown for a
+  pivot below 1e-13 of its diagonal and for a solve whose relative residual exceeds 1e-6.
+- `docs/v2_experiments.md` (harness and runbook); 8 study tests, a batch smoke test with
+  resume, 1 direct-solver test.
+
 ### Phase V2-7: Smoothed-aggregation AMG (`v2-phase-7`)
 - `src/core/solvers/amg/Amg`: strength of connection with a threshold halving per level,
   three-phase greedy aggregation (isolated nodes left out), piecewise-constant tentative

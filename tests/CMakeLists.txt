@@ -191,6 +191,20 @@ add_test(NAME lint.v2_module_rules
         -P "${CMAKE_CURRENT_SOURCE_DIR}/lint/module_rules.cmake")
 set_tests_properties(lint.v2_module_rules PROPERTIES LABELS unit)
 
+# V2 experiment harness (build spec §9): plan, records, references, one run, collect.
+uniforge_add_test(unit_study
+    LABEL unit
+    SOURCES unit/study/StudyTest.cpp
+    LIBS uniforge_core)
+
+# The batch end to end: child processes, result files, collection and resume (smoke plan T0).
+add_test(NAME integration.study_batch_smoke
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/study_smoke_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/study_smoke.cmake")
+set_tests_properties(integration.study_batch_smoke PROPERTIES LABELS integration)
+
 uniforge_add_test(numerical_perf
     LABEL numerical
     SOURCES

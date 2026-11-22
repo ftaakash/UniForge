@@ -248,3 +248,39 @@ TEST(DirectCholesky, MisuseIsAnError) {
     bad[4] = std::numeric_limits<double>::infinity();
     EXPECT_EQ(s.solve(bad, nine, {}).error().code, ErrorCode::NonFinite);
 }
+
+TEST(DirectCholesky, NumericallySingularMatrixIsABreakdownNotAnAnswer) {
+    // Graph Laplacian with irrational edge weights and zero row sums: singular, but rounding
+    // leaves the last pivot slightly nonzero, so a plain "pivot <= 0" test can miss it (E8 dry
+    // run, all-insulated HS-7: the direct solvers returned 2e13 degC).
+    KernelPool pool(1);
+    const Index m = 12;
+    std::vector<uniforge::sparse::Triplet> t;
+    std::vector<double> diag(toSize(m * m), 0.0);
+    const auto edge = [&](Index a, Index b, double w) {
+        t.push_back({a, b, -w});
+        t.push_back({b, a, -w});
+        diag[toSize(a)] += w;
+        diag[toSize(b)] += w;
+    };
+    for (Index j = 0; j < m; ++j) {
+        for (Index i = 0; i < m; ++i) {
+            const Index id = i + m * j;
+            if (i + 1 < m) {
+                edge(id, id + 1, std::sqrt(2.0) + 0.1 * i);
+            }
+            if (j + 1 < m) {
+                edge(id, id + m, std::sqrt(3.0) + 0.07 * j);
+            }
+        }
+    }
+    for (Index r = 0; r < m * m; ++r) {
+        t.push_back({r, r, diag[toSize(r)]});
+    }
+    const CsrMatrix A = uniforge::sparse::fromTriplets(m * m, m * m, t).value();
+    for (const Ordering o : {Ordering::Natural, Ordering::Rcm, Ordering::NestedDissection}) {
+        const Factored f = factorise(A, o, pool);
+        EXPECT_EQ(f.setup.status, SolveStatus::Breakdown)
+            << static_cast<int>(o) << ": " << f.setup.detail;
+    }
+}

@@ -41,3 +41,4 @@ Actual hours are filled in from the session timestamps when each phase is review
 | 2026-11-21 | V2-5 Direct Cholesky | RCM and nested-dissection orderings, symbolic with budget, up-looking Cholesky, ladder measurement, 11 tests; main README note | 4–6 | to fill | to fill |
 | 2026-11-22 | V2-6 IC(0) | IC(0) with shift ladder, PCG-IC0, positive-coupling element test, V2-5 Linux CI fix, 7 tests | 1 | to fill | to fill |
 | 2026-11-22 | V2-7 AMG | Strength, aggregation, smoothed prolongator, Galerkin hierarchy, symmetric V-cycle, AMG and AMG-PCG, diagnostics, 8 tests | 4–6 | to fill | to fill |
+| 2026-11-22 | V2-8 Harness and dry run | Study plan, runner, collect, study CLI, Job Object / pinning / keep-awake, dry run of 85 runs, direct singularity fix, 10 tests (official batch pending) | 7–9 | to fill | to fill |

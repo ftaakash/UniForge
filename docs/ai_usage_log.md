@@ -1102,6 +1102,59 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-22: Experiment harness and dry run (Phase V2-8, part 1)
+
+### Prompts (representative)
+1. "Start V2-8".
+
+### Outputs (files, functions)
+- `src/core/study/Plan.*`: `RunSpec`, `planExperiments` (E0–E8 and the CI smoke plan T0; 241
+  runs, dry run 85), `findRun`, `makeDesign`, `systemKey`, `ladderSpacing`.
+- `src/core/study/Runner.*`: `RunRecord` (CSV row with a fixed column list), `executeRun`
+  (assembly, references, repetitions by run time, observer, history, energy audit,
+  verification checks of E1), reference files.
+- `src/core/study/Collect.*`: experiment CSVs, E5 load cases, E2 time-to-accuracy,
+  `numbers.json`.
+- `src/cli/commands/StudyCommand.*` and `src/cli/platform/Process*`: `study plan | run | batch |
+  collect`; Job Object memory cap and timeout kill, performance-core pinning, keep-awake, CPU
+  load, resume, dirty-tree refusal.
+- `src/core/solvers/direct/Cholesky.cpp`: singularity detection (pivot ratio, solve residual).
+- Tests: `tests/unit/study/StudyTest.cpp` (8), `tests/integration/study_smoke.cmake` (batch +
+  resume), a direct-solver test. `docs/v2_experiments.md` (harness and runbook).
+
+### My edits
+- None to the code yet; this phase is for your review. The official overnight batch is not run.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **406/406 tests pass in both**.
+- The smoke batch (T0) runs 4 child processes, writes 4 converged rows, collects them, and a
+  second batch executes nothing (resume).
+- Dry run of the whole dry plan (85 runs, `build/study_dry`, not committed): every run left a
+  result; 79 converged; the singular case E8 is detected by all six solvers after the fix below;
+  stand-alone AMG stagnates on HS-7 at 0.794 mm and at h = 5 (the TIM weakness of V2-7).
+- **Not run:** the official batch (needs the machine idle overnight, D12) and Linux CI.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **Direct solver silently accepted a singular system.** In the dry run, both direct solvers
+  reported `Converged` on the all-insulated HS-7 (K singular) with peak temperatures of 2e13 °C,
+  a relative residual of 2.1 and a 100 % energy imbalance: rounding left the last pivot slightly
+  positive, so the V2-5 test `pivot ≤ 0` did not fire. Fixed with a relative pivot test
+  (pivot < 1e-13 of its diagonal) and a residual check after the solve (> 1e-6 → Breakdown);
+  pinned by `DirectCholesky.NumericallySingularMatrixIsABreakdownNotAnAnswer`. H9 now holds for
+  all six solvers. This is exactly what the dry run was for.
+- **Observer-overhead check inconclusive.** The pair with and without the error observer differed
+  by 9.5 %, which is process-to-process noise (only one of five repetitions carries the observer),
+  not a measured observer cost; N4 is left for the idle official batch.
+- **One commit per phase is not possible for V2-8:** the official batch refuses a dirty tree and
+  records the commit it measured, so the harness must be committed before the runs; the results
+  become a second commit, which gets the `v2-phase-8` tag.
+- Smaller slips caught by tests or builds: the dry plan's first run (E1) lacked the dry-run cap;
+  the T0 test compared a 5-character prefix of 188.199999… ; a shell command with nested quoting
+  failed to parse and was split into separate steps; the README test filter `Study` also matched
+  v1 tests and was narrowed to the 117 V2 tests.
+
+---
+
 ## Entry template
 
 ```markdown

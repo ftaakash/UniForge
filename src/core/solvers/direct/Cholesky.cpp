@@ -15,6 +15,11 @@ using Clock = std::chrono::steady_clock;
 using sparse::Offset;
 using sparse::toSize;
 
+// Pivot smaller than this fraction of its original diagonal: numerically singular (see numeric).
+constexpr double kSingularPivotRatio = 1e-13;
+// Largest relative residual accepted from a direct solve before it is reported as a breakdown.
+constexpr double kMaxDirectResidual = 1e-6;
+
 double secondsSince(Clock::time_point t0) {
     return std::chrono::duration<double>(Clock::now() - t0).count();
 }
@@ -207,6 +212,7 @@ Result<SetupReport> DirectCholesky::setup(const CsrMatrix& K, const CoordinateHi
             x[toSize(c.col[toSize(q)])] = c.val[toSize(q)];
         }
         double d = x[toSize(k)];
+        const double diagonal = d; // K_kk before the updates, for the singularity test below
         x[toSize(k)] = 0.0;
         for (Index t2 = top; t2 < n; ++t2) {
             const Index j = s[toSize(t2)];
@@ -220,11 +226,15 @@ Result<SetupReport> DirectCholesky::setup(const CsrMatrix& K, const CoordinateHi
             L.val[toSize(next[toSize(j)])] = lkj;
             ++next[toSize(j)];
         }
-        if (!(d > 0.0)) {
+        // A pivot that lost all but ~1e-13 of its diagonal is rounding noise: K is singular to
+        // working precision (E8 dry run: the all-insulated HS-7 left a tiny positive pivot and the
+        // "solution" reached 2e13 °C). Legitimate near-singular systems keep ratios ≫ 1e-13.
+        if (!(d > kSingularPivotRatio * std::fabs(diagonal))) {
             report.status = SolveStatus::Breakdown;
-            report.detail = "Cholesky pivot " + number(d) + " ≤ 0 at row " + std::to_string(k) +
+            report.detail = "Cholesky pivot " + number(d) + " at row " + std::to_string(k) +
                             " (matrix row " + std::to_string(p.perm[toSize(k)]) +
-                            "): K is not symmetric positive definite.";
+                            ") is not positive relative to its diagonal " + number(diagonal) +
+                            ": K is singular or not symmetric positive definite.";
             report.phases.emplace_back("numeric", secondsSince(t));
             report.seconds = secondsSince(t0);
             return report;
@@ -321,6 +331,13 @@ Result<SolveReport> DirectCholesky::solve(const Vector& f, Vector& x, const Solv
     // assign() rather than `= {value}`: GCC 13 with ASan/UBSan reports a false -Warray-bounds on
     // the one-element initializer-list assignment (CI run of v2-phase-5).
     rep.residualHistory.assign(1, rep.finalTrueRelResidual);
+    // Second line of defence: a direct solve that does not satisfy K·x = f is never "Converged".
+    if (!(rep.finalTrueRelResidual <= kMaxDirectResidual)) {
+        rep.status = SolveStatus::Breakdown;
+        rep.detail = "The direct solution leaves a relative residual of " +
+                     number(rep.finalTrueRelResidual) +
+                     ": K is numerically singular or the factor is inaccurate.";
+    }
     if (control.residualSumMask != nullptr) {
         double sum = 0.0;
         for (std::size_t i = 0; i < n; ++i) {

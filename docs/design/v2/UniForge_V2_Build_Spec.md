@@ -501,6 +501,14 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 | E8 | Failure modes | singular case; IC(0) without shift on thin TIM; run over memory cap | small meshes | H8, H9 |
 
 ### 8.3 Machine-time budget (A6)
+**Dry run (V2-8, 85 runs, not the official protocol):** every run left a result (79
+converged, 4 breakdowns and 2 setup breakdowns on the singular case E8, 2 stand-alone AMG
+stagnations on HS-7). H9 failed for the direct solvers on the first try (a 2e13 °C answer on the
+singular system) and holds after the fix in `DirectCholesky` (pivot ratio and residual checks).
+Process-to-process timing noise was ~10 % (PCG-J at 94 k DOF: 1.468 vs 1.340 s, both medians of
+5), so the observer-overhead check N4 needs the idle official batch. Solver time of the dry run
+was ~7.5 min; the official batch is estimated at 4–7 h [EST].
+
 
 One **overnight batch, target ≤ 8 h [EST]**, after a **~1 h dry run** at the two smallest sizes of
 every experiment. Order: E1, E0, E7, E8 → E3 → E5 → E4 → E6 → E2 largest sizes last.

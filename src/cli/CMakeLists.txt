@@ -8,7 +8,8 @@ add_executable(uniforge_cli
     commands/BackpropCommand.cpp
     commands/FeaCommand.cpp
     commands/ImportBenchCommand.cpp
-    commands/SamplesCommand.cpp)
+    commands/SamplesCommand.cpp
+    commands/StudyCommand.cpp)
 if(WIN32)
     target_sources(uniforge_cli PRIVATE cli.manifest platform/Process_win.cpp)
 else()
