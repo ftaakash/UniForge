@@ -362,7 +362,7 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 | Stopping | Tight relative residual; **residual not trusted alone** (A2/A3): error vs reference via observer, `residualSum` (energy imbalance), κ_est |
 | κ estimate | From the Lanczos tridiagonal built from CG coefficients (free) (A3) |
 | Jacobi | Diagonal scaling; parallel; cannot break down |
-| IC(0) | Sparsity of K; breakdown **likely** in the thin TIM (Q1 hexes with aspect ratio > √2 give positive off-diagonals [VERIFY]); shift ladder α = 1e-3, 1e-2, … [VERIFY Manteuffel 1980]; α and retries recorded (A7) |
+| IC(0) | Sparsity of K; shift ladder α = 0, 1e-3, 1e-2, 1e-1, 1 on K + α·diag(K) [VERIFY Manteuffel 1980]; α and retries recorded (A7). **Corrected in V2-6:** the earlier "aspect ratio > √2" threshold holds for 2D bilinear elements only; for trilinear boxes the coupling along an edge is positive as soon as that edge is longer than the other two (element test `NonCubicBoxesHavePositiveEdgeCouplings`), so K has positive off-diagonals on practically every mesh (68 872 on HS-7 at 2 mm). Measured: IC(0) did **not** break down on the bar or on HS-7 at 2 mm (no shift needed); breakdown and the ladder are shown on Kershaw's 4 × 4 matrix (α = 1 after four failures). Whether thinner TIM meshes break it is an E3/E8 question |
 | Complexity | Iteration O(nnz) ≈ 27n; iterations ∝ √κ, κ ∝ h⁻² → ∝ n^{1/3}; total O(n^{4/3}); memory O(n) |
 | Failures | pᵀKp ≤ 0 → `Breakdown`; no 10× drop in N iterations → `Stagnated`; caps → `MaxIterations` / `TimeCap` |
 | Tests | Converges to reference; model-problem iteration counts; κ_est vs analytic κ of a 1D Laplacian within a factor; serial = parallel bit-for-bit; shift ladder on a constructed non-M-matrix |
@@ -471,7 +471,7 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 | H5 | With k load cases n₁ moves up (factorisation amortised) |
 | H6 | Plate-like fins keep ND fill below a compact block with the same DOF |
 | H7 | All cores: PCG-J closes much of the gap to serial AMG; speedup bandwidth-limited |
-| H8 | IC(0) breaks down without shift above a TIM aspect-ratio threshold; Jacobi never does |
+| H8 | IC(0) breaks down without shift on sufficiently thin / stretched TIM cells; Jacobi never does. (V2-6: not observed on HS-7 at 2 mm, aspect ratio up to 20; to be tested on the full E3 sweep.) |
 | H9 | On a singular case (all faces insulated) every solver detects and reports it |
 
 ### 8.2 Experiment matrix
@@ -692,7 +692,7 @@ Solver Lab GUI view (D-23, ~4 h), transient explicit vs implicit (~5 h), nonline
 |---|---|---|---|---|
 | K1 | Direct hits its wall too early | Medium | Medium | Geometric ladder, ND, symbolic budget; the wall is a result |
 | K2 | AMG weak on thin TIM | Medium | High | Strength threshold, SGS, AMG-PCG; time-boxed; report as finding |
-| K3 | IC(0) breakdown | Medium–high | Low | Shift ladder, recorded, finding H8 |
+| K3 | IC(0) breakdown | Medium (not seen at 2 mm) | Low | Shift ladder, recorded, finding H8 |
 | K4 | No clear separation | Low | High | E3 knobs and L4 force separation |
 | K5 | Timing noise / unfair comparison | Medium | High | Pinning, repetition policy, idle check, observer subtraction, time-to-accuracy |
 | K6 | Iterative "converges" with wrong mean | High without A2/A3 | High | Error vs reference, energy imbalance, κ_est |

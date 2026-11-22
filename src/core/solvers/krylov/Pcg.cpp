@@ -68,11 +68,16 @@ Result<SetupReport> Pcg::setup(const CsrMatrix& K, const CoordinateHint& /*hint*
         report.seconds = secondsSince(t0);
         return report;
     }
+    const auto tp = Clock::now();
     SetupReport pre = m_->setup(K, pool);
     if (pre.status != SolveStatus::Converged) {
         pre.seconds = secondsSince(t0);
         return pre;
     }
+    report.detail = pre.detail;
+    report.phases.emplace_back("preconditioner", secondsSince(tp));
+    report.preconditionerShift = pre.preconditionerShift;
+    report.preconditionerRetries = pre.preconditionerRetries;
     r_.assign(n, 0.0);
     z_.assign(n, 0.0);
     p_.assign(n, 0.0);

@@ -133,6 +133,10 @@ struct SetupReport {
     std::int64_t factorNnz = 0;
     std::int64_t predictedFactorNnz = 0;
     double factorFlops = 0.0;
+    // Incomplete factorisations (IC(0)): the diagonal shift α finally used (K + α·diag(K) was
+    // factorised) and how many shifts failed before it (build spec §5.3, amendment A7).
+    double preconditionerShift = 0.0;
+    int preconditionerRetries = 0;
 };
 
 struct SolveReport {

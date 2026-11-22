@@ -96,3 +96,18 @@ TEST(Element, FaceMatricesIntegrateTheFilm) {
         EXPECT_NEAR(gq[a], g[a], 1e-15);
     }
 }
+
+TEST(Element, NonCubicBoxesHavePositiveEdgeCouplings) {
+    // K_01 couples the two nodes of an x-edge:
+    //   K_01 = k·(−dy·dz/(9dx) + dx·dz/(18dy) + dx·dy/(18dz)).
+    // It is 0 for a cube and positive as soon as the edge is longer than the other two (dy = dz):
+    // trilinear hexahedra give positive off-diagonals, so K is not an M-matrix, for almost any
+    // non-cubic cell (relevant to IC(0) breakdown, spec §5.3).
+    EXPECT_NEAR(hexStiffness(1.0, 1.0, 1.0, 1.0)[0][1], 0.0, 1e-16);
+    EXPECT_GT(hexStiffness(1.0, 1.1, 1.0, 1.0)[0][1], 0.0) << "x-edge 10 % longer";
+    EXPECT_LT(hexStiffness(1.0, 0.9, 1.0, 1.0)[0][1], 0.0) << "x-edge 10 % shorter";
+    const double dx = 1e-3, dy = 1e-3, dz = 1e-4; // a TIM cell: 1 mm × 1 mm × 0.1 mm
+    const double expected = -dy * dz / (9 * dx) + dx * dz / (18 * dy) + dx * dy / (18 * dz);
+    EXPECT_NEAR(hexStiffness(1.0, dx, dy, dz)[0][1], expected, 1e-18);
+    EXPECT_GT(expected, 0.0);
+}

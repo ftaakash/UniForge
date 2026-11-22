@@ -14,6 +14,7 @@
 #include "core/fem3d/Assembly.hpp"
 #include "core/fem3d/Post.hpp"
 #include "core/solvers/direct/Cholesky.hpp"
+#include "core/solvers/krylov/Ic0.hpp"
 #include "core/solvers/krylov/Pcg.hpp"
 
 using namespace uniforge::fem3d;
@@ -328,5 +329,51 @@ TEST(Verification, DirectSolversAgreeWithPcgOnTheFeSystems) {
             // is badly conditioned (κ_est ~1e5), so the relative residual sits above 1e-12.
             EXPECT_LT(r.value().finalTrueRelResidual, 1e-10) << d.name;
         }
+    }
+}
+
+// ---- PCG-IC0 on the FE systems ---------------------------------------------------------------
+
+TEST(Verification, PcgIc0AgreesWithPcgJacobiOnTheFeSystems) {
+    using uniforge::solvers::Ic0Preconditioner;
+    for (const Design& d : {makeV1Bar(), makeHS7()}) {
+        const double s = d.ladderLevel == "L0a" ? 0.005 : 2e-3;
+        const Solved ref = solve(d, s);
+        // Positive off-diagonal entries: K is not an M-matrix (see Element test).
+        std::size_t positive = 0;
+        const auto& K = ref.system.K;
+        for (uniforge::sparse::Index r = 0; r < K.rows; ++r) {
+            for (auto q = K.rowPtr[static_cast<std::size_t>(r)];
+                 q < K.rowPtr[static_cast<std::size_t>(r) + 1]; ++q) {
+                if (K.col[static_cast<std::size_t>(q)] != r &&
+                    K.val[static_cast<std::size_t>(q)] > 0.0) {
+                    ++positive;
+                }
+            }
+        }
+        KernelPool pool(1);
+        Pcg pcg(SolverKind::PcgIc0, std::make_unique<Ic0Preconditioner>());
+        auto su = pcg.setup(K, {}, pool, {});
+        ASSERT_TRUE(su.ok());
+        ASSERT_EQ(su.value().status, SolveStatus::Converged) << su.value().detail;
+        Vector T(ref.T.size(), 0.0);
+        SolveControl c;
+        c.relTol = 1e-13;
+        c.maxIterations = 200000;
+        c.stagnationWindow = 0;
+        auto r = pcg.solve(ref.system.f, T, c);
+        ASSERT_TRUE(r.ok());
+        ASSERT_EQ(r.value().status, SolveStatus::Converged) << r.value().detail;
+        double maxDiff = 0.0;
+        for (std::size_t i = 0; i < T.size(); ++i) {
+            maxDiff = std::max(maxDiff, std::fabs(T[i] - ref.T[i]));
+        }
+        std::printf("[ic0 %s] DOF %zu, positive off-diagonals %zu, shift %.0e (%d retries), "
+                    "iterations IC(0) %d vs Jacobi %d, κ_est %.3e vs %.3e, |T − T_J| %.2e K\n",
+                    d.name.c_str(), T.size(), positive, su.value().preconditionerShift,
+                    su.value().preconditionerRetries, r.value().iterations, ref.report.iterations,
+                    r.value().kappaEstimate, ref.report.kappaEstimate, maxDiff);
+        EXPECT_LT(maxDiff, 1e-6) << d.name;
+        EXPECT_LT(r.value().iterations, ref.report.iterations) << d.name;
     }
 }

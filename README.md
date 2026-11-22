@@ -39,11 +39,11 @@ works best in which scenario. The deliverable is a single PDF report. V2 is buil
 | V2-3 | Solver interface and reports, observers, κ estimate, Jacobi-PCG, module-rule lint | `v2-phase-3` | Done |
 | V2-4 | Trilinear hex element, CSR assembly, boundary conditions, energy audit, verification (patch test, v1 bar in 3D, manufactured solution, fin theory) | `v2-phase-4` | Done |
 | V2-5 | Sparse direct Cholesky: RCM and nested-dissection orderings, exact symbolic prediction with a memory budget, up-looking factorisation | `v2-phase-5` | Done |
-| V2-6 | IC(0) preconditioner with shift-and-retry | – | Next |
-| V2-7 | Algebraic multigrid | – | Planned |
+| V2-6 | IC(0) preconditioner with shift-and-retry (PCG-IC0) | `v2-phase-6` | Done |
+| V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG) | – | Next |
 | V2-8 … V2-10 | Experiment harness and official runs, figures, PDF report | – | Planned |
 
-So far 382 tests pass on Windows (Release and Debug); 93 of them are new in V2. The 3D model
+So far 389 tests pass on Windows (Release and Debug); 100 of them are new in V2. The 3D model
 reproduces v1's bar result (188.2 °C at x = 0.42 m, 0.42 / 0.58 W through the ends) and
 converges at second order on a manufactured solution. Every phase tag
 also runs the Linux ASan/TSan CI. The V2 code lives in `src/core/sparse/`, `src/core/fem3d/`
@@ -51,7 +51,7 @@ and `src/core/solvers/`; build and test it exactly like v1 (see [Build from sour
 To run only the V2 tests:
 
 ```bash
-ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ordering\.|DirectCholesky|SolverFactory|v2_module_rules"
+ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ic0|Ordering\.|DirectCholesky|SolverFactory|v2_module_rules"
 ```
 
 No V2 numbers are final yet: values in the V2 documents marked [EST] are estimates and will be
@@ -209,8 +209,8 @@ src/core/       portable C++17 engineering core (standard library only): common/
                 importers), perf/ (batch generator, worker pool, runners, benchmark, SystemInfo),
                 hw/ (simulated device adapters, retry policy), ml/ (one-neuron backprop)
                 V2: sparse/ (CSR, kernel pool, SpMV, SpGEMM), fem3d/ (box designs, graded hex
-                mesher, Q1 element, CSR assembly, energy audit), solvers/ (solver interface, reports, observers, PCG,
-                direct Cholesky with RCM / nested dissection)
+                mesher, Q1 element, CSR assembly, energy audit), solvers/ (solver interface, reports, observers, PCG with
+                Jacobi / IC(0), direct Cholesky with RCM / nested dissection)
 src/app/        UniForge.exe: platform/ (Win32, D3D11, crash handler), services/ (JobRunner,
                 LogSink, ResultStore, DeviceManager), render/ (3D viewport), ui/ (theme, fonts,
                 shell, widgets), views/, shaders/

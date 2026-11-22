@@ -9,6 +9,20 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-6: IC(0) preconditioner (`v2-phase-6`)
+- `src/core/solvers/krylov/Ic0`: incomplete Cholesky with zero fill on the lower-triangle
+  pattern; shift ladder K + α·diag(K), α = 0, 1e-3, 1e-2, 1e-1, 1, with the α used and the
+  failed attempts reported; Breakdown when the ladder is exhausted. `makeSolver` builds PCG-IC0.
+- The PCG setup report now passes on the preconditioner's timing, detail, shift and retries.
+- Measured: on HS-7 at 2 mm PCG-IC0 needs 117 iterations against 800 for PCG-J (κ_est 2.0e3 vs
+  1.37e5) and no shift, although K has 68 872 positive off-diagonal entries; Kershaw's 4 × 4
+  matrix breaks unshifted IC(0) and is recovered with α = 1.
+- Spec correction: positive off-diagonals of trilinear boxes appear as soon as an edge is longer
+  than the other two, not above an aspect ratio of √2 (a 2D result).
+- Fix: GCC 13 ASan/UBSan false positive (-Warray-bounds) that failed the Linux build of
+  `v2-phase-5`.
+- 5 IC(0) tests, 1 element test, 1 verification test.
+
 ### Phase V2-5: Sparse direct Cholesky (`v2-phase-5`)
 - `src/core/solvers/direct/Ordering`: natural, reverse Cuthill–McKee (pseudo-peripheral start,
   per component) and graph nested dissection (middle-level separators of breadth-first level

@@ -38,6 +38,7 @@ add_library(uniforge_core STATIC
     solvers/direct/Cholesky.cpp
     solvers/direct/Ordering.cpp
     solvers/SolverFactory.cpp
+    solvers/krylov/Ic0.cpp
     solvers/krylov/Lanczos.cpp
     solvers/krylov/Pcg.cpp
     solvers/krylov/Preconditioner.cpp

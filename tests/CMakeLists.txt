@@ -178,6 +178,7 @@ uniforge_add_test(unit_solvers
     LABEL unit
     SOURCES
         unit/solvers/DirectTest.cpp
+        unit/solvers/Ic0Test.cpp
         unit/solvers/LanczosTest.cpp
         unit/solvers/PcgTest.cpp
     LIBS uniforge_core)

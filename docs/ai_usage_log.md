@@ -1005,6 +1005,52 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-22: IC(0) preconditioner (Phase V2-6) and the V2-5 Linux CI fix
+
+### Prompts (representative)
+1. "Start V2-6".
+
+### Outputs (files, functions)
+- `src/core/solvers/krylov/Ic0.*`: `Ic0Preconditioner` (zero-fill incomplete Cholesky, shift
+  ladder, triangular-solve apply, factor access).
+- `SolverTypes.hpp`: setup report gains the shift used and the retries; `Pcg::setup` passes the
+  preconditioner's timing, detail, shift and retries on; `makeSolver` builds PCG-IC0.
+- Tests: `tests/unit/solvers/Ic0Test.cpp` (5), an element test on positive edge couplings, and a
+  verification test (PCG-IC0 vs PCG-J on the bar and HS-7).
+- Commit `c0b2565`: fix for the failed Linux build of `v2-phase-5`.
+- Spec §5.3, H8 and K3 corrected/updated; README and CHANGELOG.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **389/389 tests pass in both**.
+- IC(0) equals the exact Cholesky factor on a tridiagonal matrix (PCG converges in 1 iteration).
+- Iterations to 1e-10 / 1e-13: 2D Laplacian 1600 unknowns Jacobi 143 vs IC(0) 49; 3D 4096
+  unknowns 74 vs 28; v1 bar 200 vs 87; HS-7 at 2 mm 800 vs 117 (κ_est 1.37e5 vs 2.0e3). Same
+  temperatures as PCG-J to 1.4e-12 K on HS-7.
+- Kershaw's 4 × 4 SPD matrix (checked SPD by the exact factorisation): unshifted IC(0) fails at
+  row 3; the ladder recovers with α = 1 after four failed shifts; a ladder {0, 1e-6} ends in
+  Breakdown.
+- **Not run:** Linux CI for this phase and for the V2-5 fix (both after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **V2-5 broke the Linux build** (CI of tag `v2-phase-5`): GCC 13 with ASan/UBSan reported
+  `-Warray-bounds`, an error under `-Werror`, on `rep.residualHistory = {value};`. Windows was
+  unaffected and I had pushed after a Windows-only check. Fixed with `assign()` in commit
+  `c0b2565`; the published tag `v2-phase-5` was left as it is (not rewritten). Lesson: GCC-only
+  diagnostics are checked only by CI, so the Linux job result has to be confirmed before a phase
+  counts as green.
+- **The design documents' claim "Q1 hexes with aspect ratio > √2 give positive off-diagonals"
+  (an AI statement tagged [VERIFY]) is wrong for 3D.** √2 is the 2D bilinear threshold; for a
+  trilinear box the edge coupling is −dy·dz/(9dx) + dx·dz/(18dy) + dx·dy/(18dz), positive as soon
+  as the edge is the longest. Caught while writing the IC(0) tests; corrected in the spec and
+  pinned by a test.
+- **Hypothesis H8 not confirmed at the tested size:** IC(0) did not break down on HS-7 at 2 mm
+  despite 68 872 positive off-diagonals. Recorded as measured; the full E3 sweep decides.
+
+---
+
 ## Entry template
 
 ```markdown
