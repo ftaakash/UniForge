@@ -62,8 +62,9 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-10 | PDF report with numbers traced to the results | Done, tag `v2-phase-10` = release `v2.0.0` |
 
 Each phase tag runs the Windows and Linux (ASan/UBSan, TSan) CI. The release `v2.0.0` passed
-all three jobs (it was moved once, on 2026-11-23, to include the filled effort log; CI passed on
-the moved tag too). Two earlier phase tags failed CI and were fixed in the next tag: `v2-phase-5` (a
+all three jobs. The tag was moved twice after the first release, without code or report changes:
+on 2026-11-23 to include the filled effort log and on 2026-11-24 to include the updated `v2`
+README; CI passed on each moved tag. Two earlier phase tags failed CI and were fixed in the next tag: `v2-phase-5` (a
 GCC 13 false-positive warning, green from `v2-phase-6`) and `v2-phase-9` (a GCC sign-conversion
 error in a test and the packaging hygiene scan flagging base64 images in the figure SVGs; both
 fixed and green in `v2-phase-9.1`).
