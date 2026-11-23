@@ -10,7 +10,9 @@ ratio:E1-verify-mms16:check_fe:E1-verify-mms32:check_fe|%.2f,4.00,results/v2/csv
 ratio:E2-HS7-s0.198-AMG:total_s_median:E2-HS7-s0.198-AMG-PCG:total_s_median|%.1f,2.5,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG / E2-HS7-s0.198-AMG-PCG,total_s_median / total_s_median
 ratio:E2-HS7-s0.198-PCG-IC0:spmv_eq:E2-HS7-s0.198-AMG-PCG:spmv_eq|%.0f,17,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0 / E2-HS7-s0.198-AMG-PCG,spmv_eq / spmv_eq
 ratio:E2-HS7-s0.198-PCG-IC0:total_s_median:E2-HS7-s0.198-AMG-PCG:total_s_median|%.0f,11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0 / E2-HS7-s0.198-AMG-PCG,total_s_median / total_s_median
+ratio:E2-HS7-s0.198-PCG-J:dof:E2-HS7-s0.250-PCG-J:dof|%.1f,2.0,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J / E2-HS7-s0.250-PCG-J,dof / dof
 ratio:E2-HS7-s0.198-PCG-J:iterations:E2-HS7-s0.198-PCG-IC0:iterations|%.1f,2.7,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J / E2-HS7-s0.198-PCG-IC0,iterations / iterations
+ratio:E2-HS7-s0.794-PCG-J:dof:E2-HS7-s1.000-PCG-J:dof|%.1f,1.7,results/v2/csv/all_runs.csv,E2-HS7-s0.794-PCG-J / E2-HS7-s1.000-PCG-J,dof / dof
 ratio:E3-HS7-h5-s0.500-PCG-IC0:iterations:E3-HS7-h500-s0.500-PCG-IC0:iterations|%.2f,1.39,results/v2/csv/all_runs.csv,E3-HS7-h5-s0.500-PCG-IC0 / E3-HS7-h500-s0.500-PCG-IC0,iterations / iterations
 ratio:E3-HS7-h5-s0.500-PCG-IC0:kappa_est:E3-HS7-h500-s0.500-PCG-IC0:kappa_est|%.0f,93,results/v2/csv/all_runs.csv,E3-HS7-h5-s0.500-PCG-IC0 / E3-HS7-h500-s0.500-PCG-IC0,kappa_est / kappa_est
 ratio:E4-HS7-s1.000-DIRECT-ND:factor_nnz:E4-HS7-s1.000-DIRECT-ND:dof|%.0f,296,results/v2/csv/all_runs.csv,E4-HS7-s1.000-DIRECT-ND / E4-HS7-s1.000-DIRECT-ND,factor_nnz / dof
@@ -96,8 +98,10 @@ run:E2-HS7-s1.000-AMG-PCG:total_s_median|%.2f,0.19,results/v2/csv/all_runs.csv,E
 run:E2-HS7-s1.000-AMG:iterations|int,365,results/v2/csv/all_runs.csv,E2-HS7-s1.000-AMG,iterations
 run:E2-HS7-s1.000-DIRECT-ND:total_s_median|%.1f,3.7,results/v2/csv/all_runs.csv,E2-HS7-s1.000-DIRECT-ND,total_s_median
 run:E2-HS7-s1.000-PCG-J:dof|int,56 015,results/v2/csv/all_runs.csv,E2-HS7-s1.000-PCG-J,dof
+run:E3-HS7-h100-s0.500-DIRECT-ND:total_s_median|%.1f,70.9,results/v2/csv/all_runs.csv,E3-HS7-h100-s0.500-DIRECT-ND,total_s_median
 run:E3-HS7-h5-s0.500-PCG-IC0:iterations|int,361,results/v2/csv/all_runs.csv,E3-HS7-h5-s0.500-PCG-IC0,iterations
 run:E3-HS7-h500-s0.500-PCG-IC0:iterations|int,260,results/v2/csv/all_runs.csv,E3-HS7-h500-s0.500-PCG-IC0,iterations
+run:E3-HS7-kTim20-s0.500-DIRECT-ND:total_s_median|%.1f,69.7,results/v2/csv/all_runs.csv,E3-HS7-kTim20-s0.500-DIRECT-ND,total_s_median
 run:E3-HS7-s0.500-PCG-J:dof|int,285 532,results/v2/csv/all_runs.csv,E3-HS7-s0.500-PCG-J,dof
 run:E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG:iterations|int,40,results/v2/csv/all_runs.csv,E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG,iterations
 run:E3-HS7-tim0.5mm-s0.500-AMG-PCG:iterations|int,23,results/v2/csv/all_runs.csv,E3-HS7-tim0.5mm-s0.500-AMG-PCG,iterations

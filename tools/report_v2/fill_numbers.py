@@ -243,14 +243,40 @@ def resolve(token):
     return text, where
 
 
+# Short codes for the source files in the printed provenance table (the legend is printed too;
+# provenance.csv keeps the full paths).
+FILE_CODES = [
+    ("results/v2/csv/all_runs.csv", "R"),
+    ("results/v2/csv/E5_load_cases.csv", "L"),
+    ("results/v2/csv/E2_time_to_accuracy.csv", "T"),
+    ("results/v2/numbers.json", "N"),
+    ("results/v2_superseded/amg_theta008/runs/", "S"),
+]
+
+
+def file_code(src):
+    for prefix, code in FILE_CODES:
+        if src.startswith(prefix):
+            return code
+    return src
+
+
 def provenance_table():
     rows = sorted(PROVENANCE.items(), key=lambda kv: (kv[1][1], kv[1][2], kv[1][3]))
-    out = ['<table class="prov"><tr><th>Value</th><th>File</th><th>Run / row</th><th>Column</th></tr>']
-    for _, (text, src, rid, col) in rows:
-        out.append(f"<tr><td class=\"n\">{html.escape(text)}</td><td>{html.escape(src.replace('results/', ''))}</td>"
-                   f"<td>{html.escape(rid)}</td><td>{html.escape(col)}</td></tr>")
-    out.append("</table>")
-    return "\n".join(out)
+    legend = ("<p class=\"small\">Each number in this report, with the file (under results/), run or row and column it was filled in from. Files: R = v2/csv/all_runs.csv, L = v2/csv/E5_load_cases.csv, "
+              "T = v2/csv/E2_time_to_accuracy.csv, N = v2/numbers.json, S = v2_superseded/"
+              "amg_theta008/runs/ (AMG rows before the threshold fix). Full paths in "
+              "docs/report_v2/provenance.csv.</p>")
+    half = (len(rows) + 1) // 2
+    tables = []
+    for part in (rows[:half], rows[half:]):
+        t = ['<table class="prov"><tr><th class="n">Value</th><th>F</th><th>Run / row</th><th>Column</th></tr>']
+        for _, (text, src, rid, col) in part:
+            t.append(f"<tr><td class=\"n\">{html.escape(text)}</td><td>{file_code(src)}</td>"
+                     f"<td>{html.escape(rid)}</td><td>{html.escape(col)}</td></tr>")
+        t.append("</table>")
+        tables.append("\n".join(t))
+    return legend + '\n<div class="provcols"><div>' + tables[0] + "</div><div>" + tables[1] + "</div></div>"
 
 
 def main():
