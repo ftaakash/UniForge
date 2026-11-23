@@ -510,6 +510,10 @@ Process-to-process timing noise was ~10 % (PCG-J at 94 k DOF: 1.468 vs 1.340 s, 
 was ~7.5 min; the official batch is estimated at 4–7 h [EST].
 
 
+**Official batch (V2-8, 2026-11-23, commit `5e9bea7`):** 241/241 runs left a result in
+2 h 46 min (205 converged, 23 stand-alone AMG stagnations, 7 direct runs over the 8 GB
+budget, 6 singular runs detected). First reading of H1–H9 in `docs/v2_experiments.md`.
+
 One **overnight batch, target ≤ 8 h [EST]**, after a **~1 h dry run** at the two smallest sizes of
 every experiment. Order: E1, E0, E7, E8 → E3 → E5 → E4 → E6 → E2 largest sizes last.
 
@@ -711,7 +715,7 @@ Solver Lab GUI view (D-23, ~4 h), transient explicit vs implicit (~5 h), nonline
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
 | K1 | Direct hits its wall too early | Medium | Medium | Geometric ladder, ND, symbolic budget; the wall is a result |
-| K2 | AMG weak on thin TIM | **Occurred (V2-7)** | High | Stand-alone AMG 673 cycles on HS-7 at 2 mm; AMG-PCG still best Krylov (84 it); reported as a finding, not tuned away |
+| K2 | AMG weak on thin TIM | **Occurred (V2-7); cause revised (V2-8)** | High | Stand-alone AMG 673 cycles on HS-7 at 2 mm; AMG-PCG still best Krylov (84 it). Official batch: AMG also weak on the plain cube and AMG-PCG iterations grow with refinement (52 → 872); suspected cause θ₀ = 0.08 marks all Q1 couplings of cubic cells weak. Checked as a candidate; official results kept as measured |
 | K3 | IC(0) breakdown | Medium (not seen at 2 mm) | Low | Shift ladder, recorded, finding H8 |
 | K4 | No clear separation | Low | High | E3 knobs and L4 force separation |
 | K5 | Timing noise / unfair comparison | Medium | High | Pinning, repetition policy, idle check, observer subtraction, time-to-accuracy |

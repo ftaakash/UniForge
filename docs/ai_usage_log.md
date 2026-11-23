@@ -1155,6 +1155,37 @@ a persistent kernel pool instead.
 
 ---
 
+## 2026-11-23: Official batch (Phase V2-8, part 2)
+
+### Prompts (representative)
+1. "push v2-8 harness and start the overnight batch, ill be off to sleep, so once the run is
+   done, make necessary changes and start the next phase and push that also".
+
+### Outputs (files, functions)
+- `results/v2/` from the unattended batch on commit `5e9bea7` (241 runs).
+- `docs/v2_experiments.md`: official-batch section, first reading of H1–H9 and N4.
+- `src/cli/commands/StudyCommand.cpp`: `batch.log` and final `progress.json` fix;
+  `tests/integration/study_smoke.cmake` checks both.
+
+### My edits
+- None yet; the user was asleep and reviews this phase afterwards.
+
+### Verification (tests run, numbers checked, manual checks)
+- Every row records commit `5e9bea7`; 241 rows, no crash, time cap or memory-cap kill.
+- Hypothesis table checked against the CSVs by a script (slopes by least squares on log–log).
+- Full Windows test suite in Release and Debug before the commit.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **AMG strength threshold unsuitable for trilinear hexahedra (suspected).** The V2-7 θ₀ = 0.08
+  was tuned on a 7-point finite-difference Laplacian. On Q1 hexahedra of aspect ratio 1 every
+  coupling is below 0.08 of the diagonal, so nodes are left out of the coarse space; the
+  official batch shows stand-alone AMG stagnating even on the cube and AMG-PCG iterations
+  growing with refinement. Caught by reading the official results, not by a test. Official
+  results kept as measured; the fix is checked as a candidate and needs the user's decision.
+- **Harness log bug.** `batch.log` kept one line because the old file was open during the
+  atomic rename on Windows; the dry run did not show it because nobody read the log. Fixed and
+  pinned by the smoke test.
+
 ## Entry template
 
 ```markdown

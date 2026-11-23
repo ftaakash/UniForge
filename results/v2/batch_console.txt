@@ -1,0 +1,489 @@
+[1/241] E1-verify-bar ... E1-verify-bar: Converged
+Converged (0.5 s)
+[2/241] E1-verify-mms4 ... E1-verify-mms4: Converged
+Converged (0.5 s)
+[3/241] E1-verify-mms8 ... E1-verify-mms8: Converged
+Converged (0.5 s)
+[4/241] E1-verify-mms16 ... E1-verify-mms16: Converged
+Converged (0.5 s)
+[5/241] E1-verify-mms32 ... E1-verify-mms32: Converged
+Converged (0.6 s)
+[6/241] E1-verify-fin ... E1-verify-fin: Converged
+Converged (0.5 s)
+[7/241] E0-bar-s10.000-REF ... E0-bar-s10.000-REF: Converged
+Converged (0.5 s)
+[8/241] E0-bar-s10.000-DIRECT-ND ... E0-bar-s10.000-DIRECT-ND: Converged
+Converged (0.5 s)
+[9/241] E0-bar-s10.000-DIRECT-RCM ... E0-bar-s10.000-DIRECT-RCM: Converged
+Converged (0.5 s)
+[10/241] E0-bar-s10.000-PCG-J ... E0-bar-s10.000-PCG-J: Converged
+Converged (0.5 s)
+[11/241] E0-bar-s10.000-PCG-IC0 ... E0-bar-s10.000-PCG-IC0: Converged
+Converged (0.5 s)
+[12/241] E0-bar-s10.000-AMG ... E0-bar-s10.000-AMG: Converged
+Converged (0.5 s)
+[13/241] E0-bar-s10.000-AMG-PCG ... E0-bar-s10.000-AMG-PCG: Converged
+Converged (0.5 s)
+[14/241] E0-bar-s5.000-REF ... E0-bar-s5.000-REF: Converged
+Converged (0.5 s)
+[15/241] E0-bar-s5.000-DIRECT-ND ... E0-bar-s5.000-DIRECT-ND: Converged
+Converged (0.5 s)
+[16/241] E0-bar-s5.000-DIRECT-RCM ... E0-bar-s5.000-DIRECT-RCM: Converged
+Converged (0.5 s)
+[17/241] E0-bar-s5.000-PCG-J ... E0-bar-s5.000-PCG-J: Converged
+Converged (0.5 s)
+[18/241] E0-bar-s5.000-PCG-IC0 ... E0-bar-s5.000-PCG-IC0: Converged
+Converged (0.5 s)
+[19/241] E0-bar-s5.000-AMG ... E0-bar-s5.000-AMG: Converged
+Converged (0.5 s)
+[20/241] E0-bar-s5.000-AMG-PCG ... E0-bar-s5.000-AMG-PCG: Converged
+Converged (0.5 s)
+[21/241] E0-bar-s2.500-REF ... E0-bar-s2.500-REF: Converged
+Converged (0.6 s)
+[22/241] E0-bar-s2.500-DIRECT-ND ... E0-bar-s2.500-DIRECT-ND: Converged
+Converged (0.7 s)
+[23/241] E0-bar-s2.500-DIRECT-RCM ... E0-bar-s2.500-DIRECT-RCM: Converged
+Converged (0.6 s)
+[24/241] E0-bar-s2.500-PCG-J ... E0-bar-s2.500-PCG-J: Converged
+Converged (0.7 s)
+[25/241] E0-bar-s2.500-PCG-IC0 ... E0-bar-s2.500-PCG-IC0: Converged
+Converged (0.7 s)
+[26/241] E0-bar-s2.500-AMG ... E0-bar-s2.500-AMG: Stagnated
+Stagnated (2 s)
+[27/241] E0-bar-s2.500-AMG-PCG ... E0-bar-s2.500-AMG-PCG: Converged
+Converged (0.8 s)
+[28/241] E0-cube-s5.802-REF ... E0-cube-s5.802-REF: Converged
+Converged (0.5 s)
+[29/241] E0-cube-s5.802-DIRECT-ND ... E0-cube-s5.802-DIRECT-ND: Converged
+Converged (1.1 s)
+[30/241] E0-cube-s5.802-DIRECT-RCM ... E0-cube-s5.802-DIRECT-RCM: Converged
+Converged (0.5 s)
+[31/241] E0-cube-s5.802-PCG-J ... E0-cube-s5.802-PCG-J: Converged
+Converged (0.5 s)
+[32/241] E0-cube-s5.802-PCG-IC0 ... E0-cube-s5.802-PCG-IC0: Converged
+Converged (0.5 s)
+[33/241] E0-cube-s5.802-AMG ... E0-cube-s5.802-AMG: Converged
+Converged (0.5 s)
+[34/241] E0-cube-s5.802-AMG-PCG ... E0-cube-s5.802-AMG-PCG: Converged
+Converged (0.5 s)
+[35/241] E0-cube-s2.901-REF ... E0-cube-s2.901-REF: Converged
+Converged (0.8 s)
+[36/241] E0-cube-s2.901-DIRECT-ND ... E0-cube-s2.901-DIRECT-ND: Converged
+Converged (1.7 s)
+[37/241] E0-cube-s2.901-DIRECT-RCM ... E0-cube-s2.901-DIRECT-RCM: Converged
+Converged (2.8 s)
+[38/241] E0-cube-s2.901-PCG-J ... E0-cube-s2.901-PCG-J: Converged
+Converged (0.5 s)
+[39/241] E0-cube-s2.901-PCG-IC0 ... E0-cube-s2.901-PCG-IC0: Converged
+Converged (0.6 s)
+[40/241] E0-cube-s2.901-AMG ... E0-cube-s2.901-AMG: Converged
+Converged (0.9 s)
+[41/241] E0-cube-s2.901-AMG-PCG ... E0-cube-s2.901-AMG-PCG: Converged
+Converged (0.6 s)
+[42/241] E0-cube-s1.934-REF ... E0-cube-s1.934-REF: Converged
+Converged (2.8 s)
+[43/241] E0-cube-s1.934-DIRECT-ND ... E0-cube-s1.934-DIRECT-ND: Converged
+Converged (13 s)
+[44/241] E0-cube-s1.934-DIRECT-RCM ... E0-cube-s1.934-DIRECT-RCM: Converged
+Converged (26.4 s)
+[45/241] E0-cube-s1.934-PCG-J ... E0-cube-s1.934-PCG-J: Converged
+Converged (0.6 s)
+[46/241] E0-cube-s1.934-PCG-IC0 ... E0-cube-s1.934-PCG-IC0: Converged
+Converged (0.6 s)
+[47/241] E0-cube-s1.934-AMG ... E0-cube-s1.934-AMG: Converged
+Converged (2.4 s)
+[48/241] E0-cube-s1.934-AMG-PCG ... E0-cube-s1.934-AMG-PCG: Converged
+Converged (0.7 s)
+[49/241] E7-HS7-s1.000-DIRECT-NAT ... E7-HS7-s1.000-DIRECT-NAT: Converged
+Converged (81.7 s)
+[50/241] E7-HS7-s0.794-DIRECT-NAT ... E7-HS7-s0.794-DIRECT-NAT: Converged
+Converged (294.3 s)
+[51/241] E8-HS7-singular-s2.000-DIRECT-ND-noobs ... E8-HS7-singular-s2.000-DIRECT-ND-noobs: Breakdown
+Breakdown (0.8 s)
+[52/241] E8-HS7-singular-s2.000-DIRECT-RCM-noobs ... E8-HS7-singular-s2.000-DIRECT-RCM-noobs: Breakdown
+Breakdown (0.7 s)
+[53/241] E8-HS7-singular-s2.000-PCG-J-noobs ... E8-HS7-singular-s2.000-PCG-J-noobs: Breakdown
+Breakdown (0.6 s)
+[54/241] E8-HS7-singular-s2.000-PCG-IC0-noobs ... E8-HS7-singular-s2.000-PCG-IC0-noobs: Breakdown
+Breakdown (0.6 s)
+[55/241] E8-HS7-singular-s2.000-AMG-noobs ... E8-HS7-singular-s2.000-AMG-noobs: setup Breakdown
+setup Breakdown (0.5 s)
+[56/241] E8-HS7-singular-s2.000-AMG-PCG-noobs ... E8-HS7-singular-s2.000-AMG-PCG-noobs: setup Breakdown
+setup Breakdown (0.5 s)
+[57/241] E8-HS7-s1.000-PCG-IC0-noshift-noobs ... E8-HS7-s1.000-PCG-IC0-noshift-noobs: Converged
+Converged (2 s)
+[58/241] E8-HS7-s0.500-PCG-IC0-noshift-noobs ... E8-HS7-s0.500-PCG-IC0-noshift-noobs: Converged
+Converged (17 s)
+[59/241] E3-HS7-h5-s0.500-REF ... E3-HS7-h5-s0.500-REF: Converged
+Converged (71.4 s)
+[60/241] E3-HS7-h5-s0.500-PCG-J ... E3-HS7-h5-s0.500-PCG-J: Converged
+Converged (31.4 s)
+[61/241] E3-HS7-h5-s0.500-PCG-IC0 ... E3-HS7-h5-s0.500-PCG-IC0: Converged
+Converged (17.6 s)
+[62/241] E3-HS7-h5-s0.500-AMG ... E3-HS7-h5-s0.500-AMG: Stagnated
+Stagnated (44.3 s)
+[63/241] E3-HS7-h5-s0.500-AMG-PCG ... E3-HS7-h5-s0.500-AMG-PCG: Converged
+Converged (36.7 s)
+[64/241] E3-HS7-h5-s0.500-DIRECT-ND ... E3-HS7-h5-s0.500-DIRECT-ND: Converged
+Converged (71.1 s)
+[65/241] E3-HS7-s0.500-REF ... E3-HS7-s0.500-REF: Converged
+Converged (71.3 s)
+[66/241] E3-HS7-s0.500-PCG-J ... E3-HS7-s0.500-PCG-J: Converged
+Converged (30.8 s)
+[67/241] E3-HS7-s0.500-PCG-IC0 ... E3-HS7-s0.500-PCG-IC0: Converged
+Converged (17.1 s)
+[68/241] E3-HS7-s0.500-AMG ... E3-HS7-s0.500-AMG: Stagnated
+Stagnated (44.6 s)
+[69/241] E3-HS7-s0.500-AMG-PCG ... E3-HS7-s0.500-AMG-PCG: Converged
+Converged (34.9 s)
+[70/241] E3-HS7-s0.500-DIRECT-ND ... E3-HS7-s0.500-DIRECT-ND: Converged
+Converged (71.4 s)
+[71/241] E3-HS7-h100-s0.500-REF ... E3-HS7-h100-s0.500-REF: Converged
+Converged (71.1 s)
+[72/241] E3-HS7-h100-s0.500-PCG-J ... E3-HS7-h100-s0.500-PCG-J: Converged
+Converged (29.6 s)
+[73/241] E3-HS7-h100-s0.500-PCG-IC0 ... E3-HS7-h100-s0.500-PCG-IC0: Converged
+Converged (15.6 s)
+[74/241] E3-HS7-h100-s0.500-AMG ... E3-HS7-h100-s0.500-AMG: Stagnated
+Stagnated (44.4 s)
+[75/241] E3-HS7-h100-s0.500-AMG-PCG ... E3-HS7-h100-s0.500-AMG-PCG: Converged
+Converged (33.6 s)
+[76/241] E3-HS7-h100-s0.500-DIRECT-ND ... E3-HS7-h100-s0.500-DIRECT-ND: Converged
+Converged (71.7 s)
+[77/241] E3-HS7-h500-s0.500-REF ... E3-HS7-h500-s0.500-REF: Converged
+Converged (71 s)
+[78/241] E3-HS7-h500-s0.500-PCG-J ... E3-HS7-h500-s0.500-PCG-J: Converged
+Converged (26.3 s)
+[79/241] E3-HS7-h500-s0.500-PCG-IC0 ... E3-HS7-h500-s0.500-PCG-IC0: Converged
+Converged (13 s)
+[80/241] E3-HS7-h500-s0.500-AMG ... E3-HS7-h500-s0.500-AMG: Stagnated
+Stagnated (84.2 s)
+[81/241] E3-HS7-h500-s0.500-AMG-PCG ... E3-HS7-h500-s0.500-AMG-PCG: Converged
+Converged (28 s)
+[82/241] E3-HS7-h500-s0.500-DIRECT-ND ... E3-HS7-h500-s0.500-DIRECT-ND: Converged
+Converged (70.8 s)
+[83/241] E3-HS7-kTim0.5-s0.500-REF ... E3-HS7-kTim0.5-s0.500-REF: Converged
+Converged (71.8 s)
+[84/241] E3-HS7-kTim0.5-s0.500-PCG-J ... E3-HS7-kTim0.5-s0.500-PCG-J: Converged
+Converged (30.7 s)
+[85/241] E3-HS7-kTim0.5-s0.500-PCG-IC0 ... E3-HS7-kTim0.5-s0.500-PCG-IC0: Converged
+Converged (17.1 s)
+[86/241] E3-HS7-kTim0.5-s0.500-AMG ... E3-HS7-kTim0.5-s0.500-AMG: Stagnated
+Stagnated (44.4 s)
+[87/241] E3-HS7-kTim0.5-s0.500-AMG-PCG ... E3-HS7-kTim0.5-s0.500-AMG-PCG: Converged
+Converged (34.8 s)
+[88/241] E3-HS7-kTim0.5-s0.500-DIRECT-ND ... E3-HS7-kTim0.5-s0.500-DIRECT-ND: Converged
+Converged (70.9 s)
+[89/241] E3-HS7-kTim20-s0.500-REF ... E3-HS7-kTim20-s0.500-REF: Converged
+Converged (71 s)
+[90/241] E3-HS7-kTim20-s0.500-PCG-J ... E3-HS7-kTim20-s0.500-PCG-J: Converged
+Converged (30.4 s)
+[91/241] E3-HS7-kTim20-s0.500-PCG-IC0 ... E3-HS7-kTim20-s0.500-PCG-IC0: Converged
+Converged (16.7 s)
+[92/241] E3-HS7-kTim20-s0.500-AMG ... E3-HS7-kTim20-s0.500-AMG: Stagnated
+Stagnated (44.7 s)
+[93/241] E3-HS7-kTim20-s0.500-AMG-PCG ... E3-HS7-kTim20-s0.500-AMG-PCG: Converged
+Converged (35 s)
+[94/241] E3-HS7-kTim20-s0.500-DIRECT-ND ... E3-HS7-kTim20-s0.500-DIRECT-ND: Converged
+Converged (70.6 s)
+[95/241] E3-HS7-kTim200-s0.500-REF ... E3-HS7-kTim200-s0.500-REF: Converged
+Converged (70.9 s)
+[96/241] E3-HS7-kTim200-s0.500-PCG-J ... E3-HS7-kTim200-s0.500-PCG-J: Converged
+Converged (30.9 s)
+[97/241] E3-HS7-kTim200-s0.500-PCG-IC0 ... E3-HS7-kTim200-s0.500-PCG-IC0: Converged
+Converged (16.6 s)
+[98/241] E3-HS7-kTim200-s0.500-AMG ... E3-HS7-kTim200-s0.500-AMG: Stagnated
+Stagnated (44.6 s)
+[99/241] E3-HS7-kTim200-s0.500-AMG-PCG ... E3-HS7-kTim200-s0.500-AMG-PCG: Converged
+Converged (35 s)
+[100/241] E3-HS7-kTim200-s0.500-DIRECT-ND ... E3-HS7-kTim200-s0.500-DIRECT-ND: Converged
+Converged (71.2 s)
+[101/241] E3-HS7-c2-s0.500-REF ... E3-HS7-c2-s0.500-REF: Converged
+Converged (120.1 s)
+[102/241] E3-HS7-c2-s0.500-PCG-J ... E3-HS7-c2-s0.500-PCG-J: Converged
+Converged (38.1 s)
+[103/241] E3-HS7-c2-s0.500-PCG-IC0 ... E3-HS7-c2-s0.500-PCG-IC0: Converged
+Converged (18.6 s)
+[104/241] E3-HS7-c2-s0.500-AMG ... E3-HS7-c2-s0.500-AMG: Stagnated
+Stagnated (48.3 s)
+[105/241] E3-HS7-c2-s0.500-AMG-PCG ... E3-HS7-c2-s0.500-AMG-PCG: Converged
+Converged (39.8 s)
+[106/241] E3-HS7-c2-s0.500-DIRECT-ND ... E3-HS7-c2-s0.500-DIRECT-ND: Converged
+Converged (121.4 s)
+[107/241] E3-HS7-tim0.2mm-s0.500-REF ... E3-HS7-tim0.2mm-s0.500-REF: Converged
+Converged (54.4 s)
+[108/241] E3-HS7-tim0.2mm-s0.500-PCG-J ... E3-HS7-tim0.2mm-s0.500-PCG-J: Converged
+Converged (25.5 s)
+[109/241] E3-HS7-tim0.2mm-s0.500-PCG-IC0 ... E3-HS7-tim0.2mm-s0.500-PCG-IC0: Converged
+Converged (16.6 s)
+[110/241] E3-HS7-tim0.2mm-s0.500-AMG ... E3-HS7-tim0.2mm-s0.500-AMG: Stagnated
+Stagnated (42.8 s)
+[111/241] E3-HS7-tim0.2mm-s0.500-AMG-PCG ... E3-HS7-tim0.2mm-s0.500-AMG-PCG: Converged
+Converged (34.3 s)
+[112/241] E3-HS7-tim0.2mm-s0.500-DIRECT-ND ... E3-HS7-tim0.2mm-s0.500-DIRECT-ND: Converged
+Converged (162.6 s)
+[113/241] E3-HS7-tim0.2mm-c2-s0.500-REF ... E3-HS7-tim0.2mm-c2-s0.500-REF: Converged
+Converged (73.1 s)
+[114/241] E3-HS7-tim0.2mm-c2-s0.500-PCG-J ... E3-HS7-tim0.2mm-c2-s0.500-PCG-J: Converged
+Converged (31.1 s)
+[115/241] E3-HS7-tim0.2mm-c2-s0.500-PCG-IC0 ... E3-HS7-tim0.2mm-c2-s0.500-PCG-IC0: Converged
+Converged (17.2 s)
+[116/241] E3-HS7-tim0.2mm-c2-s0.500-AMG ... E3-HS7-tim0.2mm-c2-s0.500-AMG: Stagnated
+Stagnated (45 s)
+[117/241] E3-HS7-tim0.2mm-c2-s0.500-AMG-PCG ... E3-HS7-tim0.2mm-c2-s0.500-AMG-PCG: Converged
+Converged (36.4 s)
+[118/241] E3-HS7-tim0.2mm-c2-s0.500-DIRECT-ND ... E3-HS7-tim0.2mm-c2-s0.500-DIRECT-ND: Converged
+Converged (72.8 s)
+[119/241] E3-HS7-tim0.5mm-s0.500-REF ... E3-HS7-tim0.5mm-s0.500-REF: Converged
+Converged (46.3 s)
+[120/241] E3-HS7-tim0.5mm-s0.500-PCG-J ... E3-HS7-tim0.5mm-s0.500-PCG-J: Converged
+Converged (21.5 s)
+[121/241] E3-HS7-tim0.5mm-s0.500-PCG-IC0 ... E3-HS7-tim0.5mm-s0.500-PCG-IC0: Converged
+Converged (15.4 s)
+[122/241] E3-HS7-tim0.5mm-s0.500-AMG ... E3-HS7-tim0.5mm-s0.500-AMG: Stagnated
+Stagnated (40.8 s)
+[123/241] E3-HS7-tim0.5mm-s0.500-AMG-PCG ... E3-HS7-tim0.5mm-s0.500-AMG-PCG: Converged
+Converged (32.4 s)
+[124/241] E3-HS7-tim0.5mm-s0.500-DIRECT-ND ... E3-HS7-tim0.5mm-s0.500-DIRECT-ND: Converged
+Converged (137.7 s)
+[125/241] E3-HS7-tim0.5mm-c2-s0.500-REF ... E3-HS7-tim0.5mm-c2-s0.500-REF: Converged
+Converged (58.4 s)
+[126/241] E3-HS7-tim0.5mm-c2-s0.500-PCG-J ... E3-HS7-tim0.5mm-c2-s0.500-PCG-J: Converged
+Converged (25.9 s)
+[127/241] E3-HS7-tim0.5mm-c2-s0.500-PCG-IC0 ... E3-HS7-tim0.5mm-c2-s0.500-PCG-IC0: Converged
+Converged (16.4 s)
+[128/241] E3-HS7-tim0.5mm-c2-s0.500-AMG ... E3-HS7-tim0.5mm-c2-s0.500-AMG: Stagnated
+Stagnated (42.2 s)
+[129/241] E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG ... E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG: Converged
+Converged (34.2 s)
+[130/241] E3-HS7-tim0.5mm-c2-s0.500-DIRECT-ND ... E3-HS7-tim0.5mm-c2-s0.500-DIRECT-ND: Converged
+Converged (173.4 s)
+[131/241] E4-bar-s1.000-REF ... E4-bar-s1.000-REF: Converged
+Converged (3.5 s)
+[132/241] E4-bar-s1.000-DIRECT-ND ... E4-bar-s1.000-DIRECT-ND: Converged
+Converged (15 s)
+[133/241] E4-bar-s1.000-DIRECT-RCM ... E4-bar-s1.000-DIRECT-RCM: Converged
+Converged (4.6 s)
+[134/241] E4-bar-s1.000-PCG-J ... E4-bar-s1.000-PCG-J: Converged
+Converged (10 s)
+[135/241] E4-bar-s1.000-PCG-IC0 ... E4-bar-s1.000-PCG-IC0: Converged
+Converged (7.5 s)
+[136/241] E4-bar-s1.000-AMG ... E4-bar-s1.000-AMG: Stagnated
+Stagnated (18.9 s)
+[137/241] E4-bar-s1.000-AMG-PCG ... E4-bar-s1.000-AMG-PCG: Converged
+Converged (14.4 s)
+[138/241] E4-cube-s1.000-REF ... E4-cube-s1.000-REF: Converged
+Converged (148.9 s)
+[139/241] E4-cube-s1.000-DIRECT-ND ... E4-cube-s1.000-DIRECT-ND: Converged
+Converged (147.8 s)
+[140/241] E4-cube-s1.000-DIRECT-RCM ... E4-cube-s1.000-DIRECT-RCM: Converged
+Converged (701.9 s)
+[141/241] E4-cube-s1.000-PCG-J ... E4-cube-s1.000-PCG-J: Converged
+Converged (1.1 s)
+[142/241] E4-cube-s1.000-PCG-IC0 ... E4-cube-s1.000-PCG-IC0: Converged
+Converged (1.7 s)
+[143/241] E4-cube-s1.000-AMG ... E4-cube-s1.000-AMG: Converged
+Converged (39.7 s)
+[144/241] E4-cube-s1.000-AMG-PCG ... E4-cube-s1.000-AMG-PCG: Converged
+Converged (2.8 s)
+[145/241] E4-plate-s1.000-REF ... E4-plate-s1.000-REF: Converged
+Converged (0.8 s)
+[146/241] E4-plate-s1.000-DIRECT-ND ... E4-plate-s1.000-DIRECT-ND: Converged
+Converged (2 s)
+[147/241] E4-plate-s1.000-DIRECT-RCM ... E4-plate-s1.000-DIRECT-RCM: Converged
+Converged (2.9 s)
+[148/241] E4-plate-s1.000-PCG-J ... E4-plate-s1.000-PCG-J: Converged
+Converged (0.7 s)
+[149/241] E4-plate-s1.000-PCG-IC0 ... E4-plate-s1.000-PCG-IC0: Converged
+Converged (0.7 s)
+[150/241] E4-plate-s1.000-AMG ... E4-plate-s1.000-AMG: Stagnated
+Stagnated (2.1 s)
+[151/241] E4-plate-s1.000-AMG-PCG ... E4-plate-s1.000-AMG-PCG: Converged
+Converged (0.9 s)
+[152/241] E4-fins-s1.000-REF ... E4-fins-s1.000-REF: Converged
+Converged (1.7 s)
+[153/241] E4-fins-s1.000-DIRECT-ND ... E4-fins-s1.000-DIRECT-ND: Converged
+Converged (6.4 s)
+[154/241] E4-fins-s1.000-DIRECT-RCM ... E4-fins-s1.000-DIRECT-RCM: Converged
+Converged (6.3 s)
+[155/241] E4-fins-s1.000-PCG-J ... E4-fins-s1.000-PCG-J: Converged
+Converged (2 s)
+[156/241] E4-fins-s1.000-PCG-IC0 ... E4-fins-s1.000-PCG-IC0: Converged
+Converged (1.6 s)
+[157/241] E4-fins-s1.000-AMG ... E4-fins-s1.000-AMG: Stagnated
+Stagnated (5.8 s)
+[158/241] E4-fins-s1.000-AMG-PCG ... E4-fins-s1.000-AMG-PCG: Converged
+Converged (1.8 s)
+[159/241] E4-HS7-s1.000-REF ... E4-HS7-s1.000-REF: Converged
+Converged (4.4 s)
+[160/241] E4-HS7-s1.000-DIRECT-ND ... E4-HS7-s1.000-DIRECT-ND: Converged
+Converged (19.3 s)
+[161/241] E4-HS7-s1.000-DIRECT-RCM ... E4-HS7-s1.000-DIRECT-RCM: Converged
+Converged (14.8 s)
+[162/241] E4-HS7-s1.000-PCG-J ... E4-HS7-s1.000-PCG-J: Converged
+Converged (3.3 s)
+[163/241] E4-HS7-s1.000-PCG-IC0 ... E4-HS7-s1.000-PCG-IC0: Converged
+Converged (2.1 s)
+[164/241] E4-HS7-s1.000-AMG ... E4-HS7-s1.000-AMG: Converged
+Converged (63.1 s)
+[165/241] E4-HS7-s1.000-AMG-PCG ... E4-HS7-s1.000-AMG-PCG: Converged
+Converged (1.8 s)
+[166/241] E4-pinfin-s1.000-REF ... E4-pinfin-s1.000-REF: Converged
+Converged (5.8 s)
+[167/241] E4-pinfin-s1.000-DIRECT-ND ... E4-pinfin-s1.000-DIRECT-ND: Converged
+Converged (27.2 s)
+[168/241] E4-pinfin-s1.000-DIRECT-RCM ... E4-pinfin-s1.000-DIRECT-RCM: Converged
+Converged (23.7 s)
+[169/241] E4-pinfin-s1.000-PCG-J ... E4-pinfin-s1.000-PCG-J: Converged
+Converged (4.9 s)
+[170/241] E4-pinfin-s1.000-PCG-IC0 ... E4-pinfin-s1.000-PCG-IC0: Converged
+Converged (2.6 s)
+[171/241] E4-pinfin-s1.000-AMG ... E4-pinfin-s1.000-AMG: Converged
+Converged (49.2 s)
+[172/241] E4-pinfin-s1.000-AMG-PCG ... E4-pinfin-s1.000-AMG-PCG: Converged
+Converged (1.9 s)
+[173/241] E6-HS7-s0.397-PCG-J-noobs ... E6-HS7-s0.397-PCG-J-noobs: Converged
+Converged (45.2 s)
+[174/241] E6-HS7-s0.397-AMG-PCG-noobs ... E6-HS7-s0.397-AMG-PCG-noobs: Converged
+Converged (56.6 s)
+[175/241] E6-HS7-s0.397-PCG-J-noobs-p2 ... E6-HS7-s0.397-PCG-J-noobs-p2: Converged
+Converged (47 s)
+[176/241] E6-HS7-s0.397-AMG-PCG-noobs-p2 ... E6-HS7-s0.397-AMG-PCG-noobs-p2: Converged
+Converged (51 s)
+[177/241] E6-HS7-s0.397-PCG-J-noobs-p4 ... E6-HS7-s0.397-PCG-J-noobs-p4: Converged
+Converged (29.5 s)
+[178/241] E6-HS7-s0.397-AMG-PCG-noobs-p4 ... E6-HS7-s0.397-AMG-PCG-noobs-p4: Converged
+Converged (43.3 s)
+[179/241] E6-HS7-s0.397-PCG-J-noobs-p8 ... E6-HS7-s0.397-PCG-J-noobs-p8: Converged
+Converged (29.2 s)
+[180/241] E6-HS7-s0.397-AMG-PCG-noobs-p8 ... E6-HS7-s0.397-AMG-PCG-noobs-p8: Converged
+Converged (40.6 s)
+[181/241] E6-HS7-s0.397-PCG-J-noobs-p14 ... E6-HS7-s0.397-PCG-J-noobs-p14: Converged
+Converged (29.4 s)
+[182/241] E6-HS7-s0.397-AMG-PCG-noobs-p14 ... E6-HS7-s0.397-AMG-PCG-noobs-p14: Converged
+Converged (39.6 s)
+[183/241] E6-HS7-s0.397-PCG-J-noobs-p20 ... E6-HS7-s0.397-PCG-J-noobs-p20: Converged
+Converged (28.9 s)
+[184/241] E6-HS7-s0.397-AMG-PCG-noobs-p20 ... E6-HS7-s0.397-AMG-PCG-noobs-p20: Converged
+Converged (39.2 s)
+[185/241] E2-HS7-s1.000-REF ... E2-HS7-s1.000-REF: Converged
+Converged (0.6 s)
+[186/241] E2-HS7-s1.000-DIRECT-ND ... E2-HS7-s1.000-DIRECT-ND: Converged
+Converged (19.3 s)
+[187/241] E2-HS7-s1.000-DIRECT-RCM ... E2-HS7-s1.000-DIRECT-RCM: Converged
+Converged (14.7 s)
+[188/241] E2-HS7-s1.000-PCG-J ... E2-HS7-s1.000-PCG-J: Converged
+Converged (3.2 s)
+[189/241] E2-HS7-s1.000-PCG-IC0 ... E2-HS7-s1.000-PCG-IC0: Converged
+Converged (2 s)
+[190/241] E2-HS7-s1.000-AMG ... E2-HS7-s1.000-AMG: Converged
+Converged (63.4 s)
+[191/241] E2-HS7-s1.000-AMG-PCG ... E2-HS7-s1.000-AMG-PCG: Converged
+Converged (1.9 s)
+[192/241] E2-HS7-s0.794-REF ... E2-HS7-s0.794-REF: Converged
+Converged (10.2 s)
+[193/241] E2-HS7-s0.794-DIRECT-ND ... E2-HS7-s0.794-DIRECT-ND: Converged
+Converged (49 s)
+[194/241] E2-HS7-s0.794-DIRECT-RCM ... E2-HS7-s0.794-DIRECT-RCM: Converged
+Converged (37.3 s)
+[195/241] E2-HS7-s0.794-PCG-J ... E2-HS7-s0.794-PCG-J: Converged
+Converged (7.1 s)
+[196/241] E2-HS7-s0.794-PCG-IC0 ... E2-HS7-s0.794-PCG-IC0: Converged
+Converged (3.8 s)
+[197/241] E2-HS7-s0.794-AMG ... E2-HS7-s0.794-AMG: Stagnated
+Stagnated (14.1 s)
+[198/241] E2-HS7-s0.794-AMG-PCG ... E2-HS7-s0.794-AMG-PCG: Converged
+Converged (4.2 s)
+[199/241] E2-HS7-s0.630-REF ... E2-HS7-s0.630-REF: Converged
+Converged (31 s)
+[200/241] E2-HS7-s0.630-DIRECT-ND ... E2-HS7-s0.630-DIRECT-ND: Converged
+Converged (92 s)
+[201/241] E2-HS7-s0.630-DIRECT-RCM ... E2-HS7-s0.630-DIRECT-RCM: Converged
+Converged (74.7 s)
+[202/241] E2-HS7-s0.630-PCG-J ... E2-HS7-s0.630-PCG-J: Converged
+Converged (15.5 s)
+[203/241] E2-HS7-s0.630-PCG-IC0 ... E2-HS7-s0.630-PCG-IC0: Converged
+Converged (8.5 s)
+[204/241] E2-HS7-s0.630-AMG ... E2-HS7-s0.630-AMG: Stagnated
+Stagnated (24.7 s)
+[205/241] E2-HS7-s0.630-AMG-PCG ... E2-HS7-s0.630-AMG-PCG: Converged
+Converged (17 s)
+[206/241] E2-HS7-s0.630-PCG-J-noobs ... E2-HS7-s0.630-PCG-J-noobs: Converged
+Converged (15.1 s)
+[207/241] E2-HS7-s0.500-REF ... E2-HS7-s0.500-REF: Converged
+Converged (0.8 s)
+[208/241] E2-HS7-s0.500-DIRECT-ND ... E2-HS7-s0.500-DIRECT-ND: Converged
+Converged (71 s)
+[209/241] E2-HS7-s0.500-DIRECT-RCM ... E2-HS7-s0.500-DIRECT-RCM: Converged
+Converged (90.7 s)
+[210/241] E2-HS7-s0.500-PCG-J ... E2-HS7-s0.500-PCG-J: Converged
+Converged (30.6 s)
+[211/241] E2-HS7-s0.500-PCG-IC0 ... E2-HS7-s0.500-PCG-IC0: Converged
+Converged (17.1 s)
+[212/241] E2-HS7-s0.500-AMG ... E2-HS7-s0.500-AMG: Stagnated
+Stagnated (44.7 s)
+[213/241] E2-HS7-s0.500-AMG-PCG ... E2-HS7-s0.500-AMG-PCG: Converged
+Converged (34.9 s)
+[214/241] E2-HS7-s0.397-REF ... E2-HS7-s0.397-REF: Converged
+Converged (273.9 s)
+[215/241] E2-HS7-s0.397-DIRECT-ND ... E2-HS7-s0.397-DIRECT-ND: Converged
+Converged (276.3 s)
+[216/241] E2-HS7-s0.397-DIRECT-RCM ... E2-HS7-s0.397-DIRECT-RCM: setup OverBudget
+setup OverBudget (3.4 s)
+[217/241] E2-HS7-s0.397-PCG-J ... E2-HS7-s0.397-PCG-J: Converged
+Converged (46.2 s)
+[218/241] E2-HS7-s0.397-PCG-IC0 ... E2-HS7-s0.397-PCG-IC0: Converged
+Converged (42.6 s)
+[219/241] E2-HS7-s0.397-AMG ... E2-HS7-s0.397-AMG: Stagnated
+Stagnated (86.9 s)
+[220/241] E2-HS7-s0.397-AMG-PCG ... E2-HS7-s0.397-AMG-PCG: Converged
+Converged (56.8 s)
+[221/241] E2-HS7-s0.315-REF ... E2-HS7-s0.315-REF: Converged
+Converged (52.4 s)
+[222/241] E2-HS7-s0.315-DIRECT-ND ... E2-HS7-s0.315-DIRECT-ND: setup OverBudget
+setup OverBudget (6.2 s)
+[223/241] E2-HS7-s0.315-DIRECT-RCM ... E2-HS7-s0.315-DIRECT-RCM: setup OverBudget
+setup OverBudget (4.1 s)
+[224/241] E2-HS7-s0.315-PCG-J ... E2-HS7-s0.315-PCG-J: Converged
+Converged (97.7 s)
+[225/241] E2-HS7-s0.315-PCG-IC0 ... E2-HS7-s0.315-PCG-IC0: Converged
+Converged (57.2 s)
+[226/241] E2-HS7-s0.315-AMG ... E2-HS7-s0.315-AMG: Stagnated
+Stagnated (153.8 s)
+[227/241] E2-HS7-s0.315-AMG-PCG ... E2-HS7-s0.315-AMG-PCG: Converged
+Converged (130 s)
+[228/241] E2-HS7-s0.250-REF ... E2-HS7-s0.250-REF: Converged
+Converged (113.2 s)
+[229/241] E2-HS7-s0.250-DIRECT-ND ... E2-HS7-s0.250-DIRECT-ND: setup OverBudget
+setup OverBudget (9.6 s)
+[230/241] E2-HS7-s0.250-DIRECT-RCM ... E2-HS7-s0.250-DIRECT-RCM: setup OverBudget
+setup OverBudget (5.4 s)
+[231/241] E2-HS7-s0.250-PCG-J ... E2-HS7-s0.250-PCG-J: Converged
+Converged (74.1 s)
+[232/241] E2-HS7-s0.250-PCG-IC0 ... E2-HS7-s0.250-PCG-IC0: Converged
+Converged (125.9 s)
+[233/241] E2-HS7-s0.250-AMG ... E2-HS7-s0.250-AMG: Stagnated
+Stagnated (270.1 s)
+[234/241] E2-HS7-s0.250-AMG-PCG ... E2-HS7-s0.250-AMG-PCG: Converged
+Converged (97.5 s)
+[235/241] E2-HS7-s0.198-REF ... E2-HS7-s0.198-REF: Converged
+Converged (278.2 s)
+[236/241] E2-HS7-s0.198-DIRECT-ND ... E2-HS7-s0.198-DIRECT-ND: setup OverBudget
+setup OverBudget (17.5 s)
+[237/241] E2-HS7-s0.198-DIRECT-RCM ... E2-HS7-s0.198-DIRECT-RCM: setup OverBudget
+setup OverBudget (8.4 s)
+[238/241] E2-HS7-s0.198-PCG-J ... E2-HS7-s0.198-PCG-J: Converged
+Converged (167.7 s)
+[239/241] E2-HS7-s0.198-PCG-IC0 ... E2-HS7-s0.198-PCG-IC0: Converged
+Converged (115.2 s)
+[240/241] E2-HS7-s0.198-AMG ... E2-HS7-s0.198-AMG: Stagnated
+Stagnated (529.4 s)
+[241/241] E2-HS7-s0.198-AMG-PCG ... E2-HS7-s0.198-AMG-PCG: Converged
+Converged (245 s)
+241 runs executed, 0 already done.
+241 results collected into results/v2\csv
+  Breakdown: 4
+  Converged: 205
+  Stagnated: 23
+  setup Breakdown: 2
+  setup OverBudget: 7

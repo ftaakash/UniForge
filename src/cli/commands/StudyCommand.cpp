@@ -195,11 +195,16 @@ int doBatch(const StudyArgs& a, const std::string& commit, std::ostream& out, st
         log += formatUtcIso8601(std::chrono::system_clock::now()) + " " + r.id + " " + status +
                " " + formatShortest(seconds) + "s\n";
         {
+            // Read the old log in its own scope: on Windows an open handle makes the atomic
+            // rename fail, which kept only the first line in the official V2-8 batch.
             std::string all;
-            std::ifstream prev(a.out / "batch.log", std::ios::binary);
-            std::ostringstream s;
-            s << prev.rdbuf();
-            all = s.str() + log;
+            {
+                std::ifstream prev(a.out / "batch.log", std::ios::binary);
+                std::ostringstream s;
+                s << prev.rdbuf();
+                all = s.str();
+            }
+            all += log;
             log.clear();
             (void)writeFileAtomic(a.out / "batch.log", all);
         }
@@ -207,6 +212,16 @@ int doBatch(const StudyArgs& a, const std::string& commit, std::ostream& out, st
         ++executed;
     }
     platform::keepAwake(false);
+    {
+        MetaJson progress;
+        const double elapsed = std::chrono::duration<double>(Clock::now() - t0).count();
+        progress.set("total", static_cast<int>(runs.size()))
+            .set("done", done)
+            .set("current", std::string())
+            .set("elapsed_s", elapsed)
+            .set("updated_utc", formatUtcIso8601(std::chrono::system_clock::now()));
+        (void)progress.save(a.out / "progress.json");
+    }
     out << executed << " runs executed, " << (static_cast<int>(runs.size()) - executed)
         << " already done.\n";
     return doCollect(a, out, err);

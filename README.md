@@ -41,7 +41,7 @@ works best in which scenario. The deliverable is a single PDF report. V2 is buil
 | V2-5 | Sparse direct Cholesky: RCM and nested-dissection orderings, exact symbolic prediction with a memory budget, up-looking factorisation | `v2-phase-5` | Done |
 | V2-6 | IC(0) preconditioner with shift-and-retry (PCG-IC0) | `v2-phase-6` | Done |
 | V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG); all six solver variants built | `v2-phase-7` | Done |
-| V2-8 | Experiment harness (`uniforge_cli study`: plan, one process per run, memory cap, P-core pinning, resume, collect) and dry run | – | Harness done; official overnight batch pending |
+| V2-8 | Experiment harness (`uniforge_cli study`: plan, one process per run, memory cap, P-core pinning, resume, collect) and the official batch (241 runs, results in `results/v2/`) | `v2-phase-8` | Done |
 | V2-9 … V2-10 | Figures, PDF report | – | Planned |
 
 So far 406 tests pass on Windows (Release and Debug); 117 of them are new in V2. How the

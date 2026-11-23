@@ -9,7 +9,15 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
-### Phase V2-8: Experiment harness (official runs pending)
+### Phase V2-8: Experiment harness and official batch (`v2-phase-8`)
+- Official batch on commit `5e9bea7` (2 h 46 min): 241/241 runs left a result (205 converged,
+  23 stand-alone AMG stagnations, 7 direct runs over the memory budget, 6 singular runs
+  detected). Results in `results/v2/` (references not committed); first reading of the
+  hypotheses in `docs/v2_experiments.md`, including a suspected AMG strength-threshold
+  weakness on trilinear hexahedra.
+- Fixed after the batch: `batch.log` kept only its first line on Windows (old log still open
+  during the atomic rename) and the final `progress.json` update was missing; the smoke test
+  now checks both.
 - `src/core/study/`: code-defined plan of E0–E8 (241 runs; dry run 85) with ids a child process
   resolves on its own; one run (mesh, assembly, solver setup and timed solves with 5/3/1
   repetitions by run time, error observer on the first, iteration history, energy audit) and
