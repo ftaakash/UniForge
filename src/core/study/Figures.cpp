@@ -1260,7 +1260,7 @@ Result<void> figP13(Ctx& ctx) {
         std::remove_if(a.series.begin(), a.series.end(),
                        [](const PlotSeries& s) { return s.label.rfind("DIRECT", 0) == 0; }),
         a.series.end());
-    a.note = "data: results/v2/csv/E2.csv; stand-alone AMG stops at its stagnation cap";
+    a.note = "data: results/v2/csv/E2.csv";
     if (auto r = ctx.plot("P13", "P13a_iterations_vs_dof.svg", a, "results/v2/csv/E2.csv"); !r) {
         return r;
     }
@@ -1485,8 +1485,8 @@ Result<void> figP16(Ctx& ctx) {
     c.textBlock(
         1100, 240,
         "Read: pick the column of your\nmesh size and the row of your\nnumber of load cases. "
-        "Stand-alone\nAMG is left out (it stagnated\non HS-7 from 0.794 mm down).\n\nAll "
-        "cores (E6): PCG-J gains\n2.6×, so with spare cores it\novertakes serial solvers.",
+        "Stand-alone\nAMG is left out: AMG-PCG uses\nthe same hierarchy and is\nalways faster."
+        "\n\nAll cores (E6): PCG-J gains\n2.6× and AMG-PCG 1.13×;\nserial AMG-PCG still wins.",
         12, 1.4, kMuted);
     return ctx.canvas("P16", "P16_decision_chart.svg", c, "Decision chart: which solver when",
                       "results/v2/csv/E5_load_cases.csv, E2.csv, E6.csv");
@@ -1744,8 +1744,9 @@ Result<void> figP21(Ctx& ctx) {
     }
     yy += 34;
     c.textBlock(1000, yy,
-                "No run crashed, hit a time cap\nor was killed by the memory cap.\nStagnated: "
-                "stand-alone AMG.\nOver budget: direct beyond 568 k\n(RCM) / 1.02 M (ND) DOF.",
+                "No run crashed, hit a time cap\nor was killed by the memory cap.\nBreakdowns: "
+                "the singular E8\ncases only. Over budget: direct\nbeyond 568 k (RCM) / 1.02 M "
+                "(ND)\nDOF.",
                 12, 1.4, kMuted);
     return ctx.canvas("P21", "P21_failure_modes.svg", c, "Failure-mode table and E8 outcomes",
                       "results/v2/csv/E8.csv, all_runs.csv");

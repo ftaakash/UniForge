@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>P15 complexity ladder</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Complexity ladder at s = 1 mm: which solver is fastest (setup + one solve)</text>
+<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Ratio = time of the slowest finished solver / time of the fastest. Same physics, increasingly complex objects.</text>
+<image x="30.00" y="80.00" width="420.00" height="220.00" href="P15_complexity_ladder-1.png"/>
+<text x="34.00" y="320.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">L0a v1 bar</text>
+<rect x="34.00" y="332.00" width="12.00" height="12.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="52.00" y="343.00" font-size="12.50" text-anchor="start" fill="#1A1E24">fastest AMG-PCG 0.152 s</text>
+<text x="34.00" y="363.00" font-size="12.00" text-anchor="start" fill="#59616E">121121 DOF; slowest DIRECT-ND (19×)</text>
+<image x="485.00" y="80.00" width="420.00" height="220.00" href="P15_complexity_ladder-2.png"/>
+<text x="489.00" y="320.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">L0b cube</text>
+<rect x="489.00" y="332.00" width="12.00" height="12.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
+<text x="507.00" y="343.00" font-size="12.50" text-anchor="start" fill="#1A1E24">fastest PCG-J 0.0869 s</text>
+<text x="489.00" y="363.00" font-size="12.00" text-anchor="start" fill="#59616E">110592 DOF; slowest DIRECT-RCM (8065×)</text>
+<image x="940.00" y="80.00" width="420.00" height="220.00" href="P15_complexity_ladder-3.png"/>
+<text x="944.00" y="320.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">L1 plate</text>
+<rect x="944.00" y="332.00" width="12.00" height="12.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="962.00" y="343.00" font-size="12.50" text-anchor="start" fill="#1A1E24">fastest AMG-PCG 0.0233 s</text>
+<text x="944.00" y="363.00" font-size="12.00" text-anchor="start" fill="#59616E">15447 DOF; slowest DIRECT-RCM (20×)</text>
+<image x="30.00" y="420.00" width="420.00" height="220.00" href="P15_complexity_ladder-4.png"/>
+<text x="34.00" y="660.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">L2 finned plate</text>
+<rect x="34.00" y="672.00" width="12.00" height="12.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="52.00" y="683.00" font-size="12.50" text-anchor="start" fill="#1A1E24">fastest AMG-PCG 0.0813 s</text>
+<text x="34.00" y="703.00" font-size="12.00" text-anchor="start" fill="#59616E">45707 DOF; slowest DIRECT-ND (14×)</text>
+<image x="485.00" y="420.00" width="420.00" height="220.00" href="P15_complexity_ladder-5.png"/>
+<text x="489.00" y="660.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">L3 HS-7</text>
+<rect x="489.00" y="672.00" width="12.00" height="12.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="507.00" y="683.00" font-size="12.50" text-anchor="start" fill="#1A1E24">fastest AMG-PCG 0.191 s</text>
+<text x="489.00" y="703.00" font-size="12.00" text-anchor="start" fill="#59616E">56015 DOF; slowest DIRECT-ND (20×)</text>
+<image x="940.00" y="420.00" width="420.00" height="220.00" href="P15_complexity_ladder-6.png"/>
+<text x="944.00" y="660.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">L4 pin fin</text>
+<rect x="944.00" y="672.00" width="12.00" height="12.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="962.00" y="683.00" font-size="12.50" text-anchor="start" fill="#1A1E24">fastest AMG-PCG 0.167 s</text>
+<text x="944.00" y="703.00" font-size="12.00" text-anchor="start" fill="#59616E">56832 DOF; slowest DIRECT-ND (32×)</text>
+</svg>

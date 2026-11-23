@@ -1,6 +1,6 @@
 # V2 report figures
 
-Written by `uniforge_cli study figures` from `results/v2` (build spec §12.1). Every figure maps to the data it is drawn from.
+Written by `uniforge_cli study figures` from `results/v2` (build spec §12.1). Every figure maps to the data it is drawn from. 3D renders and spy rasters are PNG files next to their SVG (`<figure>-<k>.png`).
 
 | Figure | File | What it shows | Drawn from |
 |---|---|---|---|
