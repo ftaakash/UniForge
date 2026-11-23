@@ -608,6 +608,8 @@ Only the direct solver reaches the 8 GB budget, as intended.
 | P7 | MMS convergence log–log | SvgPlot |
 | P8 | Spy: K, L(natural/RCM/ND) as density rasters | `viz::Spy` |
 | P9 | AMG aggregates on the surface + hierarchy table | Raster3D (categorical) |
+| P23 (added V2-10) | E6 time vs threads, PCG-J and AMG-PCG, with ideal speed-up | SvgPlot |
+| P24 (added V2-10) | AMG threshold before/after on the E2 sweep (from `results/v2_superseded`) | SvgPlot |
 | P10 | Residual vs iteration, all iterative variants | SvgPlot |
 | P11 | Time vs DOF with fitted slopes, setup/solve split | SvgPlot |
 | P12 | Memory vs DOF, direct budget wall | SvgPlot |

@@ -27,6 +27,15 @@ more complex object, reported in one PDF. Specification:
   place; the three historical design inputs carry a note pointing to the resolutions.
 - Figures: failure labels in P11–P13 drawn once per reason beside the first cross (no overlaps);
   the fin-theory note cites Bergman et al. 2011.
+- Review fixes (user review of `a466125`): corrected the AI-use statement, the CI claim (now
+  tied to the tagged release commit), the PCG-IC0 breakdown wording, the E3 direct-cost
+  evidence (Appendix D table instead of figures that do not show it), the design count in E4,
+  the DOF growth per step and the note on the 3.76 M DOF reference. New figures P23 (E6 thread
+  scaling) and P24 (AMG threshold before/after from `results/v2_superseded`). P22 on a log
+  axis with the setup/solve split visible (`BarChartSpec::logY`); all plots full width at
+  820 × 430 so their text prints at about 7.5 pt; colliding annotations pushed apart and a
+  label gutter before the legend (`PlotSpec::labelGutter`); P21 narrower, wrapped and cropped.
+  Forced page breaks removed; provenance in two columns. 22 pages, 192 numbers, 2 new tests.
 
 ### Phase V2-9.1: Fixes after the V2-9 CI run (`v2-phase-9.1`)
 - **AMG strength threshold 0.08 → 0.02.** The V2-7 value was tuned on a 7-point Laplacian; on

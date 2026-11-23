@@ -1242,6 +1242,32 @@ a persistent kernel pool instead.
   absolute solve time is small) and "four hypotheses confirmed" (three, counting H6 as
   supported). Both corrected before the commit.
 
+### Review fixes (same phase, after the user's review of `a466125`)
+- **Prompt:** the user reviewed the report and said "Send all fixes"; the planning session relayed
+  nine items (five factual, four presentation).
+- **Wrong or overstated statements I had written,** caught by the user's review, not by me:
+  1. Appendix B said every phase was "reviewed and approved before it was committed" and that the
+     author "chose" the problem and decisions. In fact I committed each phase and the user reviewed
+     it before the push; the design defaults were proposed and then approved. Reworded.
+  2. Appendix A said "Linux CI green" although V2-10 changed figure code and had no CI run. Now
+     worded for the tagged release commit; it is true only once that tag passes CI.
+  3. The scenario table said PCG-IC0 had "no breakdown seen anywhere", contradicting Figure 24
+     (PCG-IC0 reports a breakdown on the singular E8 case). Now "no IC(0) pivot breakdown".
+  4. E3 cited Figures 20 and 21 for the direct solver's cost, which neither figure shows. Now
+     cites the Appendix D table with the measured range and notes that the TIM variants change
+     the DOF.
+  5. E4 said five designs; Figure 22 shows six.
+- **Presentation:** half-empty pages came from forced page breaks and side-by-side plots whose
+  text printed at about 3.6 pt; plots are now full width, page breaks only where needed, and the
+  provenance table is two columns. Page fill was measured from the PDF's content streams
+  (text and image positions) because no PDF renderer is installed. A `pip download pymupdf`
+  probe I ran while looking for one failed and installed nothing; I did not pursue an install
+  without asking.
+- **Number without a source** caught on rereading: the first caption of the new Figure 13b said
+  "grew 17×"; it now uses the two placeholders from the superseded rows.
+- Verification: `check_pdf.py` passes (22 pages, 2.1 MB); 424/424 tests pass in Release and
+  Debug; P11, P12, P21, P22, P23, P24 re-rendered and inspected.
+
 ## 2026-11-23: Fixes after V2-9 (Phase V2-9.1)
 
 ### Prompts (representative)
