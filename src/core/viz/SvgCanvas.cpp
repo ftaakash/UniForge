@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <string_view>
 
 #include "core/common/AtomicFile.hpp"
 #include "core/viz/Colormap.hpp"
@@ -89,10 +90,19 @@ SvgCanvas::SvgCanvas(int width, int height, const std::string& title)
     , height_(height)
     , title_(title) {}
 
+// Placeholder for the image href, resolved in str() once the file stem is known. '\x01'
+// cannot occur in escaped SVG text.
+constexpr char kImageMark = '\x01';
+
 void SvgCanvas::image(const std::vector<std::uint8_t>& png, double x, double y, double w,
                       double h) {
+    images_.push_back(png);
     body_ += "<image x=\"" + num(x) + "\" y=\"" + num(y) + "\" width=\"" + num(w) + "\" height=\"" +
-             num(h) + "\" href=\"data:image/png;base64," + base64(png) + "\"/>\n";
+             num(h) + "\" href=\"" + kImageMark + "\"/>\n";
+}
+
+std::string SvgCanvas::imageName(const std::string& stem, std::size_t k) {
+    return stem + "-" + std::to_string(k) + ".png";
 }
 
 void SvgCanvas::text(double x, double y, const std::string& text, double size,
@@ -190,20 +200,35 @@ void SvgCanvas::raw(const std::string& svg) {
     body_ += svg;
 }
 
-std::string SvgCanvas::str() const {
+std::string SvgCanvas::str(const std::string& imageStem) const {
     std::string svg = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     svg += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + std::to_string(width_) +
            "\" height=\"" + std::to_string(height_) + "\" viewBox=\"0 0 " + std::to_string(width_) +
            " " + std::to_string(height_) + "\" font-family=\"" + kTextFont + "\">\n";
     svg += "<title>" + escapeXmlText(title_) + "</title>\n";
     svg += "<rect width=\"100%\" height=\"100%\" fill=\"#FFFFFF\"/>\n";
-    svg += body_;
+    std::size_t k = 0;
+    for (const char ch : body_) {
+        if (ch == kImageMark) {
+            svg += escapeXmlText(imageName(imageStem, ++k));
+        } else {
+            svg += ch;
+        }
+    }
     svg += "</svg>\n";
     return svg;
 }
 
 Result<void> SvgCanvas::save(const std::filesystem::path& path) const {
-    return writeFileAtomic(path, str());
+    const std::string stem = path.stem().u8string();
+    for (std::size_t k = 0; k < images_.size(); ++k) {
+        const auto& png = images_[k];
+        const std::string_view bytes(reinterpret_cast<const char*>(png.data()), png.size());
+        if (auto r = writeFileAtomic(path.parent_path() / imageName(stem, k + 1), bytes); !r) {
+            return r;
+        }
+    }
+    return writeFileAtomic(path, str(stem));
 }
 
 } // namespace uniforge::viz

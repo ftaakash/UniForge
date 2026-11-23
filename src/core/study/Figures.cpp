@@ -1853,7 +1853,9 @@ Result<std::vector<FigureEntry>> makeFigures(const FigureOptions& options) {
     });
     std::string md = "# V2 report figures\n\nWritten by `uniforge_cli study figures` from `" +
                      options.results.generic_u8string() +
-                     "` (build spec §12.1). Every figure maps to the data it is drawn from.\n\n"
+                     "` (build spec §12.1). Every figure maps to the data it is drawn from. 3D "
+                     "renders and spy rasters are PNG files next to their SVG "
+                     "(`<figure>-<k>.png`).\n\n"
                      "| Figure | File | What it shows | Drawn from |\n|---|---|---|---|\n";
     for (const auto& e : entries) {
         md += "| " + e.id + " | [" + e.file + "](" + e.file + ") | " + e.title + " | " + e.sources +

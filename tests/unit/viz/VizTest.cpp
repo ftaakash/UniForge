@@ -142,7 +142,7 @@ TEST(Viz, Base64MatchesRfc4648Vectors) {
     EXPECT_EQ(b("foobar"), "Zm9vYmFy");
 }
 
-TEST(Viz, CanvasEscapesTextAndEmbedsImages) {
+TEST(Viz, CanvasEscapesTextAndLinksImageFiles) {
     SvgCanvas c(300, 200, "a < b");
     c.text(10, 20, "T & q");
     c.image({1, 2, 3}, 0, 0, 10, 10);
@@ -150,7 +150,11 @@ TEST(Viz, CanvasEscapesTextAndEmbedsImages) {
     const std::string svg = c.str();
     EXPECT_NE(svg.find("<title>a &lt; b</title>"), std::string::npos);
     EXPECT_NE(svg.find("T &amp; q"), std::string::npos);
-    EXPECT_NE(svg.find("data:image/png;base64,AQID"), std::string::npos);
+    EXPECT_NE(svg.find("href=\"image-1.png\""), std::string::npos);
+    EXPECT_EQ(svg.find("base64"), std::string::npos); // renders are files, not text
+    EXPECT_NE(c.str("P8_spy").find("href=\"P8_spy-1.png\""), std::string::npos);
+    ASSERT_EQ(c.images().size(), 1u);
+    EXPECT_EQ(c.images()[0], (std::vector<std::uint8_t>{1, 2, 3}));
     EXPECT_NE(svg.find(">99.1<"), std::string::npos);
     EXPECT_EQ(c.str(), svg); // deterministic
 }

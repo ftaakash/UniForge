@@ -10,14 +10,17 @@
 
 namespace uniforge::viz {
 
-// A figure page in SVG: raster renders embedded as base64 PNG, with text labels, leader lines,
-// boxes and colour bars drawn as vectors on top (labels stay sharp in the PDF; build spec
-// §12.1 "Raster3D + SVG overlay"). Deterministic: coordinates with two decimals, no ids or
-// timestamps. Fonts follow the figure tokens (Inter for text, JetBrains Mono for numbers).
+// A figure page in SVG: raster renders as PNG files next to the SVG (`<stem>-<k>.png`, linked
+// by a relative href), with text labels, leader lines, boxes and colour bars drawn as vectors on
+// top (labels stay sharp in the PDF; build spec §12.1 "Raster3D + SVG overlay"). The renders
+// are separate files and not base64 text inside the SVG, so the packaging hygiene scan reads
+// them as binaries. Deterministic: coordinates with two decimals, no ids or timestamps. Fonts
+// follow the figure tokens (Inter for text, JetBrains Mono for numbers).
 class SvgCanvas {
 public:
     SvgCanvas(int width, int height, const std::string& title);
 
+    // Adds a PNG render; save() writes it as `<stem>-<k>.png` (k = 1, 2, ... in call order).
     void image(const std::vector<std::uint8_t>& png, double x, double y, double w, double h);
     void text(double x, double y, const std::string& text, double size = 13.0,
               const std::string& anchor = "start", const std::string& color = "#1A1E24",
@@ -41,8 +44,14 @@ public:
                    double lineHeight = 1.35, const std::string& color = "#1A1E24");
     void raw(const std::string& svg); // already-escaped SVG fragment
 
-    [[nodiscard]] std::string str() const;
+    // The SVG text, with image hrefs `<imageStem>-<k>.png`.
+    [[nodiscard]] std::string str(const std::string& imageStem = "image") const;
+    // Writes the SVG and its PNG renders (named after the SVG's stem) into its folder.
     Result<void> save(const std::filesystem::path& path) const;
+    [[nodiscard]] const std::vector<std::vector<std::uint8_t>>& images() const noexcept {
+        return images_;
+    }
+    [[nodiscard]] static std::string imageName(const std::string& stem, std::size_t k);
 
     [[nodiscard]] int width() const noexcept { return width_; }
     [[nodiscard]] int height() const noexcept { return height_; }
@@ -52,6 +61,7 @@ private:
     int height_;
     std::string title_;
     std::string body_;
+    std::vector<std::vector<std::uint8_t>> images_;
 };
 
 [[nodiscard]] std::string base64(const std::vector<std::uint8_t>& data);
