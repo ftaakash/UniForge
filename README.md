@@ -5,11 +5,14 @@ thermal results, solves a 1D thermal finite-element problem, benchmarks serial v
 batch solves, and demonstrates simulated embedded-hardware adapters. All backend logic,
 numerics, file processing and concurrency are written in C++17.
 
-> **Status: v1.0.0, submitted.** Candidate ID RA2311042010060 (Aakash G S). Tasks A–F are
-> complete. 289 tests pass, and the package was tested from Unicode, read-only and WARP paths.
-> Start with the [report](docs/report/report.pdf) (5 pages), then the
-> [screenshots](docs/demo/screenshots/), the [ownership statement](docs/ownership.md) and the
-> [AI-use log](docs/ai_usage_log.md).
+> **Status (2026-11-24): v1.0.0 submitted; V2 complete and released as
+> [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0).** Candidate ID
+> RA2311042010060 (Aakash G S). v1: tasks A–F complete, 289 tests pass, and the package was tested
+> from Unicode, read-only and WARP paths; start with the [report](docs/report/report.pdf)
+> (5 pages), then the [screenshots](docs/demo/screenshots/), the
+> [ownership statement](docs/ownership.md) and the [AI-use log](docs/ai_usage_log.md). V2 (the
+> Assignment Extension): see the section below and the
+> [V2 report](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/report_v2/UniForge_V2_Report.pdf).
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
@@ -37,8 +40,13 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
   for comparison.
 - **Specification and build notes:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/design/v2/UniForge_V2_Build_Spec.md),
   [`v2` README](https://github.com/ftaakash/UniForge/blob/v2.0.0/README.md).
+- **Effort and AI use:** 6.05 h of working sessions for V2 (19.8 h with v1), per phase in the
+  [effort log](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/effort_log.md), which also
+  lists the design decisions made by the author; the assistant's work and its caught mistakes are
+  in the [AI-use log](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/ai_usage_log.md).
+- **Tests:** 424 pass on Windows (Release and Debug); 136 of them are new in V2.
 
-| Phase | Content | Status (2026-11-23) |
+| Phase | Content | Status (2026-11-24) |
 |---|---|---|
 | V2-0 | Design documents and build specification | Done, tag `v2-phase-0` |
 | V2-1 | Sparse kernels (CSR, deterministic kernel pool, SpMV, SpGEMM) | Done, tag `v2-phase-1` |
@@ -53,8 +61,9 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-9.1 | Fixes: renders as separate PNG files; AMG strength threshold 0.08 → 0.02 and the AMG rows re-run | Done, tag `v2-phase-9.1` |
 | V2-10 | PDF report with numbers traced to the results | Done, tag `v2-phase-10` = release `v2.0.0` |
 
-Each phase tag runs the Windows and Linux (ASan/UBSan, TSan) CI. The release commit passed all
-three jobs. Two earlier phase tags failed CI and were fixed in the next tag: `v2-phase-5` (a
+Each phase tag runs the Windows and Linux (ASan/UBSan, TSan) CI. The release `v2.0.0` passed
+all three jobs (it was moved once, on 2026-11-23, to include the filled effort log; CI passed on
+the moved tag too). Two earlier phase tags failed CI and were fixed in the next tag: `v2-phase-5` (a
 GCC 13 false-positive warning, green from `v2-phase-6`) and `v2-phase-9` (a GCC sign-conversion
 error in a test and the packaging hygiene scan flagging base64 images in the figure SVGs; both
 fixed and green in `v2-phase-9.1`).
