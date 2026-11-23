@@ -845,9 +845,9 @@ Result<void> figP5(Ctx& ctx, const Solved& hs) {
     s1.color = kAmg;
     s1.marker = PlotMarker::Circle;
     spec.series = {s1, reference("1-D fin theory, T_b from FE", zs, th)};
-    spec.note =
-        "fin theory: convective tip, m = sqrt(hP/kA) [VERIFY Incropera]; 1-D theory ignores "
-        "the spread in y";
+    spec.note = "fin theory with a convective tip, m = sqrt(hP/kA) (Bergman et al. 2011); 1-D "
+                "theory ignores "
+                "the spread in y";
     return ctx.plot("P5", "P5_fin_profile.svg", spec, "HS-7 at s = 0.5 mm, fin 4 centre line");
 }
 
@@ -1119,7 +1119,7 @@ Result<void> figP10(Ctx& ctx) {
 // E2 sweep of one quantity per solver; failed runs as hollow crosses.
 PlotSpec sweepPlot(const Results& res, const std::string& title, const std::string& yLabel,
                    const std::function<double(const Row&)>& y, bool slopes,
-                   const std::function<double(const Row&)>& failY) {
+                   const std::function<double(const Row&)>& failY, bool labelsBelow = false) {
     PlotSpec spec;
     spec.title = title;
     spec.xLabel = "DOF";
@@ -1175,19 +1175,35 @@ PlotSpec sweepPlot(const Results& res, const std::string& title, const std::stri
     if (!fails.x.empty()) {
         spec.series.push_back(fails);
     }
-    const double lastDof = failNotes.empty() ? 0.0 : failNotes.rbegin()->first;
+    // Each reason once, at the first cross where it occurs, naming every solver that failed for
+    // that reason at any size; further crosses are explained by the legend and the caption. The
+    // label goes beside the cross, away from the curves (above, or below when the crosses sit
+    // at the top of the plot).
+    std::map<std::string, std::vector<std::string>> whoByReason;
     for (const auto& [dof, byReason] : failNotes) {
-        double dy = -8.0;
         for (const auto& [reason, names] : byReason) {
-            std::string who;
+            auto& all = whoByReason[reason];
             for (const auto& n : names) {
+                if (std::find(all.begin(), all.end(), n) == all.end()) {
+                    all.push_back(n);
+                }
+            }
+        }
+    }
+    std::set<std::string> labelled;
+    for (const auto& [dof, byReason] : failNotes) {
+        double dy = labelsBelow ? 16.0 : -10.0;
+        for (const auto& [reason, names] : byReason) {
+            if (!labelled.insert(reason).second) {
+                continue;
+            }
+            std::string who;
+            for (const auto& n : whoByReason[reason]) {
                 who += (who.empty() ? "" : ", ") + n;
             }
-            // The largest size sits at the right edge: label to its left, clear of the legend.
-            const bool last = dof == lastDof;
-            spec.annotations.push_back({dof, failAt[dof], who + ": " + reason, kMuted,
-                                        last ? 4.0 : 0.0, dy, last ? "end" : "middle"});
-            dy -= 13.0;
+            spec.annotations.push_back(
+                {dof, failAt[dof], who + ": " + reason, kMuted, 8.0, dy, "start"});
+            dy += labelsBelow ? 16.0 : -16.0;
         }
     }
     return spec;
@@ -1236,7 +1252,7 @@ Result<void> figP12(Ctx& ctx) {
         return nnz > 0.0 ? nnz * 12.0 / 1e9 : kNaN;
     };
     PlotSpec spec = sweepPlot(ctx.res, "Peak memory vs problem size", "peak working set (GB)", gb,
-                              true, predicted);
+                              true, predicted, true);
     std::vector<double> xs;
     for (const auto& s : spec.series) {
         xs.insert(xs.end(), s.x.begin(), s.x.end());

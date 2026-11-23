@@ -103,10 +103,7 @@
 <text x="565.43" y="134.37" font-size="11.5" text-anchor="start" fill="#E69F00">slope 0.99</text>
 <text x="565.43" y="130.57" font-size="11.5" text-anchor="start" fill="#009E73">slope 0.99</text>
 <text x="565.43" y="143.59" font-size="11.5" text-anchor="start" fill="#009E73">slope 0.99</text>
-<text x="349.15" y="50.30" font-size="11.5" text-anchor="middle" fill="#59616E">DIRECT-RCM: over 8 GB</text>
-<text x="414.28" y="50.93" font-size="11.5" text-anchor="middle" fill="#59616E">DIRECT-ND, DIRECT-RCM: over 8 GB</text>
-<text x="480.95" y="52.13" font-size="11.5" text-anchor="middle" fill="#59616E">DIRECT-ND, DIRECT-RCM: over 8 GB</text>
-<text x="562.43" y="54.93" font-size="11.5" text-anchor="end" fill="#59616E">DIRECT-ND, DIRECT-RCM: over 8 GB</text>
+<text x="357.15" y="74.30" font-size="11.5" text-anchor="start" fill="#59616E">DIRECT-RCM, DIRECT-ND: over 8 GB</text>
 <text x="812.00" y="496.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2/csv/E2.csv (peak_ws_bytes); crosses: predicted factor size of refused runs</text>
 <g font-size="12" fill="#1A1E24">
 <line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#0072B2" stroke-width="1.50" stroke-linejoin="round"/>

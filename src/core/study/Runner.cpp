@@ -230,7 +230,7 @@ Result<Check> runCheck(const std::string& check) {
         out.fe = audit.heatConvected;
         out.reference = q;
         out.error = audit.heatConvected / q - 1.0;
-        out.detail = "fin heat in W vs 1D fin theory with convective tip [VERIFY Incropera]";
+        out.detail = "fin heat in W vs 1D fin theory with convective tip (Bergman et al. 2011)";
     } else {
         return makeError(ErrorCode::InvalidInput, "Unknown verification check '" + check + "'.");
     }
