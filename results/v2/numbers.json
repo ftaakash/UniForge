@@ -12,8 +12,7 @@
   },
   "per_status": {
     "Breakdown": 4,
-    "Converged": 205,
-    "Stagnated": 23,
+    "Converged": 228,
     "setup Breakdown": 2,
     "setup OverBudget": 7
   }
