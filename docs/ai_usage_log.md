@@ -1194,12 +1194,13 @@ a persistent kernel pool instead.
    all estimate and verify markers; leave the effort-log hours to the user; stop for review
    before tagging the final release or pushing to `main`.
 2. The user, in this session: "start V2-10 once CI is green".
+3. After the first draft (17 pages, below the user's D-16 range of 18–25): "Add content".
 
 ### Outputs (files, functions)
 - `docs/report_v2/report.src.html` (template), `report.html` (filled), `UniForge_V2_Report.pdf`,
   `provenance.csv`.
-- `tools/report_v2/fill_numbers.py` (placeholders `run`, `sup`, `e5`, `ratio`, `slope`,
-  `status`, `numbers`, `fig`, `table`, `provenance`), `check_pdf.py`, `build_report_v2.ps1`.
+- `tools/report_v2/fill_numbers.py` (placeholders `run`, `sup`, `e5`, `tta`, `ratio`, `diff`,
+  `slope`, `status`, `numbers`, `fig`, `table`, `provenance`), `check_pdf.py`, `build_report_v2.ps1`.
 - `Figures.cpp`: failure labels once per reason; fin-theory note cites Bergman et al. 2011.
 - Marker resolution in the Build Spec, `figure_tokens.md`, README, code comments and two test
   comments; notes on the three historical design documents.
@@ -1208,7 +1209,7 @@ a persistent kernel pool instead.
 - None yet; the report is for the user's review.
 
 ### Verification (tests run, numbers checked, manual checks)
-- `check_pdf.py` passes: 17 pages, 1.8 MB, no placeholder, marker, code-like text, e-mail
+- `check_pdf.py` passes: 22 pages, 2.1 MB, no placeholder, marker, code-like text, e-mail
   address or absolute path in the extracted text.
 - Every number comes from `fill_numbers.py`; it fails on a missing row, column or non-number.
   Spot checks of the prose against the CSVs (E0 winners, E2 times and slopes, E3 ratios, E5 load
@@ -1232,8 +1233,14 @@ a persistent kernel pool instead.
   without the books; they were removed and only the verified bibliographic data kept. The
   attribution of the 4 × 4 IC(0) counter-example to Kershaw is marked as not checked against
   the paper.
-- **Page count:** the planned 18–25 pages would have needed padding; the limit was amended to
-  16–25 in the spec instead (17 pages).
+- **Page count:** the first draft had 17 pages and I proposed lowering the limit rather than
+  padding; the user chose to add content. Added from existing results only: thermal results
+  along the design ladder, cross-solver accuracy, measured scaling exponents and work units,
+  time to an engineering answer, the ordering comparison (E7) and a hypotheses section.
+- **Two overstatements in the added prose,** caught by checking the filled values: "the direct
+  solver's solve grows slowest" (its solve exponent is 1.27–1.48, above multigrid's; only its
+  absolute solve time is small) and "four hypotheses confirmed" (three, counting H6 as
+  supported). Both corrected before the commit.
 
 ## 2026-11-23: Fixes after V2-9 (Phase V2-9.1)
 

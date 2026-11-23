@@ -53,7 +53,7 @@ design notation for this spec; none of it goes into the PDF.
 | D-13 | ND ordering | **Graph-based nested dissection** on the CSR graph; grid-plane ND as fallback if time is short | Grid-plane ND only |
 | D-14 | 3D pictures | **CPU rasteriser in core** (`viz::Raster3D`); labels as SVG overlays | Extend the D3D11 shader |
 | D-15 | `PngWriter` | **Move** from `app/render` to `core/viz` (behaviour unchanged) | Duplicate it |
-| D-16 | Report length | **18–25 pages**, A4 (V2-10: the report has 17 pages with every planned section; not padded, check limit set to 16–25; your call whether to add content) | Shorter |
+| D-16 | Report length | **18–25 pages**, A4 (V2-10: 22 pages) | Shorter |
 | D-17 | Run caps | **30 min wall, 10 000 iterations, 8 GB solver memory** per run | Other caps |
 | D-18 | E0 objects | **v1 bar and a compact cube** | v1 bar only |
 | D-19 | Repo layout | Same repo, **branch `v2`** | New repo |
@@ -634,8 +634,8 @@ Only the direct solver reaches the 8 GB budget, as intended.
 | Typography | Inter, JetBrains Mono for numbers, units in every header |
 | Caption | what is shown · case and mesh · what to notice · data file |
 
-### 12.3 Report outline (18–25 pages planned; amended in V2-10 to 16–25: the finished report has
-17 pages with every planned section and figure, and was not padded to reach 18)
+### 12.3 Report outline (18–25 pages; the V2-10 report has 22, with section 8 "Hypotheses" added
+between the comparison and the decision chart)
 
 1. Summary: question, object, three solvers, answer + decision chart thumbnail.
 2. From the cube to a complex object: linearity → identical answers; E0 bar vs cube (P22).
@@ -662,7 +662,7 @@ study figures ─► fig/*.svg|png (renders: PNG; labels: SVG overlays)         
   provenance comment (run IDs) (N8).
 - `check_pdf.py` fails on: unresolved placeholder, a leftover estimate or verify marker, code-like text
   (`#include`, `std::`, `for (` …), e-mail addresses, absolute paths, PDF > 15 MB, page count
-  outside 16–25 (amended from 18–25, see §12.3).
+  outside 18–25.
 - v1's `PngWriter` writes uncompressed PNG (~6.4 MB per 1600 × 1000 render); whether Edge
   recompresses in the PDF was not checked; fix if needed: smaller renders or a real deflate encoder.
   **Done in V2-9:** `viz::PngWriter` now writes adaptive row filters and a fixed-Huffman

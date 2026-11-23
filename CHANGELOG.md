@@ -10,13 +10,15 @@ more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
 ### Phase V2-10: Report
-- `docs/report_v2/UniForge_V2_Report.pdf` (17 pages, no source code): summary and answer, the
-  move from the cube to HS-7, the thermal problem, FEA and verification, thermal results, how each
-  solver was built, the comparison E0–E8, the decision chart and scenario table, limitations, and
+- `docs/report_v2/UniForge_V2_Report.pdf` (22 pages, no source code): summary and answer, the
+  move from the cube to HS-7, the thermal problem, FEA and verification, thermal results along
+  the design ladder, how each solver was built, the comparison E0–E8 (with cross-solver
+  accuracy, measured scaling exponents and work, time to an engineering answer, orderings),
+  the hypotheses before and after, the decision chart and scenario table, limitations, and
   appendices (machine and protocol, AI use, IEEE references, full result tables, provenance).
 - `tools/report_v2/fill_numbers.py`: every number in the report is a placeholder naming its CSV
   row and column (or a fit or ratio of them); the script fills `report.html`, inlines the figures
-  and writes `docs/report_v2/provenance.csv` and the provenance appendix. 85 numbers.
+  and writes `docs/report_v2/provenance.csv` and the provenance appendix. 188 numbers.
 - `tools/report_v2/check_pdf.py` (pypdf): page count, size, placeholders, estimate/verify
   markers, code-like text, e-mail addresses, absolute paths. `build_report_v2.ps1` runs fill,
   headless Edge print and check.
