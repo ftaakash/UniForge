@@ -5,8 +5,8 @@ thermal results, solves a 1D thermal finite-element problem, benchmarks serial v
 batch solves, and demonstrates simulated embedded-hardware adapters. All backend logic,
 numerics, file processing and concurrency are written in C++17.
 
-> **Status (2026-11-24): v1.0.0 submitted; V2 complete and released as
-> [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0).** Candidate ID
+> **Status (2026-11-24): v1.0.0 and V2 both submitted; V2 released as
+> [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0) and its report sent on 2026-11-24.** Candidate ID
 > RA2311042010060 (Aakash G S). v1: tasks A–F complete, 289 tests pass, and the package was tested
 > from Unicode, read-only and WARP paths; start with the [report](docs/report/report.pdf)
 > (5 pages), then the [screenshots](docs/demo/screenshots/), the
@@ -16,7 +16,7 @@ numerics, file processing and concurrency are written in C++17.
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
-## V2: complete (release [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0), branch [`v2`](https://github.com/ftaakash/UniForge/tree/v2))
+## V2: complete and submitted 2026-11-24 (release [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0), branch [`v2`](https://github.com/ftaakash/UniForge/tree/v2))
 
 This branch (`main`) and the tag `v1.0.0` are the submitted v1 and stay unchanged apart from
 this note. V2 answers the Assignment Extension Notice: three different solver types applied to
