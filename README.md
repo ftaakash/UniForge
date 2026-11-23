@@ -27,7 +27,7 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 - **Specification:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2/docs/design/v2/UniForge_V2_Build_Spec.md);
   progress and build notes in the [`v2` README](https://github.com/ftaakash/UniForge/blob/v2/README.md).
 
-| Phase | Content | Status (2026-11-22) |
+| Phase | Content | Status (2026-11-23) |
 |---|---|---|
 | V2-0 | Design documents and build specification | Done, tag `v2-phase-0` |
 | V2-1 | Sparse kernels (CSR, deterministic kernel pool, SpMV, SpGEMM) | Done, tag `v2-phase-1` |
@@ -37,12 +37,17 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-5 | Sparse direct Cholesky (RCM and nested-dissection orderings) | Done, tag `v2-phase-5` |
 | V2-6 | IC(0) preconditioner with shift ladder (PCG-IC0) | Done, tag `v2-phase-6` |
 | V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG): all six solver variants built | Done, tag `v2-phase-7` |
-| V2-8 | Experiment harness (241 planned runs, one process per run, resumable) and dry run | In progress: harness and dry run done, official overnight batch pending |
-| V2-9 … V2-10 | Figures, PDF report | Planned |
+| V2-8 | Experiment harness and the official overnight batch (241 runs, all left a result; 205 converged) | Done, tag `v2-phase-8` |
+| V2-9 | Figures P1–P22: CPU rasteriser, sparsity plots, compressed PNG, `study figures` | Built, tag `v2-phase-9`; CI failed (see below) |
+| V2-10 | PDF report | Planned |
 
 Each phase tag runs the Windows and Linux (ASan/TSan) CI. All pass except `v2-phase-5`, whose
 Linux build failed on a GCC 13 false-positive warning; the one-line fix is in the next commit and
-passed CI with `v2-phase-6`. No V2 results are final until the report is written.
+passed CI with `v2-phase-6`. `v2-phase-9` failed CI twice: a GCC sign-conversion error in a new test
+(fixed on `v2` in the next commit, not yet re-run) and the packaging hygiene scan, which flags the
+base64 images embedded in the new figure SVGs (open). No V2 results are final until the report is written: the official
+batch showed a suspected AMG tuning weakness (strength threshold), checked as a candidate and
+awaiting a decision before the report.
 
 ## Features
 
