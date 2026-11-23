@@ -41,7 +41,7 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-9 | Figures P1–P22: CPU rasteriser, sparsity plots, compressed PNG, `study figures` | Built, tag `v2-phase-9`; CI failed (see below) |
 | V2-10 | PDF report | Planned |
 
-Each phase tag runs the Windows and Linux (ASan/TSan) CI. All pass except `v2-phase-5`, whose
+Each phase tag runs the Windows and Linux (ASan/TSan) CI. All pass except `v2-phase-5` and `v2-phase-9`. `v2-phase-5`'s
 Linux build failed on a GCC 13 false-positive warning; the one-line fix is in the next commit and
 passed CI with `v2-phase-6`. `v2-phase-9` failed CI twice: a GCC sign-conversion error in a new test
 (fixed on `v2` in the next commit, not yet re-run) and the packaging hygiene scan, which flags the
