@@ -9,6 +9,20 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-9.1: Fixes after the V2-9 CI run (`v2-phase-9.1`)
+- **AMG strength threshold 0.08 → 0.02.** The V2-7 value was tuned on a 7-point Laplacian; on
+  trilinear hexahedra of aspect ratio 1 every coupling is at most 1/16 of the diagonal, so 0.08
+  aggregated no node of a cubic cell and AMG stagnated (23 of 72 AMG runs in the official batch).
+  The 72 AMG and AMG-PCG rows were re-run officially on the fixed commit: all 70 solvable runs
+  converge, AMG-PCG at 3.76 M DOF takes 23 iterations / 9.5 s instead of 872 / 237 s. The old
+  rows are kept in `results/v2_superseded/amg_theta008/`; hypotheses H1–H7 re-read in
+  `docs/v2_experiments.md`. New test on a Q1 Laplacian.
+- **Figure renders as separate PNG files** next to each SVG (`<figure>-<k>.png`, relative
+  href) instead of base64 text, which the packaging hygiene scan flagged as possible secrets;
+  the scanner is unchanged.
+- PNG test inflater: explicit unsigned conversions for GCC `-Wsign-conversion`.
+- Corrected H1 timing claim (direct RCM, not ND, was fastest on the 1.8 k and 10 k DOF bars).
+
 ### Phase V2-9: Figures (`v2-phase-9`)
 - `src/core/viz/` (depends on `common` only): `Image`, inferno and categorical colormaps, a
   CPU rasteriser (`Raster3D`: orthographic camera fitted to a box, z-buffered triangles,

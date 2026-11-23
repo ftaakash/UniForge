@@ -75,34 +75,46 @@ smallest sizes of every sweep with 300 s caps; its timings are not official.
 
 ## Official batch, 2026-11-23
 
-Run on commit `5e9bea7` (recorded in every row), Release build, machine idle, from 23:06 to
-01:52 UTC (2 h 46 min wall time). Files: `results/v2/runs/` (one row per run),
-`results/v2/history/` (iteration histories), `results/v2/csv/` (per experiment, E5 load cases, E2
-time-to-accuracy), `results/v2/numbers.json`, `results/v2/batch_console.txt` (the batch's console
-output). The reference solutions (`results/v2/refs/`, 87 MB) are not committed; the REF runs
-recreate them.
+Run on commit `5e9bea7`, Release build, machine idle, from 23:06 to 01:52 UTC (2 h 46 min wall
+time). **The 72 AMG and AMG-PCG rows were re-run the same day on commit `9be2090`** (07:49–08:01
+UTC) after the strength-threshold fix below; every row records its own commit. Files:
+`results/v2/runs/` (one row per run), `results/v2/history/` (iteration histories),
+`results/v2/csv/` (per experiment, E5 load cases, E2 time-to-accuracy),
+`results/v2/numbers.json`, `results/v2/batch_console.txt` and
+`results/v2/batch_console_amg_rerun.txt` (console output of the batch and of the AMG re-run). The
+reference solutions (`results/v2/refs/`, 87 MB) are not committed; the REF runs recreate them.
+The replaced θ₀ = 0.08 rows are in `results/v2_superseded/amg_theta008/` (not official).
 
-**Outcome:** 241 of 241 runs left a result: 205 converged, 23 stand-alone AMG runs stagnated,
-7 direct runs were refused by the 8 GB memory budget before factorising (RCM from 568 k DOF,
-ND from 1.02 M DOF), and the 6 singular E8 runs were all detected (4 solve breakdowns, 2 AMG
-setup breakdowns). No run crashed, hit a time cap or was killed by the memory cap.
+**Outcome:** 241 of 241 runs left a result: 228 converged, 7 direct runs were refused by the 8 GB
+memory budget before factorising (RCM from 568 k DOF, ND from 1.02 M DOF), and the 6 singular E8
+runs were all detected (4 solve breakdowns, 2 AMG setup breakdowns). No run stagnated, crashed,
+hit a time cap or was killed by the memory cap. (Before the fix: 205 converged and 23
+stand-alone AMG runs stagnated.)
 
 **Harness defects found in the official run** (results unaffected; fixed after the batch):
 `batch.log` kept only its first line (the old log was still open when the atomic rename
 replaced it, which Windows refuses), and the last `progress.json` update says 240 of 241. The
 console output holds the full per-run log.
 
-### First reading of the hypotheses (build spec §8.1; figures and final wording in V2-9/V2-10)
+**Process notes on the AMG re-run.** The 72 old rows were moved out of `results/v2`, so the tree
+differed from the commit only in those result files; the batch was started with `--allow-dirty`
+after checking that `git diff HEAD -- ':!results/v2'` was empty (the flag only skips that check).
+The first re-run skipped the runbook's "reconfigure" step, so its rows recorded the stale
+configure-time commit `68a4041`; they were discarded and the 72 runs repeated after
+reconfiguring. `batch.log` therefore lists the AMG runs twice; the rows in `runs/` are the second
+re-run, all on `9be2090`.
+
+### Hypotheses (build spec §8.1; final wording in V2-10)
 
 | | Result | Evidence |
 |---|---|---|
-| H1 | **Confirmed for the answers, partly for times.** All six solvers give the same T_max (bar 188.2 °C, cube 100.0 °C) to within 1e-5 K of the reference. On time, direct wins only the 10 k DOF bar (0.029 s vs 0.033 s for PCG-IC0); AMG-PCG wins the two smaller bars and PCG-J the cube | E0 |
-| H2 | **Refuted as stated.** On HS-7, direct ND never wins a single solve: at 56 k DOF it takes 3.7 s vs 0.29 s for PCG-IC0, so n₁ (one load case) is below the smallest E2 mesh. PCG-J never wins on time and uses the least memory (1.66 GB at 3.76 M DOF vs 2.29 GB for PCG-IC0) | E2 |
-| H3 | **PCG confirmed, AMG refuted.** Iteration slopes vs DOF: PCG-J 0.23, PCG-IC0 0.34 (≈ n^{1/3}); AMG-PCG 0.64 (52 → 872), not flat. See the AMG note below | E2 |
-| H4 | **Partly.** κ_est falls 93× from h = 5 to h = 500 but PCG-IC0 iterations change only 361 → 260 (not ∝ √κ_est); TIM conductivity and thickness barely matter (337–351). Direct cost is unchanged (~70 s) | E3 |
-| H5 | **Confirmed.** For 20 load cases, direct wins up to 171 k DOF (RCM 27.3 s vs PCG-IC0 30.4 s) and loses at 286 k (ND 73.4 s vs 63.4 s) | E5 |
+| H1 | **Confirmed for the answers, partly for times.** All six solvers give the same T_max (bar 188.2 °C, cube 100.0 °C) to within 1e-5 K of the reference (largest: AMG 8.5e-6 K on the 10 k DOF bar). On time no family wins everywhere: AMG-PCG wins the smallest bar (0.11 ms), direct RCM the 1.8 k and 10 k DOF bars (0.79 ms and 6.5 ms vs AMG-PCG 1.15 ms and 9.1 ms), PCG-J all three cubes | E0 |
+| H2 | **Refuted as stated.** There is no crossover: AMG-PCG is the fastest solver at every HS-7 size, from 56 k DOF (0.19 s vs direct RCM 2.8 s, ND 3.7 s, PCG-IC0 0.29 s) to 3.76 M DOF (9.5 s, 11× ahead of PCG-IC0). Direct never wins on HS-7. PCG-J never wins on time and uses the least memory (1.66 GB at 3.76 M DOF vs PCG-IC0 2.29 GB, AMG-PCG 3.00 GB) | E2 |
+| H3 | **Confirmed.** Iteration slopes vs DOF: PCG-J 0.23, PCG-IC0 0.34 (≈ n^{1/3}); AMG-PCG −0.17 (50 → 23) and stand-alone AMG −0.35 (365 → 75): flat or falling, as multigrid should be | E2 |
+| H4 | **Partly.** κ_est of the IC(0)-preconditioned system falls 93× from h = 5 to h = 500 but PCG-IC0 iterations change only 361 → 260 (not ∝ √κ_est); TIM conductivity and thickness barely matter for it (337–351). AMG-PCG needs 23–40 iterations over all E3 variants (the most, 40, with two cells across the TIM). Direct cost is unchanged (~70 s) | E3 |
+| H5 | **Refuted.** For 20 load cases AMG-PCG still wins at every size (56 k DOF: 3.0 s vs direct RCM 3.4 s; 171 k: 8.3 s vs 27.3 s). Among the other solvers direct beats PCG-IC0 up to 171 k DOF and loses from 286 k, as predicted | E5 |
 | H6 | **Supported (indicative).** Factor fill per DOF with ND at 1 mm: plate 194, fins 197, HS-7 296, compact cube 1025 | E4 |
-| H7 | **Confirmed.** PCG-J speeds up 2.6× (14.6 → 5.5 s), flat beyond 4 threads (memory bandwidth); with all cores it beats every serial iterative solver on the same mesh (PCG-IC0 8.2 s, AMG-PCG 18.0 s) | E6 |
+| H7 | **Partly.** PCG-J speeds up 2.6× (14.6 → 5.5 s), flat beyond 4 threads (memory bandwidth), which narrows its gap to serial AMG-PCG (1.57 s) from 9.4× to 3.5× but does not close it. AMG-PCG gains only 1.13× (best 1.38 s at 4 threads) and slows down beyond (2.07 s at 20 threads); the cause is not investigated | E6 |
 | H8 | **Not observed.** IC(0) needed no shift anywhere (E3, and without the shift ladder in E8) | E3, E8 |
 | H9 | **Confirmed.** All six solvers report the singular case (after the V2-8 dry-run fix) | E8 |
 | N4 | Observer overhead: PCG-J with/without the error observer 2.876 vs 2.880 s (0.15 %) | E2 |
@@ -110,15 +122,55 @@ console output holds the full per-run log.
 Other findings: RCM factorises faster than ND up to 171 k DOF and ND is faster from 286 k
 (E2); natural ordering needs 293 s and 8× the fill of ND at 94 k DOF (E7).
 
-**AMG note (suspected implementation weakness, not yet a conclusion).** Stand-alone AMG
-stagnates even on the plain cube (1992 cycles at 110 k DOF), and AMG-PCG iterations grow with
-refinement. A likely cause is the strength threshold θ₀ = 0.08: for trilinear hexahedra of
-aspect ratio 1 the largest off-diagonal coupling is 1/16 of the diagonal (edge neighbours;
-axis neighbours couple with zero), so every coupling of a cubic cell counts as weak and its
-nodes get no coarse-grid correction. HS-7 cells become more uniform as the mesh is refined (maximum
-aspect ratio 10 → 3.9), which matches AMG getting worse with refinement. The V2-7 tuning used a
-7-point finite-difference Laplacian, where the ratio is 1/6. This is checked separately as a
-candidate change; the official results above stay as measured.
+## AMG strength threshold: flaw and fix (2026-11-23)
+
+**The flaw.** Smoothed aggregation only groups node j with node i when the coupling is strong,
+|a_ij| ≥ θ·√(a_ii a_jj), with θ₀ = 0.08 halved per level. That value was tuned in V2-7 on a
+7-point finite-difference Laplacian, where every off-diagonal coupling is 1/6 of the diagonal.
+The study's matrices come from trilinear (Q1) hexahedra: for a cell of aspect ratio 1 the axis
+neighbours couple with 0, face-diagonal neighbours with 1/16 and body-diagonal neighbours with
+1/32 of the diagonal. At θ₀ = 0.08 every coupling of a cubic cell is weak, its nodes join no
+aggregate and get no coarse-grid correction, and AMG falls back to Gauss–Seidel smoothing.
+
+**How it was found.** The official batch showed stand-alone AMG stagnating even on the plain cube
+(1992 cycles at 110 k DOF) and AMG-PCG iterations growing 17× with refinement on HS-7 (52 → 872),
+the opposite of what multigrid should do (H3). HS-7 cells become more cubic as the mesh is refined
+(maximum aspect ratio 10 → 3.9), which matched AMG getting worse; the aggregate render P9 showed
+that at 1 mm only 0.6 % of HS-7 nodes were isolated, because stretched cells keep strong
+couplings along their short edges. A candidate run of all 72 AMG runs at θ₀ = 0.02 (temporary
+source change, outside `results/v2`) converged everywhere. The user then decided to adopt it as a
+bug fix and re-run the rows officially.
+
+**The fix** (commit `9be2090`): default θ₀ = 0.02 in `SolverOptions`. A new unit test on a Q1
+Laplacian shows that θ₀ = 0.08 aggregates no node at all, while 0.02 converges in 12, 13 and 17
+cycles on 10³, 16³ and 24³ grids; the old 7-point test keeps θ₀ = 0.08, the value it was tuned on.
+
+**Before and after** (same 72 runs; before: `5e9bea7`, after: `9be2090`; full table in
+`results/v2_superseded/amg_theta008/compare_theta008_vs_002.csv`):
+
+| Run | θ₀ = 0.08 | θ₀ = 0.02 |
+|---|---|---|
+| All 72 AMG / AMG-PCG runs | 47 converged, 23 stagnated, 2 singular | 70 converged, 2 singular |
+| E4 cube 1 mm (110 k DOF), AMG cycles / total s | 1992 / 12.9 | 15 / 0.22 |
+| E4 bar 1 mm (121 k DOF), AMG | stagnated (2510 / 17.9 s) | 20 / 0.23 s |
+| E2 HS-7 1.0 mm (56 k DOF), AMG-PCG iterations / total s | 52 / 0.25 | 50 / 0.19 |
+| E2 HS-7 0.5 mm (286 k DOF), AMG-PCG | 292 / 6.78 s | 31 / 0.86 s |
+| E2 HS-7 0.198 mm (3.76 M DOF), AMG-PCG | 872 / 237.0 s | 23 / 9.52 s |
+| E2 HS-7 0.198 mm, stand-alone AMG | stagnated (2000 / 517 s) | 75 / 23.7 s |
+| E6 HS-7 0.397 mm, AMG-PCG serial | 415 / 18.5 s | 28 / 1.57 s |
+
+Errors against the references after the fix are 1.7e-11 to 1.7e-5 K, and operator complexity is
+1.00–1.08 (the hierarchies have fewer levels: 4 instead of 6 on the largest HS-7 meshes, because
+coarsening is now faster).
+
+**What changed in the conclusions:** H3 is now confirmed (AMG-PCG iterations fall with
+refinement); H2 and H5 have no direct/iterative crossover because AMG-PCG wins at every size and
+load-case count; H7 is only partly true. P16 (decision chart) shows AMG-PCG in every cell.
+
+**What it does not change:** the V2-7 note that the thin TIM is hard for stand-alone AMG (risk
+K2) still shows at 1 mm: stand-alone AMG needs 365 cycles on HS-7 against 15 on the cube.
+V2-7 also reported, from a single preliminary run at 2 mm, that θ₀ = 0.02 did not help there; that
+run is not part of the plan and was not repeated. As a preconditioner AMG is not affected.
 
 ## Figures (V2-9)
 
@@ -127,32 +179,3 @@ candidate change; the official results above stay as measured.
 file. Renders (P1–P6, P8, P9, P15) come from small in-process solves of the same designs; the
 plots read the CSVs only, so the figures follow the results when they are re-run. All figures
 take about 16 s.
-
-## Candidate check: AMG strength threshold (2026-11-23, not official)
-
-To test the suspected cause in the AMG note above, all 72 AMG and AMG-PCG runs of the plan were
-re-run with θ₀ = 0.02 instead of 0.08 (one temporary source change, `study run --allow-dirty`
-into `build/amg_cand`, then reverted; results are **not** in `results/v2` and the timings are
-indicative, one process per run as in the batch).
-
-| Run | Official (θ₀ = 0.08) | Candidate (θ₀ = 0.02) |
-|---|---|---|
-| E4 cube 1 mm, AMG cycles | 1992 | 15 |
-| E4 cube 1 mm, AMG-PCG iterations | 56 | 9 |
-| E2 HS-7 1.0 mm, AMG-PCG iterations | 52 | 50 |
-| E2 HS-7 0.5 mm, AMG-PCG iterations / total s | 292 / 6.8 | 31 / 0.86 |
-| E2 HS-7 0.198 mm, AMG-PCG iterations / total s | 872 / 237 | 23 / 9.4 |
-| E2 HS-7 0.198 mm, stand-alone AMG | stagnated (2000) | converged (75) |
-| E2 HS-7 0.198 mm, PCG-IC0 total s (unchanged) | 107 | – |
-
-All 70 solvable candidate runs converged (the 2 singular E8 runs fail in setup, as before), with
-errors against the references of 1e-11 to 2e-5 K. AMG-PCG iterations now fall slightly with
-refinement instead of growing 17×. P9 adds a detail: at s = 1 mm only 0.6 % of HS-7 nodes are
-isolated with θ₀ = 0.08, because stretched cells keep strong couplings along their short edges;
-the threshold mostly makes aggregates follow the stretched direction, and as the cells become
-cubic with refinement more couplings drop below it.
-
-**Decision needed (user):** adopt θ₀ = 0.02 as a bug fix of the V2-7 tuning (made on a 7-point
-finite-difference Laplacian, not on trilinear hexahedra) and re-run the AMG rows of the
-official batch (about 15 minutes of machine time), or keep θ₀ = 0.08 and report the candidate
-as a separate finding. The official results above are unchanged until then.

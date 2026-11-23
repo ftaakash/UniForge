@@ -383,6 +383,10 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 | Pictures | **Aggregates coloured on the HS-7 surface**; hierarchy table; convergence factor per cycle |
 
 **Measured (V2-7, preliminary, single runs):**
+- **Superseded in V2-9.1:** θ₀ = 0.08 below was tuned on the 7-point Laplacian and is wrong for
+  trilinear hexahedra (every coupling of a cubic cell is ≤ 1/16 of the diagonal, so nothing is
+  aggregated); the default is now **θ₀ = 0.02** (halved per level as before) and the official AMG
+  rows were re-run. Before/after: `docs/v2_experiments.md`.
 - Strength threshold θ_l = 0.08·0.5^l (halving per level) is needed: with a constant θ the
   stand-alone cycle count on the 3D Laplacian grew 16 → 30 → 56 → 89 from 10³ to 32³; with the
   decay it is 15 → 16 → 16 → 19 (mean factor 0.28–0.36), operator complexity 1.5–1.6.
@@ -513,6 +517,9 @@ was ~7.5 min; the official batch is estimated at 4–7 h [EST].
 **Official batch (V2-8, 2026-11-23, commit `5e9bea7`):** 241/241 runs left a result in
 2 h 46 min (205 converged, 23 stand-alone AMG stagnations, 7 direct runs over the 8 GB
 budget, 6 singular runs detected). First reading of H1–H9 in `docs/v2_experiments.md`.
+**AMG re-run (V2-9.1, 2026-11-23, commit `9be2090`):** after the strength-threshold fix the 72 AMG
+and AMG-PCG rows were re-run in 11.5 min; the batch now stands at 228 converged, 0 stagnated,
+7 over budget, 6 singular runs detected.
 
 One **overnight batch, target ≤ 8 h [EST]**, after a **~1 h dry run** at the two smallest sizes of
 every experiment. Order: E1, E0, E7, E8 → E3 → E5 → E4 → E6 → E2 largest sizes last.
@@ -718,7 +725,7 @@ Solver Lab GUI view (D-23, ~4 h), transient explicit vs implicit (~5 h), nonline
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
 | K1 | Direct hits its wall too early | Medium | Medium | Geometric ladder, ND, symbolic budget; the wall is a result |
-| K2 | AMG weak on thin TIM | **Occurred (V2-7); cause revised (V2-8)** | High | Stand-alone AMG 673 cycles on HS-7 at 2 mm; AMG-PCG still best Krylov (84 it). Official batch: AMG also weak on the plain cube and AMG-PCG iterations grow with refinement (52 → 872); suspected cause θ₀ = 0.08 marks all Q1 couplings of cubic cells weak. Checked as a candidate; official results kept as measured |
+| K2 | AMG weak on thin TIM | **Occurred (V2-7); main cause found and fixed (V2-9.1)** | High | Stand-alone AMG 673 cycles on HS-7 at 2 mm in V2-7. The official batch showed AMG weak on the plain cube too: θ₀ = 0.08 marked all Q1 couplings of cubic cells weak. With θ₀ = 0.02 all AMG runs converge and AMG-PCG is the fastest solver at every HS-7 size; stand-alone AMG still needs 365 cycles on HS-7 at 1 mm vs 15 on the cube (the TIM remains harder) |
 | K3 | IC(0) breakdown | Medium (not seen at 2 mm) | Low | Shift ladder, recorded, finding H8 |
 | K4 | No clear separation | Low | High | E3 knobs and L4 force separation |
 | K5 | Timing noise / unfair comparison | Medium | High | Pinning, repetition policy, idle check, observer subtraction, time-to-accuracy |

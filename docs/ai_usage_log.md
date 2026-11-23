@@ -1186,6 +1186,45 @@ a persistent kernel pool instead.
   atomic rename on Windows; the dry run did not show it because nobody read the log. Fixed and
   pinned by the smoke test.
 
+## 2026-11-23: Fixes after V2-9 (Phase V2-9.1)
+
+### Prompts (representative)
+1. The user's decision, relayed by the planning session: "PNGs + adopt 0.02": write renders as
+   separate PNG files and leave the scanner unchanged; adopt θ₀ = 0.02, re-run the 72 AMG rows
+   officially, regenerate the figures, and document the flaw, how it was found and how it was
+   fixed with before/after numbers. Commit phase by phase, new tag, CI green.
+
+### Outputs (files, functions)
+- `SvgCanvas::image/str/save`: renders saved as `<stem>-<k>.png` and linked by relative href.
+- `SolverOptions::amgStrengthThreshold` = 0.02; `tests/unit/solvers/ModelProblems.hpp`
+  `q1Laplacian3d`; `Amg.DefaultThresholdHandlesTrilinearHexahedra`.
+- 72 rows of `results/v2/runs` and `history` re-run; `results/v2_superseded/amg_theta008/`
+  with the old rows and a before/after CSV; `docs/v2_experiments.md` rewritten from "Official
+  batch" on; figure text in P13, P16 and P21 updated.
+
+### My edits
+- None yet; for the user's review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: 422/422 tests pass in Release and Debug.
+- Every number in the new hypothesis table and the before/after table was recomputed from
+  `results/v2/csv/*.csv` and the compare CSV by a script, not copied from the candidate run.
+- All 72 re-run rows record commit `9be2090`; figures re-rendered and inspected (P1, P9, P11,
+  P13a, P16, P21); no SVG contains base64.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **θ₀ = 0.08 itself (V2-7):** tuned on a 7-point Laplacian, wrong for the Q1 matrices of the
+  study; caught by the official batch (AMG stagnating on the plain cube), see the experiments doc.
+- **Re-run without reconfiguring:** my first re-run skipped the runbook's reconfigure step, so
+  the rows recorded the stale configure-time commit `68a4041`. Caught by checking the
+  `git_commit` column; the rows were discarded and the runs repeated.
+- **Wrong H1 timing claim in V2-8:** I wrote that direct wins only the 10 k DOF bar with ND
+  (0.029 s); direct RCM was faster there (6.5 ms) and also won the 1.8 k bar. Caught when
+  recomputing H1 from E0.csv.
+- **Tight test bound:** the old mesh-independence test failed at the new default on the 7-point
+  Laplacian (15 → 20 cycles, bound +4); it now runs at the θ₀ it was tuned for, and the default
+  is tested on the Q1 matrix instead of loosening the bound.
+
 ## 2026-11-23: Figures (Phase V2-9)
 
 ### Prompts (representative)
