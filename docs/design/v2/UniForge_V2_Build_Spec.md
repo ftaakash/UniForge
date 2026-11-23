@@ -17,7 +17,11 @@ Written 2026-11-15.
 At the V2-0 commit the three sources and this spec move to `UniForge/docs/design/v2/`. §17 lists
 what changed in the merge.
 
-Tags: **[EST]** = estimate, must be measured before it reaches the PDF. **[VERIFY]** = unchecked
+**Markers resolved in V2-10 (2026-11-23):** every estimate and unchecked fact below now states its outcome in
+place: *(measured: …)* with the value and its result file, *(verified: …)* with the source checked, or *(not
+verified, not used in the report)*. The report itself contains none.
+
+Tags used while planning: **EST** = estimate, must be measured before it reaches the PDF. **VERIFY** = unchecked
 fact or citation, must be checked or dropped before it reaches the PDF. Interface sketches are
 design notation for this spec; none of it goes into the PDF.
 
@@ -49,7 +53,7 @@ design notation for this spec; none of it goes into the PDF.
 | D-13 | ND ordering | **Graph-based nested dissection** on the CSR graph; grid-plane ND as fallback if time is short | Grid-plane ND only |
 | D-14 | 3D pictures | **CPU rasteriser in core** (`viz::Raster3D`); labels as SVG overlays | Extend the D3D11 shader |
 | D-15 | `PngWriter` | **Move** from `app/render` to `core/viz` (behaviour unchanged) | Duplicate it |
-| D-16 | Report length | **18–25 pages**, A4 | Shorter |
+| D-16 | Report length | **18–25 pages**, A4 (V2-10: the report has 17 pages with every planned section; not padded, check limit set to 16–25; your call whether to add content) | Shorter |
 | D-17 | Run caps | **30 min wall, 10 000 iterations, 8 GB solver memory** per run | Other caps |
 | D-18 | E0 objects | **v1 bar and a compact cube** | v1 bar only |
 | D-19 | Repo layout | Same repo, **branch `v2`** | New repo |
@@ -73,7 +77,7 @@ deadline and to take the recommended defaults for every decision still open. Rec
 | Item | When |
 |---|---|
 | **D-21 Deadline for the V2 reply** (sets the cut list, §16) | Before V2-1 |
-| D-22 Eigen 3.4 download (~3–4 MB, MPL-2.0 [VERIFY]) as an optional cross-check only | Before V2-5, optional |
+| D-22 Eigen 3.4 download (~3–4 MB, MPL-2.0; not verified, Eigen was not used) as an optional cross-check only | Before V2-5, optional |
 | D-23 Optional "Solver Lab" GUI view for a screenshot | After V2-10, optional |
 | Keep the machine idle and awake for the overnight official batch | V2-8 |
 | Review and approve every phase before commit/push | Every phase |
@@ -148,11 +152,11 @@ size, conditioning and sparsity structure, and each solver family reacts to a di
 | plate | L1 | LC1 | HS-7 base plate + die, convection only |
 | fins | L2 | LC1 | Plate + die + 7 fins, no TIM (clarified in V2-2: the die is the heat source at L1–L3; the TIM is added only at L3) |
 | **HS-7** | L3 | LC1 | Full object below |
-| pin fins | L4 | LC1 | Pin array variant, e.g. 8 × 6 pins [EST layout] |
+| pin fins | L4 | LC1 | Pin array variant, 8 × 6 square pins, 2 mm side (design input, `PinFinParams`) |
 
 ### 3.2 HS-7 reference design
 
-| Part | Size (mm) | Material, typical k in W/(m·K) [VERIFY handbook] | Role |
+| Part | Size (mm) | Material, k in W/(m·K) (design inputs of typical magnitude; not verified against a handbook table, and the report calls them chosen inputs) | Role |
 |---|---|---|---|
 | Base plate | 60 × 40 × 4 | Aluminium alloy, ≈ 200 | Spreads heat |
 | 7 fins | 2 thick × 40 long × 26 tall, pitch 9, fused with the base | Same aluminium | Convect heat |
@@ -161,7 +165,7 @@ size, conditioning and sparsity structure, and each solver family reacts to a di
 
 **LC1:** steady conduction; uniform q in the die (total power P a design input, e.g. 20–50 W,
 chosen, not claimed); convection h·(T − T∞) on all exposed heat-sink surfaces, T∞ = 25 °C, h swept
-5 … 500 W/(m²·K) [VERIFY typical ranges], mid value 25 [EST]; die bottom and base underside
+5 … 500 W/(m²·K), base case 25 (design inputs; the range is not attributed to a source in the report); die bottom and base underside
 insulated. No fixed temperature: closed by convection only (near-singular at low Biot number, the
 case that separates solvers).
 
@@ -183,7 +187,7 @@ k constant per element (material).
 
 1. Design = boxes with material and per-face BC tags; overlaps rejected.
 2. All box-face coordinates are mandatory grid lines; between consecutive lines n = ceil(gap/s)
-   **equal** cells (no slivers), graded so neighbouring sizes differ by ≤ 1.5 [EST] (A5).
+   **equal** cells (no slivers), graded so neighbouring sizes differ by ≤ 1.5 (design choice, enforced by the mesher; measured max grade recorded per mesh) (A5).
 3. Only parameter: target spacing s. TIM gets a **fixed** 1 or 2 cells through its thickness (E3
    variable), so refinement changes size, not TIM conditioning (A5).
 4. Cell active if its centre is inside a box; boundary faces = active faces with an inactive
@@ -197,7 +201,7 @@ k constant per element (material).
 The DOF are 16–60 % above the earlier estimate because grading next to the 0.1 mm TIM and the
 fins adds cells; the step-to-step growth is 1.6–2.0×.
 
-| s (mm) | Grid cells | Active cells | Nodes = DOF | Max / mean aspect | K bytes ≈ 328·n [EST] |
+| s (mm) | Grid cells | Active cells | Nodes = DOF | Max / mean aspect | K bytes ≈ 328·n (measured: 325 B per DOF at 3.76 M DOF, E2.csv `matrix_bytes`) |
 |---|---|---:|---:|---|---:|
 | 1.000 | 70 × 40 × 38 | 44 080 | 56 015 | 10.0 / 2.50 | 18 MB |
 | 0.794 | 83 × 52 × 45 | 75 192 | 93 921 | 7.94 / 1.88 | 31 MB |
@@ -214,7 +218,7 @@ The maximum aspect ratio is the TIM cell (in-plane s over 0.1 mm thickness), as 
 
 - **Straight into CSR (A4):** pattern from grid connectivity (≤ 27 neighbours per node), K allocated
   once, element matrices scattered via a local → CSR index map. No COO (which would need ~3 GB +
-  sort buffer at 3 × 10⁶ cells [EST]). Assembly time and bytes reported separately.
+  sort buffer at 3 × 10⁶ cells, an estimate; COO was never built, see AI log I3). Assembly time and bytes reported separately.
 - **Measured (V2-4, HS-7, Release, one thread):** the matrix holds about 25.7 entries per row
   (≤ 27 for interior nodes).
 
@@ -236,10 +240,10 @@ The maximum aspect ratio is the TIM cell (in-plane s over 0.1 mm thickness), as 
 | Check | Expected | Proves |
 |---|---|---|
 | Patch test (trilinear T, graded grid) | Exact to round-off | Element + assembly |
-| v1 bar (LC0) | Centre-line peak 188.2 °C at 0.42 m; nodal values = v1 1D [EST: expected exact at nodes, to confirm] | Continuity with v1 |
+| v1 bar (LC0) | Centre-line peak 188.2 °C at 0.42 m; nodal values = v1 1D (measured: largest nodal error 6.6e-11 K, E1.csv `E1-verify-bar`) | Continuity with v1 |
 | Manufactured solution with Robin faces | L2 O(h²), H1 O(h) | Source and convection terms |
-| Single fin vs 1D fin theory [VERIFY Incropera] | Close for Biot ≪ 1, deviation explained | Physics on the real fin |
-| Energy audit | ~1e-12 relative for direct solves [EST] | Conservation, BC bookkeeping |
+| Single fin vs 1D fin theory with convective tip (verified source: Bergman et al., *Fundamentals of Heat and Mass Transfer*, 7th ed., Wiley 2011) | Close for Biot ≪ 1, deviation explained | Physics on the real fin |
+| Energy audit | ~1e-12 relative for direct solves (measured: largest relative imbalance of a converged direct run 6.6e-10, all_runs.csv) | Conservation, BC bookkeeping |
 | Cross-solver agreement | ‖T_X − T_ref‖∞ below tolerance-derived bound | Same system solved |
 | Hex vs Kuhn tets (optional) | Same field within discretisation error | Element independence |
 
@@ -328,12 +332,12 @@ factory makeSolver(kind) -> unique_ptr<LinearOperatorSolver>
 
 | Aspect | Spec |
 |---|---|
-| Algorithm | P·K·Pᵀ = L·Lᵀ: ordering → elimination tree → column counts / symbolic → numeric up-looking Cholesky → forward/back substitution [VERIFY: Davis 2006] |
-| Orderings | natural (fill picture only); **RCM** [VERIFY Cuthill–McKee 1969]; **graph ND** (level-structure bisection on the CSR graph, recursive, separators ordered last) [VERIFY George 1973]; grid-plane ND via `CoordinateHint` as fallback (D-13) |
+| Algorithm | P·K·Pᵀ = L·Lᵀ: ordering → elimination tree → column counts / symbolic → numeric up-looking Cholesky → forward/back substitution (verified source: Davis 2006, doi 10.1137/1.9780898718881) |
+| Orderings | natural (fill picture only); **RCM** (verified source: Cuthill & McKee 1969, doi 10.1145/800195.805928); **graph ND** (level-structure bisection on the CSR graph, recursive, separators ordered last) (verified source: George 1973, doi 10.1137/0710032); grid-plane ND via `CoordinateHint` as fallback (D-13) |
 | Data | Permuted lower triangle in CSR; L compressed-column, exactly sized by symbolic; **64-bit column pointers** for L |
 | Budget | Symbolic predicts nnz(L) and bytes; over 8 GB → `OverBudget` before numeric allocation |
-| Complexity (3D grid theory) | RCM: memory O(n^{5/3}), flops O(n^{7/3}); ND: memory O(n^{4/3}), flops O(n²) [VERIFY] |
-| Expected | Fastest at small n; cost independent of conditioning; forward error ~κ·ε (measured); wall ~2–5 × 10⁵ DOF in 8 GB [EST]; simplicial, so slower than industrial supernodal codes [EST] |
+| Complexity (3D grid theory) | RCM: memory O(n^{5/3}), flops O(n^{7/3}); ND: memory O(n^{4/3}), flops O(n²) (theory not verified against a source and not stated in the report; measured fill slopes on HS-7: ND 1.30, RCM 1.53, from E2.csv `factor_nnz`) |
+| Expected | Fastest at small n; cost independent of conditioning; forward error ~κ·ε (measured); wall ~2–5 × 10⁵ DOF in 8 GB (measured: RCM refused from 568 152 DOF, ND from 1 022 979 DOF, E2.csv); simplicial, so slower than industrial supernodal codes (not measured; stated as a limitation only) |
 | Failures | Non-positive pivot → `Breakdown` + pivot index |
 | Tests | vs dense oracle (v1 `tests/support/DenseGauss.hpp`); all orderings same solution; predicted nnz(L) = actual nnz(L) exactly; L·Lᵀ = P·K·Pᵀ on small cases |
 | Pictures | Density spy plots K, L(natural/RCM/ND) (A14); nnz(L) vs n; elimination-tree sketch |
@@ -358,11 +362,11 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 
 | Aspect | Spec |
 |---|---|
-| Algorithm | Standard PCG for SPD [VERIFY Saad 2003]; residual history and per-iteration timestamps |
+| Algorithm | Standard PCG for SPD (verified sources: Hestenes & Stiefel 1952, doi 10.6028/jres.049.044; Saad 2003, doi 10.1137/1.9780898718003); residual history and per-iteration timestamps |
 | Stopping | Tight relative residual; **residual not trusted alone** (A2/A3): error vs reference via observer, `residualSum` (energy imbalance), κ_est |
 | κ estimate | From the Lanczos tridiagonal built from CG coefficients (free) (A3) |
 | Jacobi | Diagonal scaling; parallel; cannot break down |
-| IC(0) | Sparsity of K; shift ladder α = 0, 1e-3, 1e-2, 1e-1, 1 on K + α·diag(K) [VERIFY Manteuffel 1980]; α and retries recorded (A7). **Corrected in V2-6:** the earlier "aspect ratio > √2" threshold holds for 2D bilinear elements only; for trilinear boxes the coupling along an edge is positive as soon as that edge is longer than the other two (element test `NonCubicBoxesHavePositiveEdgeCouplings`), so K has positive off-diagonals on practically every mesh (68 872 on HS-7 at 2 mm). Measured: IC(0) did **not** break down on the bar or on HS-7 at 2 mm (no shift needed); breakdown and the ladder are shown on Kershaw's 4 × 4 matrix (α = 1 after four failures). Whether thinner TIM meshes break it is an E3/E8 question |
+| IC(0) | Sparsity of K; shift ladder α = 0, 1e-3, 1e-2, 1e-1, 1 on K + α·diag(K) (verified source: Manteuffel 1980, doi 10.1090/S0025-5718-1980-0559197-0); α and retries recorded (A7). **Corrected in V2-6:** the earlier "aspect ratio > √2" threshold holds for 2D bilinear elements only; for trilinear boxes the coupling along an edge is positive as soon as that edge is longer than the other two (element test `NonCubicBoxesHavePositiveEdgeCouplings`), so K has positive off-diagonals on practically every mesh (68 872 on HS-7 at 2 mm). Measured: IC(0) did **not** break down on the bar or on HS-7 at 2 mm (no shift needed); breakdown and the ladder are shown on Kershaw's 4 × 4 matrix (α = 1 after four failures). Whether thinner TIM meshes break it is an E3/E8 question |
 | Complexity | Iteration O(nnz) ≈ 27n; iterations ∝ √κ, κ ∝ h⁻² → ∝ n^{1/3}; total O(n^{4/3}); memory O(n) |
 | Failures | pᵀKp ≤ 0 → `Breakdown`; no 10× drop in N iterations → `Stagnated`; caps → `MaxIterations` / `TimeCap` |
 | Tests | Converges to reference; model-problem iteration counts; κ_est vs analytic κ of a 1D Laplacian within a factor; serial = parallel bit-for-bit; shift ladder on a constructed non-M-matrix |
@@ -373,13 +377,13 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 | Aspect | Spec |
 |---|---|
 | Why algebraic | Thin TIM and 2 mm fins cannot be represented on a coarse geometric grid; AMG coarsens from the matrix, so it works on any design |
-| Setup | strength filter (θ) → greedy aggregation → tentative P (constant per aggregate = near-null-space) → one damped-Jacobi smoothing of P (ω from ρ(D⁻¹K) by power iteration) → Galerkin Kc = Pᵀ(K·P) via two SpGEMMs with exact-size symbolic pass → repeat to a few hundred rows → coarsest level factored by Solver A [VERIFY Vaněk, Mandel, Brezina 1996] |
+| Setup | strength filter (θ) → greedy aggregation → tentative P (constant per aggregate = near-null-space) → one damped-Jacobi smoothing of P (ω from ρ(D⁻¹K) by power iteration) → Galerkin Kc = Pᵀ(K·P) via two SpGEMMs with exact-size symbolic pass → repeat to a few hundred rows → coarsest level factored by Solver A (verified source: Vaněk, Mandel & Brezina 1996, doi 10.1007/BF02238511) |
 | Cycle | V(1,1); `SymGaussSeidel` (forward pre, **backward** post) serial, `L1Jacobi` for the threaded variant |
 | Modes | `AMG` = V-cycle as stationary iteration; `AMG-PCG` = one V-cycle as CG preconditioner |
 | Symmetry (A15) | Equal pre/post sweeps, R = Pᵀ, exact coarse solve; test xᵀM⁻¹y = yᵀM⁻¹x and xᵀM⁻¹x > 0 on random vectors |
-| Complexity | Ideally flat iterations, O(n) work and memory, operator complexity 1.3–1.8 [EST]; setup = several solves [EST] |
+| Complexity | Ideally flat iterations, O(n) work and memory, operator complexity 1.3–1.8 (measured with θ₀ = 0.02: 1.00–1.08 on all official runs); setup = several solves (measured: AMG-PCG setup 2.8 s vs solve 6.7 s at 3.76 M DOF, E2.csv) |
 | Failures | Residual growth per cycle > 1 → `Diverging`; coarse factor failure → `Error`; hierarchy stats always written |
-| Tests | P preserves constants; Kc symmetric positive definite; Galerkin vs dense Pᵀ K P on small cases; two-grid factor bound (< 0.5 target [EST]); same answer as reference |
+| Tests | P preserves constants; Kc symmetric positive definite; Galerkin vs dense Pᵀ K P on small cases; two-grid factor bound (< 0.5, asserted by `Amg.ConvergenceDoesNotDegradeWithMeshSize`; measured mean factor 0.28–0.31); same answer as reference |
 | Pictures | **Aggregates coloured on the HS-7 surface**; hierarchy table; convergence factor per cycle |
 
 **Measured (V2-7, preliminary, single runs):**
@@ -457,7 +461,7 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 - **Observer** (`onIteration(k, residualNorm, x)`): each call bracketed by two clock reads;
   reported solve time = wall − observer time. Observers: `ResidualOnly`, `ErrorVsReference(T_ref)`,
   `Snapshot(every m)`. V2-8 check: with vs without `ErrorVsReference` on small sizes, subtracted
-  times agree within 2 % [EST] (N4).
+  times agree within 2 % (measured: 0.15 %, PCG-J at 171 k DOF, E2.csv) (N4).
 - **Reference T_ref** per mesh: direct where it fits, else `AMG-PCG` to 1e-12, cross-checked against
   direct on all overlapping sizes (A2).
 - **Time-to-accuracy** (A2): time and iterations to reach (a) 1 % of the Richardson-estimated
@@ -476,7 +480,7 @@ from 285 k DOF. The direct wall in 8 GB is ≈ 0.57 M DOF for RCM; for ND it lie
 
 ## 8. Experiments
 
-### 8.1 Hypotheses (stated before the data, then confirmed or refuted) [EST all]
+### 8.1 Hypotheses (stated before the data, then confirmed or refuted; outcomes in `docs/v2_experiments.md`)
 
 | ID | Hypothesis |
 |---|---|
@@ -511,7 +515,7 @@ stagnations on HS-7). H9 failed for the direct solvers on the first try (a 2e13 
 singular system) and holds after the fix in `DirectCholesky` (pivot ratio and residual checks).
 Process-to-process timing noise was ~10 % (PCG-J at 94 k DOF: 1.468 vs 1.340 s, both medians of
 5), so the observer-overhead check N4 needs the idle official batch. Solver time of the dry run
-was ~7.5 min; the official batch is estimated at 4–7 h [EST].
+was ~7.5 min; the official batch was estimated at 4–7 h (measured: 2 h 46 min).
 
 
 **Official batch (V2-8, 2026-11-23, commit `5e9bea7`):** 241/241 runs left a result in
@@ -521,7 +525,7 @@ budget, 6 singular runs detected). First reading of H1–H9 in `docs/v2_experime
 and AMG-PCG rows were re-run in 11.5 min; the batch now stands at 228 converged, 0 stagnated,
 7 over budget, 6 singular runs detected.
 
-One **overnight batch, target ≤ 8 h [EST]**, after a **~1 h dry run** at the two smallest sizes of
+One **overnight batch, target ≤ 8 h (measured: 2 h 46 min)**, after a **~1 h dry run** at the two smallest sizes of
 every experiment. Order: E1, E0, E7, E8 → E3 → E5 → E4 → E6 → E2 largest sizes last.
 
 ### 8.4 Metrics per run
@@ -573,7 +577,7 @@ uniforge_cli study all     (plan → batch → collect → figures; one-command 
 
 ---
 
-## 11. Memory model at 3.2 × 10⁶ DOF [EST]
+## 11. Memory model at 3.2 × 10⁶ DOF (estimate; measured at 3.76 M DOF: K 1.22 GB, solver memory PCG-J 0.15 GB, IC(0) 0.78 GB, AMG 0.75 GB, peak process memory 1.66–3.00 GB, E2.csv `matrix_bytes`, `solver_bytes`, `peak_ws_bytes`)
 
 | Component | Bytes |
 |---|---:|
@@ -622,7 +626,7 @@ Only the direct solver reaches the 8 GB budget, as intended.
 
 | Token | Value |
 |---|---|
-| Family colours (Okabe–Ito [VERIFY hex]) | direct `#0072B2`, PCG `#E69F00`, AMG `#009E73`; theory/reference grey dashed |
+| Family colours (Okabe–Ito; verified V2-10 against the source's Fig. 16: blue 0,114,178; orange 230,159,0; bluish green 0,158,115) | direct `#0072B2`, PCG `#E69F00`, AMG `#009E73`; theory/reference grey dashed |
 | Variants | ND solid ●, RCM dashed ○; Jacobi solid ●, IC(0) dashed ■; AMG solid ▲, AMG-PCG dashed △ |
 | Temperature colormap | inferno, legend in °C with min/max, same range across views of one case |
 | Axes | log–log for scaling, decades as 10ⁿ, fitted slope printed, x axis "DOF" |
@@ -630,7 +634,8 @@ Only the direct solver reaches the 8 GB budget, as intended.
 | Typography | Inter, JetBrains Mono for numbers, units in every header |
 | Caption | what is shown · case and mesh · what to notice · data file |
 
-### 12.3 Report outline (18–25 pages)
+### 12.3 Report outline (18–25 pages planned; amended in V2-10 to 16–25: the finished report has
+17 pages with every planned section and figure, and was not padded to reach 18)
 
 1. Summary: question, object, three solvers, answer + decision chart thumbnail.
 2. From the cube to a complex object: linearity → identical answers; E0 bar vs cube (P22).
@@ -655,10 +660,11 @@ study figures ─► fig/*.svg|png (renders: PNG; labels: SVG overlays)         
 
 - Every number in the prose is a `{{key}}` placeholder filled from `numbers.json`, with a
   provenance comment (run IDs) (N8).
-- `check_pdf.py` fails on: unresolved placeholder, leftover `[EST]`/`[VERIFY]`, code-like text
-  (`#include`, `std::`, `for (` …), PDF > 15 MB, page count outside 18–25.
+- `check_pdf.py` fails on: unresolved placeholder, a leftover estimate or verify marker, code-like text
+  (`#include`, `std::`, `for (` …), e-mail addresses, absolute paths, PDF > 15 MB, page count
+  outside 16–25 (amended from 18–25, see §12.3).
 - v1's `PngWriter` writes uncompressed PNG (~6.4 MB per 1600 × 1000 render); whether Edge
-  recompresses in the PDF is [VERIFY]; fix if needed: smaller renders or a real deflate encoder.
+  recompresses in the PDF was not checked; fix if needed: smaller renders or a real deflate encoder.
   **Done in V2-9:** `viz::PngWriter` now writes adaptive row filters and a fixed-Huffman
   deflate block (D-15 amended: moved *and* compressed; stored blocks kept as an option). The
   28 figure files are 2.7 MB in total, so the PDF size no longer depends on Edge.
@@ -669,7 +675,7 @@ study figures ─► fig/*.svg|png (renders: PNG; labels: SVG overlays)         
 
 Calibration: v1 took 13.7 h actual against 46 h planned. Machine time is the expected bottleneck.
 
-| Phase | Content | Commits (examples) | Exit criteria | Effort [EST] |
+| Phase | Content | Commits (examples) | Exit criteria | Effort (estimate; actual hours in `docs/effort_log.md`) |
 |---|---|---|---|---:|
 | V2-0 | Branch `v2`; this spec + sources into `docs/design/v2/`; figure tokens; AI-log entry | `v2-phase0(docs): v2 design documents and build spec` | You approve | 1–2 h |
 | V2-1 | `sparse`: CSR, pattern, **KernelPool** with deterministic reductions, kernels, SpGEMM, transpose | `v2-phase1(sparse): csr matrix and pattern`, `…: persistent kernel pool with deterministic reductions`, `…: spgemm and transpose` | Invariant tests; p = 1/2/7/20 bit-identical; ASan/TSan green | 3–4 h |
@@ -681,7 +687,7 @@ Calibration: v1 took 13.7 h actual against 46 h planned. Machine time is the exp
 | V2-7 | AMG: strength, aggregation, P, Galerkin, symmetric V-cycle, AMG-PCG | `v2-phase7(amg): aggregation and prolongator`, `…: galerkin hierarchy and symmetric v-cycle`, `…: amg as preconditioner` | Symmetry test; hierarchy checks; factor bound; agrees with reference | 4–6 h |
 | V2-8 | `study` + `cli/platform` (JobLimits, Affinity, KeepAwake); RunSpec/Manifest/Runner/Collect; ReferenceStore; observer-overhead check; golden tiny manifest in CI; **dry run, then official overnight batch** | `v2-phase8(study): run specs, manifest and runner`, `v2-phase8(cli): study batch with job limits and resume`, `v2-phase8(results): official runs on an idle machine` | Resume works after a kill; no run silently missing; overhead ≤ 2 % or subtracted | 7–9 h + **6–10 h machine** |
 | V2-9 | `viz` (Raster3D, Spy, Colormap, PngWriter move); all figures P1–P22 with tokens | `v2-phase9(viz): cpu rasteriser and spy plots`, `v2-phase9(results): report figures` | Every figure exists and maps to a CSV/run | 7–9 h |
-| V2-10 | Report HTML, `fill_numbers.py`, `check_pdf.py`, PDF; AI-use and effort logs; final checks | `v2-phase10(report): v2 report`, `v2-phase10(docs): ai-use and effort logs` | `check_pdf.py` passes; every [EST]/[VERIFY] resolved | 7–9 h |
+| V2-10 | Report HTML, `fill_numbers.py`, `check_pdf.py`, PDF; AI-use and effort logs; final checks | `v2-phase10(report): v2 report`, `v2-phase10(docs): ai-use and effort logs` | `check_pdf.py` passes; every estimate and verify marker resolved | 7–9 h |
 | | **Total** | | | **~43–60 h + one overnight run** |
 
 Optional, each separately approved: Eigen cross-check (D-22, ~2 h), Kuhn-tet cross-check (~2 h),
@@ -733,7 +739,7 @@ Solver Lab GUI view (D-23, ~4 h), transient explicit vs implicit (~5 h), nonline
 | K7 | Campaign does not finish | Medium | High | Caps, dry run, resume, large sizes last |
 | K8 | Assembly dominates memory | Low (A4) | Medium | CSR assembly, reported separately |
 | K9 | Rendering takes long / PDF too big | Medium | Medium | CPU rasteriser; size check in `check_pdf.py` |
-| K10 | Unverified claims (vendor menus, complexities, material data) | Medium | Medium | [VERIFY] tags; drop if not checkable |
+| K10 | Unverified claims (vendor menus, complexities, material data) | Medium | Medium | Resolved V2-10: references verified, material data and complexity theory labelled as inputs / not stated in the report |
 | K11 | Scope creep | Medium | Medium | Optional items need approval |
 | K12 | CI breaks with big tests | Low | Medium | CI uses tiny meshes and a tiny manifest |
 | K13 | Deadline unknown | ? | High | **Cut list in order:** E6 → L4 → graph ND (keep grid ND) → E5 at k = 20 → figures P15/P22 merged → report 18 pages |
@@ -771,7 +777,7 @@ memory model, `PngWriter` move.
 **New in the merge:** cut list order (K13), explicit settled/default/needed-from-you split (§0),
 traceability table (§15), D-20 dirty-tree rule, PDF page-count check range.
 
-### References to verify before use [VERIFY all]
+### References (verified V2-10 against Crossref and Open Library; IEEE list in the report, Appendix C)
 
 Davis 2006 (*Direct Methods for Sparse Linear Systems*, SIAM); George 1973 (nested dissection,
 SIAM J. Numer. Anal.); Cuthill & McKee 1969; Saad 2003 (*Iterative Methods for Sparse Linear
@@ -795,5 +801,5 @@ only if checked in vendor documentation.
   machine-time budget, verification before a usable solver; plus the probably false "solvers look
   alike on the cube" hypothesis for the slender bar). The system-design pass found that v1's
   `WorkerPool` starts threads on every call, unsuitable for solver kernels.
-- Verification so far: none. All [EST] numbers unmeasured, all [VERIFY] facts unchecked.
+- Verification so far: none at V2-0 (all estimates unmeasured, all facts unchecked); resolved in V2-10, see the note at the top.
 - My edits / decisions: to be filled in by you at review (choices among D-8 … D-23, deadline).

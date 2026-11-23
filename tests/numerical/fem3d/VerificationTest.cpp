@@ -241,7 +241,8 @@ TEST(Verification, ManufacturedSolutionConvergesAtSecondOrder) {
 TEST(Verification, SingleFinMatchesOneDimensionalFinTheory) {
     // One HS-7 fin (2 × 40 × 26 mm, aluminium k = 200) on a base held at 80 °C, convection
     // h = 25 W/(m²·K) to 25 °C on every other face. Biot number h·t/(2k) ≈ 1.3e-4, so the 1D
-    // fin equation with a convective tip applies [VERIFY: Incropera, fin with convective tip]:
+    // fin equation with a convective tip applies (Bergman et al., Fundamentals of Heat and
+    // Mass Transfer, 7th ed., Wiley 2011):
     //   q_f = √(hPkA)·θb·(sinh mL + (h/mk)·cosh mL)/(cosh mL + (h/mk)·sinh mL)
     //   θ(L)/θb = 1/(cosh mL + (h/mk)·sinh mL),   m = √(hP/(kA)),  P = 2(W + t),  A = W·t
     const double t = 0.002, W = 0.040, Lf = 0.026, k = 200.0, h = 25.0, tInf = 25.0, tBase = 80.0;

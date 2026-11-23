@@ -1,5 +1,12 @@
 # UniForge V2: Analysis and Plan (three solvers on a 3D thermal problem)
 
+> **Historical input, kept as written (note added in V2-10, 2026-11-23).** This document predates the
+> build and was superseded by `UniForge_V2_Build_Spec.md`. The estimates and unchecked facts
+> (tags EST and VERIFY below) that the build relied on were carried into the Build Spec and
+> resolved there in V2-10 (measured with its result file, verified with its source, or marked
+> not used in the report); the others were not used.
+> Measured outcomes are in `docs/v2_experiments.md`; the report contains no unresolved marker.
+
 Status: **revision 2, nothing built.** Written 2026-11-15 from the Assignment Extension
 Notice (1 page) and the v1 repository (`UniForge/`, tag `v1.0.0`, `main` = v1 + CI fixes).
 Revision 2 folds in amendments A1–A15 from `UniForge_V2_Design_Review.md` (same day); each changed

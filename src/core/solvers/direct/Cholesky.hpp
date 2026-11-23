@@ -18,8 +18,8 @@ namespace uniforge::solvers {
 //   3. numeric    up-looking Cholesky: row k of L solves L(0:k,0:k)·l = column k of P·K·Pᵀ by
 //                 a sparse triangular solve over the row's pattern, then l_kk = √(d). A pivot
 //                 d ≤ 0 means K is not positive definite → status Breakdown with its row.
-// [VERIFY: algorithms as in Davis, Direct Methods for Sparse Linear Systems, SIAM 2006, ch. 4;
-//  written here from the description, not copied.]
+// The algorithms follow T. A. Davis, Direct Methods for Sparse Linear Systems, SIAM 2006
+// (doi 10.1137/1.9780898718881); written here from the description, not copied.
 //
 // L is stored by columns: colPtr (64-bit, the factor may exceed 2^31 entries), rowIdx, val,
 // with the diagonal first in each column. The solve is serial and exact up to rounding; its

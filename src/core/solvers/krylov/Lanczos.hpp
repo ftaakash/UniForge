@@ -15,7 +15,8 @@ namespace uniforge::solvers {
 //
 // The extreme eigenvalues of T (Ritz values) approach those of M⁻¹K from inside as CG proceeds,
 // so κ_est = λ_max(T)/λ_min(T) is a lower bound that tightens with the iteration count
-// [VERIFY: Saad 2003, §6.7.3, before citing].
+// (Lanczos–CG connection: Y. Saad, Iterative Methods for Sparse Linear Systems, 2nd ed., SIAM
+// 2003, doi 10.1137/1.9780898718003.)
 
 struct ExtremeEigenvalues {
     double min = 0.0;

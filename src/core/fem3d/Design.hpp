@@ -88,8 +88,8 @@ struct Design {
 // temperatures on the x faces, other faces insulated.
 [[nodiscard]] Design makeCube();
 
-// Parameters of the finned heat sink (build spec §3.2). Values marked [EST] in the spec are
-// chosen inputs, not measured data: P, h, k of the TIM.
+// Parameters of the finned heat sink (build spec §3.2). They are chosen design inputs, not
+// measured data: dimensions, P, h and the conductivities.
 struct HeatSinkParams {
     // Base plate (origin at its lower front-left corner)
     double baseX = 0.060, baseY = 0.040, baseZ = 0.004;
@@ -100,7 +100,7 @@ struct HeatSinkParams {
     double dieX = 0.020, dieY = 0.020, dieZ = 0.0005;
     // Thermal interface layer between die and base (same footprint as the die)
     double timThickness = 0.0001;
-    // Materials, W/(m·K) [VERIFY handbook values before the report]
+    // Materials, W/(m·K): inputs of typical magnitude (the report calls them chosen inputs)
     double kAluminium = 200.0, kTim = 3.0, kSilicon = 150.0;
     // Load: total die power (W), film coefficient (W/(m²·K)), ambient (°C)
     double power = 30.0, h = 25.0, tInf = 25.0;
@@ -116,7 +116,7 @@ struct HeatSinkParams {
 [[nodiscard]] Design makeFinnedPlate(HeatSinkParams params = {});
 [[nodiscard]] Design makeHS7(HeatSinkParams params = {});
 
-// L4: pin-fin variant: square pins in a regular grid instead of straight fins [EST layout].
+// L4: pin-fin variant: square pins in a regular grid instead of straight fins (8 × 6 pins).
 struct PinFinParams {
     int pinsX = 8, pinsY = 6;
     double pinSide = 0.002;

@@ -15,10 +15,11 @@ namespace uniforge::solvers {
 // with the sums restricted to the pattern (entries outside it are dropped). M = L·Lᵀ.
 //
 // IC(0) can break down on an SPD matrix that is not an M-matrix: a pivot under the square root
-// becomes ≤ 0 because dropped fill was needed [VERIFY: Kershaw 1978 example; Manteuffel 1980 for
-// the shifted variant]. Then K + α·diag(K) is factorised instead, with α taken from the shift
-// ladder in order (amendment A7); the α used and the number of failed attempts are reported.
-// If every shift fails, setup reports Breakdown.
+// becomes ≤ 0 because dropped fill was needed (Kershaw 1978, doi 10.1016/0021-9991(78)90098-0;
+// the shifted variant after Manteuffel 1980, doi 10.1090/S0025-5718-1980-0559197-0). Then K +
+// α·diag(K) is factorised instead, with α taken from the shift ladder in order (amendment A7); the
+// α used and the number of failed attempts are reported. If every shift fails, setup reports
+// Breakdown.
 //
 // apply() is two sparse triangular solves (forward with L, backward with Lᵀ), serial.
 class Ic0Preconditioner final : public Preconditioner {

@@ -44,7 +44,7 @@ works best in which scenario. The deliverable is a single PDF report. V2 is buil
 | V2-8 | Experiment harness (`uniforge_cli study`: plan, one process per run, memory cap, P-core pinning, resume, collect) and the official batch (241 runs, results in `results/v2/`) | `v2-phase-8` | Done |
 | V2-9 | Figures: CPU rasteriser, spy plots, PNG writer with deflate (`core/viz`), `uniforge_cli study figures` → P1–P22 in [docs/report_v2/fig](docs/report_v2/fig/figures.md) | `v2-phase-9` | Done |
 | V2-9.1 | Fixes: renders as separate PNG files (packaging hygiene scan); AMG strength threshold 0.08 → 0.02 for trilinear hexahedra and the 72 AMG rows re-run officially ([before/after](docs/v2_experiments.md)) | `v2-phase-9.1` | Done |
-| V2-10 | PDF report | – | Planned |
+| V2-10 | PDF report ([UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf), 17 pages): numbers filled from `results/v2` with provenance, figures inline, references verified, markers resolved | – | Built, for review |
 
 So far 422 tests pass on Windows (Release and Debug); 134 of them are new in V2. How the
 experiments are run is described in [docs/v2_experiments.md](docs/v2_experiments.md). The 3D model
@@ -58,8 +58,9 @@ To run only the V2 tests:
 ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ic0|Amg\.|Ordering\.|DirectCholesky|SolverFactory|StudyPlan|StudyRecord|StudyRun|study_batch|study_figures|Viz\.|SvgPlotExtras|PngWriter\.(Compressed|Flat)|v2_module_rules"
 ```
 
-No V2 numbers are final yet: values in the V2 documents marked [EST] are estimates and will be
-replaced by measurements before they reach the report.
+The V2 report is [docs/report_v2/UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf); every
+number in it is filled in from `results/v2` and listed with its source in
+[docs/report_v2/provenance.csv](docs/report_v2/provenance.csv).
 
 ## Features
 

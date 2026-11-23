@@ -9,6 +9,23 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
+### Phase V2-10: Report
+- `docs/report_v2/UniForge_V2_Report.pdf` (17 pages, no source code): summary and answer, the
+  move from the cube to HS-7, the thermal problem, FEA and verification, thermal results, how each
+  solver was built, the comparison E0–E8, the decision chart and scenario table, limitations, and
+  appendices (machine and protocol, AI use, IEEE references, full result tables, provenance).
+- `tools/report_v2/fill_numbers.py`: every number in the report is a placeholder naming its CSV
+  row and column (or a fit or ratio of them); the script fills `report.html`, inlines the figures
+  and writes `docs/report_v2/provenance.csv` and the provenance appendix. 85 numbers.
+- `tools/report_v2/check_pdf.py` (pypdf): page count, size, placeholders, estimate/verify
+  markers, code-like text, e-mail addresses, absolute paths. `build_report_v2.ps1` runs fill,
+  headless Edge print and check.
+- References verified against Crossref (DOIs) and Open Library; Okabe–Ito colours verified at the
+  source. Every estimate and verify marker in the Build Spec, code comments and README resolved in
+  place; the three historical design inputs carry a note pointing to the resolutions.
+- Figures: failure labels in P11–P13 drawn once per reason beside the first cross (no overlaps);
+  the fin-theory note cites Bergman et al. 2011.
+
 ### Phase V2-9.1: Fixes after the V2-9 CI run (`v2-phase-9.1`)
 - **AMG strength threshold 0.08 → 0.02.** The V2-7 value was tuned on a 7-point Laplacian; on
   trilinear hexahedra of aspect ratio 1 every coupling is at most 1/16 of the diagonal, so 0.08

@@ -10,9 +10,9 @@
 
 namespace uniforge::solvers {
 
-// Smoothed-aggregation algebraic multigrid (build spec §5.4) [VERIFY: Vaněk, Mandel, Brezina
-// 1996 before citing; written from the description, not copied]. It coarsens from the matrix
-// alone, so it works for any mesh of any design.
+// Smoothed-aggregation algebraic multigrid (build spec §5.4) after Vaněk, Mandel and Brezina,
+// Computing 56 (1996), doi 10.1007/BF02238511; written from the description, not copied. It
+// coarsens from the matrix alone, so it works for any mesh of any design.
 //
 // Setup, level by level until at most amgCoarseSize rows remain:
 //   1. strength    j is a strong neighbour of i if |a_ij| ≥ θ_l·sqrt(|a_ii·a_jj|), with

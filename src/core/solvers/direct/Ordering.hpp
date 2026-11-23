@@ -24,14 +24,16 @@ struct Permutation {
 // Identity.
 [[nodiscard]] Permutation naturalOrdering(Index n);
 
-// Reverse Cuthill–McKee [VERIFY: Cuthill & McKee 1969; reversal by George]: per connected
+// Reverse Cuthill–McKee (Cuthill & McKee 1969, doi 10.1145/800195.805928; numbered in reverse):
+// per connected
 // component, start at a pseudo-peripheral node (repeated breadth-first search from the
 // last-level node of smallest degree until the depth stops growing), number the nodes level by
 // level with neighbours in increasing degree, then reverse. Keeps the nonzeros near the
 // diagonal (small envelope), so fill stays inside it.
 [[nodiscard]] Permutation rcmOrdering(const CsrMatrix& A);
 
-// Nested dissection on the graph [VERIFY: George 1973]: split each connected subgraph by the
+// Nested dissection on the graph (George 1973, doi 10.1137/0710032): split each connected
+// subgraph by the
 // middle level of a breadth-first level structure from a pseudo-peripheral node (a vertex
 // separator: the levels before and after it are not adjacent), order the two parts
 // recursively, and number the separator last. Subgraphs of at most `leafSize` nodes are

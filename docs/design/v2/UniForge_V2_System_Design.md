@@ -1,5 +1,12 @@
 # UniForge V2: System Design
 
+> **Historical input, kept as written (note added in V2-10, 2026-11-23).** This document predates the
+> build and was superseded by `UniForge_V2_Build_Spec.md`. The estimates and unchecked facts
+> (tags EST and VERIFY below) that the build relied on were carried into the Build Spec and
+> resolved there in V2-10 (measured with its result file, verified with its source, or marked
+> not used in the report); the others were not used.
+> Measured outcomes are in `docs/v2_experiments.md`; the report contains no unresolved marker.
+
 Produced with `/engineering:system-design` from revision 2 of `UniForge_V2_Analysis_and_Plan.md`
 and from `UniForge_V2_Design_Review.md` (2026-11-15). Scope: module boundaries, interfaces and data
 models for the new core modules (`sparse`, `fem3d`, `solvers`, `viz`, `study`), the experiment

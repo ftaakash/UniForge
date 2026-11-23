@@ -53,7 +53,8 @@ SolveReport pcgSolve(std::unique_ptr<Preconditioner> m, const CsrMatrix& K, cons
 
 // SPD but not an M-matrix; IC(0) drops the fill entries (0, 2) and (1, 3) and the last pivot
 // becomes 3 − 4/3 − 4/0.6 = −5 < 0 (exact Cholesky gives a positive 1/3). After Kershaw's
-// counter-example [VERIFY: Kershaw 1978 before citing].
+// counter-example (Kershaw 1978, doi 10.1016/0021-9991(78)90098-0); the arithmetic above was
+// checked by hand, the matrix's attribution was not checked against the paper.
 CsrMatrix kershaw() {
     return uniforge::sparse::fromTriplets(4, 4,
                                           {{0, 0, 3},

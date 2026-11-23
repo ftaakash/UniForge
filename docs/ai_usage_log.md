@@ -1186,6 +1186,55 @@ a persistent kernel pool instead.
   atomic rename on Windows; the dry run did not show it because nobody read the log. Fixed and
   pinned by the smoke test.
 
+## 2026-11-23: Report (Phase V2-10)
+
+### Prompts (representative)
+1. Relayed by the planning session: "continue to V2-10 after CI is green", with the rules: a
+   single PDF with no source code and with pictures; every number traceable to a CSV; resolve
+   all estimate and verify markers; leave the effort-log hours to the user; stop for review
+   before tagging the final release or pushing to `main`.
+2. The user, in this session: "start V2-10 once CI is green".
+
+### Outputs (files, functions)
+- `docs/report_v2/report.src.html` (template), `report.html` (filled), `UniForge_V2_Report.pdf`,
+  `provenance.csv`.
+- `tools/report_v2/fill_numbers.py` (placeholders `run`, `sup`, `e5`, `ratio`, `slope`,
+  `status`, `numbers`, `fig`, `table`, `provenance`), `check_pdf.py`, `build_report_v2.ps1`.
+- `Figures.cpp`: failure labels once per reason; fin-theory note cites Bergman et al. 2011.
+- Marker resolution in the Build Spec, `figure_tokens.md`, README, code comments and two test
+  comments; notes on the three historical design documents.
+
+### My edits
+- None yet; the report is for the user's review.
+
+### Verification (tests run, numbers checked, manual checks)
+- `check_pdf.py` passes: 17 pages, 1.8 MB, no placeholder, marker, code-like text, e-mail
+  address or absolute path in the extracted text.
+- Every number comes from `fill_numbers.py`; it fails on a missing row, column or non-number.
+  Spot checks of the prose against the CSVs (E0 winners, E2 times and slopes, E3 ratios, E5 load
+  cases, E6 threads).
+- References: nine checked on Crossref (title, authors, journal, volume, pages, year, DOI), the
+  heat-transfer textbook on Open Library (7th ed., Wiley 2011), the Okabe–Ito RGB values on the
+  source's Fig. 16.
+- The report was rendered and read page by page; P11 and P12 re-rendered after the label fix.
+- Windows MSVC: 422/422 tests pass in Release and Debug.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **Citations for numbers they were not checked against:** the first draft attributed the
+  material conductivities and h = 25 W/(m²·K) to the heat-transfer textbook without checking its
+  tables. Caught while resolving the verify markers; the report now calls them chosen design
+  inputs and cites the book only for fin theory.
+- **Wrong figure reference:** the summary pointed to "Figure 16" for the decision chart (it is
+  Figure 25). Caught when reading the rendered report.
+- **Overlapping failure labels** in P11 and P12 (one label per refused size); two fixes were
+  needed before the labels cleared the curves. Caught by eye on the rendered figures.
+- **Section and table numbers in citations** (Saad §6.7.3, Davis ch. 4) could not be checked
+  without the books; they were removed and only the verified bibliographic data kept. The
+  attribution of the 4 × 4 IC(0) counter-example to Kershaw is marked as not checked against
+  the paper.
+- **Page count:** the planned 18–25 pages would have needed padding; the limit was amended to
+  16–25 in the spec instead (17 pages).
+
 ## 2026-11-23: Fixes after V2-9 (Phase V2-9.1)
 
 ### Prompts (representative)

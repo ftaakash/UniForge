@@ -15,8 +15,9 @@ same solver looks the same in every plot. Change a token here, not in a single f
 | | | `AMG-PCG` | dashed | △ hollow triangle |
 | Theory / reference lines | grey | – | dashed, thinner | none |
 
-The colours are from the Okabe–Ito colour-blind-safe palette [VERIFY hex values against the
-source before the report is built].
+The colours are from the Okabe–Ito colour-blind-safe palette (verified 2026-11-23 against the
+source, M. Okabe and K. Ito, "Color Universal Design", jfly.uni-koeln.de/color, Fig. 16: blue
+0,114,178 = `#0072B2`; orange 230,159,0 = `#E69F00`; bluish green 0,158,115 = `#009E73`).
 
 ## Temperature fields
 
