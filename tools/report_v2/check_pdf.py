@@ -2,7 +2,7 @@
 
     py -3 tools/report_v2/check_pdf.py [docs/report_v2/UniForge_V2_Report.pdf]
 
-Fails (exit 1) on: a page count outside 16-25, a file over 15 MB, an unresolved {{placeholder}},
+Fails (exit 1) on: a page count outside 18-25, a file over 15 MB, an unresolved {{placeholder}},
 a leftover [EST] or [VERIFY] marker, text that looks like source code, an e-mail address or an
 absolute machine path. Needs pypdf.
 """
@@ -30,8 +30,8 @@ def main():
     size = pdf.stat().st_size
     reader = PdfReader(str(pdf))
     pages = len(reader.pages)
-    if not 16 <= pages <= 25:
-        problems.append(f"{pages} pages (allowed 16-25)")
+    if not 18 <= pages <= 25:
+        problems.append(f"{pages} pages (allowed 18-25)")
     if size > 15 * 1024 * 1024:
         problems.append(f"{size / 1e6:.1f} MB (allowed 15 MB)")
     for i, page in enumerate(reader.pages, start=1):

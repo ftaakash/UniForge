@@ -1,4 +1,5 @@
 placeholder,value,file,run_or_row,column
+diff:E4-HS7-s1.000-PCG-IC0:T_max_C:E4-fins-s1.000-PCG-IC0:T_max_C|%.1f,2.4,results/v2/csv/all_runs.csv,E4-HS7-s1.000-PCG-IC0 − E4-fins-s1.000-PCG-IC0,T_max_C − T_max_C
 e5:HS7-s0.630:AMG-PCG:total_k20_s|%.1f,8.3,results/v2/csv/E5_load_cases.csv,HS7-s0.630 AMG-PCG,total_k20_s
 e5:HS7-s0.630:DIRECT-RCM:total_k20_s|%.1f,27.3,results/v2/csv/E5_load_cases.csv,HS7-s0.630 DIRECT-RCM,total_k20_s
 e5:HS7-s0.630:PCG-IC0:total_k20_s|%.1f,30.4,results/v2/csv/E5_load_cases.csv,HS7-s0.630 PCG-IC0,total_k20_s
@@ -7,14 +8,19 @@ e5:HS7-s1.000:DIRECT-RCM:total_k20_s|%.2f,3.38,results/v2/csv/E5_load_cases.csv,
 numbers:runs,241,results/v2/numbers.json,runs,runs
 ratio:E1-verify-mms16:check_fe:E1-verify-mms32:check_fe|%.2f,4.00,results/v2/csv/all_runs.csv,E1-verify-mms16 / E1-verify-mms32,check_fe / check_fe
 ratio:E2-HS7-s0.198-AMG:total_s_median:E2-HS7-s0.198-AMG-PCG:total_s_median|%.1f,2.5,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG / E2-HS7-s0.198-AMG-PCG,total_s_median / total_s_median
+ratio:E2-HS7-s0.198-PCG-IC0:spmv_eq:E2-HS7-s0.198-AMG-PCG:spmv_eq|%.0f,17,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0 / E2-HS7-s0.198-AMG-PCG,spmv_eq / spmv_eq
 ratio:E2-HS7-s0.198-PCG-IC0:total_s_median:E2-HS7-s0.198-AMG-PCG:total_s_median|%.0f,11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0 / E2-HS7-s0.198-AMG-PCG,total_s_median / total_s_median
 ratio:E2-HS7-s0.198-PCG-J:iterations:E2-HS7-s0.198-PCG-IC0:iterations|%.1f,2.7,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J / E2-HS7-s0.198-PCG-IC0,iterations / iterations
+ratio:E3-HS7-h5-s0.500-PCG-IC0:iterations:E3-HS7-h500-s0.500-PCG-IC0:iterations|%.2f,1.39,results/v2/csv/all_runs.csv,E3-HS7-h5-s0.500-PCG-IC0 / E3-HS7-h500-s0.500-PCG-IC0,iterations / iterations
 ratio:E3-HS7-h5-s0.500-PCG-IC0:kappa_est:E3-HS7-h500-s0.500-PCG-IC0:kappa_est|%.0f,93,results/v2/csv/all_runs.csv,E3-HS7-h5-s0.500-PCG-IC0 / E3-HS7-h500-s0.500-PCG-IC0,kappa_est / kappa_est
 ratio:E4-HS7-s1.000-DIRECT-ND:factor_nnz:E4-HS7-s1.000-DIRECT-ND:dof|%.0f,296,results/v2/csv/all_runs.csv,E4-HS7-s1.000-DIRECT-ND / E4-HS7-s1.000-DIRECT-ND,factor_nnz / dof
 ratio:E4-cube-s1.000-DIRECT-ND:factor_nnz:E4-cube-s1.000-DIRECT-ND:dof|%.0f,1025,results/v2/csv/all_runs.csv,E4-cube-s1.000-DIRECT-ND / E4-cube-s1.000-DIRECT-ND,factor_nnz / dof
 ratio:E4-fins-s1.000-DIRECT-ND:factor_nnz:E4-fins-s1.000-DIRECT-ND:dof|%.0f,197,results/v2/csv/all_runs.csv,E4-fins-s1.000-DIRECT-ND / E4-fins-s1.000-DIRECT-ND,factor_nnz / dof
 ratio:E4-plate-s1.000-DIRECT-ND:factor_nnz:E4-plate-s1.000-DIRECT-ND:dof|%.0f,194,results/v2/csv/all_runs.csv,E4-plate-s1.000-DIRECT-ND / E4-plate-s1.000-DIRECT-ND,factor_nnz / dof
+ratio:E4-plate-s1.000-PCG-IC0:R_th_K_per_W:E4-fins-s1.000-PCG-IC0:R_th_K_per_W|%.1f,5.3,results/v2/csv/all_runs.csv,E4-plate-s1.000-PCG-IC0 / E4-fins-s1.000-PCG-IC0,R_th_K_per_W / R_th_K_per_W
+ratio:E6-HS7-s0.397-PCG-J-noobs-p20:total_s_median:E6-HS7-s0.397-AMG-PCG-noobs:total_s_median|%.1f,3.5,results/v2/csv/all_runs.csv,E6-HS7-s0.397-PCG-J-noobs-p20 / E6-HS7-s0.397-AMG-PCG-noobs,total_s_median / total_s_median
 ratio:E6-HS7-s0.397-PCG-J-noobs:total_s_median:E6-HS7-s0.397-PCG-J-noobs-p20:total_s_median|%.1f,2.6,results/v2/csv/all_runs.csv,E6-HS7-s0.397-PCG-J-noobs / E6-HS7-s0.397-PCG-J-noobs-p20,total_s_median / total_s_median
+ratio:E7-HS7-s0.794-DIRECT-NAT:factor_nnz:E2-HS7-s0.794-DIRECT-ND:factor_nnz|%.1f,8.0,results/v2/csv/all_runs.csv,E7-HS7-s0.794-DIRECT-NAT / E2-HS7-s0.794-DIRECT-ND,factor_nnz / factor_nnz
 run:E0-bar-s2.500-AMG:err_vs_ref_K|e,8.5e−6,results/v2/csv/all_runs.csv,E0-bar-s2.500-AMG,err_vs_ref_K
 run:E0-bar-s2.500-DIRECT-RCM:dof|int,10 050,results/v2/csv/all_runs.csv,E0-bar-s2.500-DIRECT-RCM,dof
 run:E0-bar-s2.500-DIRECT-RCM:total_s_median|*1000|%.1f,6.5,results/v2/csv/all_runs.csv,E0-bar-s2.500-DIRECT-RCM,total_s_median
@@ -27,49 +33,124 @@ run:E1-verify-fin:check_reference|%.4f,3.0177,results/v2/csv/all_runs.csv,E1-ver
 run:E2-HS7-s0.198-AMG-PCG:R_th_K_per_W|%.3f,2.470,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,R_th_K_per_W
 run:E2-HS7-s0.198-AMG-PCG:T_max_C|%.2f,99.09,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,T_max_C
 run:E2-HS7-s0.198-AMG-PCG:dof|/1e6|%.2f,3.76,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,dof
+run:E2-HS7-s0.198-AMG-PCG:err_vs_ref_K|e,2.0e−11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,err_vs_ref_K
 run:E2-HS7-s0.198-AMG-PCG:iterations|int,23,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,iterations
 run:E2-HS7-s0.198-AMG-PCG:peak_ws_bytes|/1e9|%.2f,3.00,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,peak_ws_bytes
 run:E2-HS7-s0.198-AMG-PCG:rel_imbalance|e,3.7e−11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,rel_imbalance
+run:E2-HS7-s0.198-AMG-PCG:spmv_eq|int,116,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,spmv_eq
 run:E2-HS7-s0.198-AMG-PCG:total_s_median|%.1f,9.5,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG-PCG,total_s_median
+run:E2-HS7-s0.198-AMG:err_vs_ref_K|e,1.5e−10,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG,err_vs_ref_K
+run:E2-HS7-s0.198-AMG:rel_imbalance|e,3.7e−11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG,rel_imbalance
+run:E2-HS7-s0.198-AMG:spmv_eq|int,350,results/v2/csv/all_runs.csv,E2-HS7-s0.198-AMG,spmv_eq
+run:E2-HS7-s0.198-PCG-IC0:err_vs_ref_K|e,2.0e−10,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0,err_vs_ref_K
+run:E2-HS7-s0.198-PCG-IC0:rel_imbalance|e,3.7e−11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0,rel_imbalance
+run:E2-HS7-s0.198-PCG-IC0:spmv_eq|int,2 006,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0,spmv_eq
 run:E2-HS7-s0.198-PCG-IC0:total_s_median|%.0f,107,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-IC0,total_s_median
 run:E2-HS7-s0.198-PCG-J:assembly_s|%.1f,3.5,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,assembly_s
 run:E2-HS7-s0.198-PCG-J:dof|int,3 759 720,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,dof
+run:E2-HS7-s0.198-PCG-J:err_vs_ref_K|e,6.6e−11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,err_vs_ref_K
 run:E2-HS7-s0.198-PCG-J:matrix_bytes|/1e9|%.2f,1.22,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,matrix_bytes
 run:E2-HS7-s0.198-PCG-J:nnz|/1e6|%.1f,96.5,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,nnz
 run:E2-HS7-s0.198-PCG-J:peak_ws_bytes|/1e9|%.2f,1.66,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,peak_ws_bytes
+run:E2-HS7-s0.198-PCG-J:rel_imbalance|e,3.7e−11,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,rel_imbalance
+run:E2-HS7-s0.198-PCG-J:spmv_eq|int,3 093,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,spmv_eq
 run:E2-HS7-s0.198-PCG-J:total_s_median|%.0f,154,results/v2/csv/all_runs.csv,E2-HS7-s0.198-PCG-J,total_s_median
+run:E2-HS7-s0.250-PCG-J:dof|int,1 867 768,results/v2/csv/all_runs.csv,E2-HS7-s0.250-PCG-J,dof
 run:E2-HS7-s0.315-DIRECT-ND:dof|/1e6|%.2f,1.02,results/v2/csv/all_runs.csv,E2-HS7-s0.315-DIRECT-ND,dof
 run:E2-HS7-s0.315-DIRECT-ND:dof|int,1 022 979,results/v2/csv/all_runs.csv,E2-HS7-s0.315-DIRECT-ND,dof
 run:E2-HS7-s0.397-DIRECT-RCM:dof|/1e3|%.0f,568,results/v2/csv/all_runs.csv,E2-HS7-s0.397-DIRECT-RCM,dof
 run:E2-HS7-s0.397-DIRECT-RCM:dof|int,568 152,results/v2/csv/all_runs.csv,E2-HS7-s0.397-DIRECT-RCM,dof
+run:E2-HS7-s0.500-AMG-PCG:T_max_C|%.4f,99.0812,results/v2/csv/all_runs.csv,E2-HS7-s0.500-AMG-PCG,T_max_C
+run:E2-HS7-s0.500-AMG-PCG:err_vs_ref_K|e,2.3e−9,results/v2/csv/all_runs.csv,E2-HS7-s0.500-AMG-PCG,err_vs_ref_K
+run:E2-HS7-s0.500-AMG:T_max_C|%.4f,99.0812,results/v2/csv/all_runs.csv,E2-HS7-s0.500-AMG,T_max_C
+run:E2-HS7-s0.500-AMG:err_vs_ref_K|e,2.4e−9,results/v2/csv/all_runs.csv,E2-HS7-s0.500-AMG,err_vs_ref_K
+run:E2-HS7-s0.500-DIRECT-ND:T_max_C|%.4f,99.0812,results/v2/csv/all_runs.csv,E2-HS7-s0.500-DIRECT-ND,T_max_C
+run:E2-HS7-s0.500-DIRECT-ND:dof|/1e3|%.0f,286,results/v2/csv/all_runs.csv,E2-HS7-s0.500-DIRECT-ND,dof
+run:E2-HS7-s0.500-DIRECT-ND:total_s_median|%.0f,70,results/v2/csv/all_runs.csv,E2-HS7-s0.500-DIRECT-ND,total_s_median
+run:E2-HS7-s0.500-DIRECT-RCM:T_max_C|%.4f,99.0812,results/v2/csv/all_runs.csv,E2-HS7-s0.500-DIRECT-RCM,T_max_C
+run:E2-HS7-s0.500-DIRECT-RCM:err_vs_ref_K|e,5.5e−9,results/v2/csv/all_runs.csv,E2-HS7-s0.500-DIRECT-RCM,err_vs_ref_K
+run:E2-HS7-s0.500-DIRECT-RCM:total_s_median|%.0f,90,results/v2/csv/all_runs.csv,E2-HS7-s0.500-DIRECT-RCM,total_s_median
+run:E2-HS7-s0.500-PCG-IC0:T_max_C|%.4f,99.0812,results/v2/csv/all_runs.csv,E2-HS7-s0.500-PCG-IC0,T_max_C
+run:E2-HS7-s0.500-PCG-IC0:err_vs_ref_K|e,2.4e−9,results/v2/csv/all_runs.csv,E2-HS7-s0.500-PCG-IC0,err_vs_ref_K
+run:E2-HS7-s0.500-PCG-J:T_max_C|%.4f,99.0812,results/v2/csv/all_runs.csv,E2-HS7-s0.500-PCG-J,T_max_C
+run:E2-HS7-s0.500-PCG-J:dof|int,285 532,results/v2/csv/all_runs.csv,E2-HS7-s0.500-PCG-J,dof
+run:E2-HS7-s0.500-PCG-J:err_vs_ref_K|e,2.3e−9,results/v2/csv/all_runs.csv,E2-HS7-s0.500-PCG-J,err_vs_ref_K
 run:E2-HS7-s0.630-AMG-PCG:dof|/1e3|%.0f,171,results/v2/csv/all_runs.csv,E2-HS7-s0.630-AMG-PCG,dof
+run:E2-HS7-s0.630-DIRECT-RCM:dof|/1e3|%.0f,171,results/v2/csv/all_runs.csv,E2-HS7-s0.630-DIRECT-RCM,dof
 run:E2-HS7-s0.630-DIRECT-RCM:dof|int,170 634,results/v2/csv/all_runs.csv,E2-HS7-s0.630-DIRECT-RCM,dof
+run:E2-HS7-s0.630-DIRECT-RCM:setup_s|%.1f,24.4,results/v2/csv/all_runs.csv,E2-HS7-s0.630-DIRECT-RCM,setup_s
+run:E2-HS7-s0.630-DIRECT-RCM:solve_s_median|%.2f,0.14,results/v2/csv/all_runs.csv,E2-HS7-s0.630-DIRECT-RCM,solve_s_median
 run:E2-HS7-s0.630-PCG-J-noobs:solve_s_median|%.3f,2.880,results/v2/csv/all_runs.csv,E2-HS7-s0.630-PCG-J-noobs,solve_s_median
 run:E2-HS7-s0.630-PCG-J:dof|int,170 634,results/v2/csv/all_runs.csv,E2-HS7-s0.630-PCG-J,dof
 run:E2-HS7-s0.630-PCG-J:solve_s_median|%.3f,2.876,results/v2/csv/all_runs.csv,E2-HS7-s0.630-PCG-J,solve_s_median
+run:E2-HS7-s0.794-DIRECT-ND:dof|int,93 921,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-ND,dof
+run:E2-HS7-s0.794-DIRECT-ND:factor_flops|/1e9|%.1f,27.7,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-ND,factor_flops
+run:E2-HS7-s0.794-DIRECT-ND:factor_nnz|int,31 021 545,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-ND,factor_nnz
+run:E2-HS7-s0.794-DIRECT-ND:total_s_median|%.1f,9.7,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-ND,total_s_median
+run:E2-HS7-s0.794-DIRECT-RCM:factor_flops|/1e9|%.1f,27.4,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-RCM,factor_flops
+run:E2-HS7-s0.794-DIRECT-RCM:factor_nnz|int,44 149 272,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-RCM,factor_nnz
+run:E2-HS7-s0.794-DIRECT-RCM:total_s_median|%.1f,7.3,results/v2/csv/all_runs.csv,E2-HS7-s0.794-DIRECT-RCM,total_s_median
+run:E2-HS7-s0.794-PCG-J:dof|int,93 921,results/v2/csv/all_runs.csv,E2-HS7-s0.794-PCG-J,dof
 run:E2-HS7-s1.000-AMG-PCG:T_max_C|%.2f,99.06,results/v2/csv/all_runs.csv,E2-HS7-s1.000-AMG-PCG,T_max_C
+run:E2-HS7-s1.000-AMG-PCG:total_s_median|%.2f,0.19,results/v2/csv/all_runs.csv,E2-HS7-s1.000-AMG-PCG,total_s_median
 run:E2-HS7-s1.000-AMG:iterations|int,365,results/v2/csv/all_runs.csv,E2-HS7-s1.000-AMG,iterations
+run:E2-HS7-s1.000-DIRECT-ND:total_s_median|%.1f,3.7,results/v2/csv/all_runs.csv,E2-HS7-s1.000-DIRECT-ND,total_s_median
 run:E2-HS7-s1.000-PCG-J:dof|int,56 015,results/v2/csv/all_runs.csv,E2-HS7-s1.000-PCG-J,dof
 run:E3-HS7-h5-s0.500-PCG-IC0:iterations|int,361,results/v2/csv/all_runs.csv,E3-HS7-h5-s0.500-PCG-IC0,iterations
 run:E3-HS7-h500-s0.500-PCG-IC0:iterations|int,260,results/v2/csv/all_runs.csv,E3-HS7-h500-s0.500-PCG-IC0,iterations
 run:E3-HS7-s0.500-PCG-J:dof|int,285 532,results/v2/csv/all_runs.csv,E3-HS7-s0.500-PCG-J,dof
 run:E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG:iterations|int,40,results/v2/csv/all_runs.csv,E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG,iterations
 run:E3-HS7-tim0.5mm-s0.500-AMG-PCG:iterations|int,23,results/v2/csv/all_runs.csv,E3-HS7-tim0.5mm-s0.500-AMG-PCG,iterations
+run:E4-HS7-s1.000-PCG-IC0:R_th_K_per_W|%.2f,2.47,results/v2/csv/all_runs.csv,E4-HS7-s1.000-PCG-IC0,R_th_K_per_W
+run:E4-HS7-s1.000-PCG-IC0:T_max_C|%.1f,99.1,results/v2/csv/all_runs.csv,E4-HS7-s1.000-PCG-IC0,T_max_C
+run:E4-HS7-s1.000-PCG-IC0:dof|int,56 015,results/v2/csv/all_runs.csv,E4-HS7-s1.000-PCG-IC0,dof
 run:E4-cube-s1.000-AMG:iterations|int,15,results/v2/csv/all_runs.csv,E4-cube-s1.000-AMG,iterations
+run:E4-fins-s1.000-PCG-IC0:R_th_K_per_W|%.2f,2.39,results/v2/csv/all_runs.csv,E4-fins-s1.000-PCG-IC0,R_th_K_per_W
+run:E4-fins-s1.000-PCG-IC0:T_max_C|%.1f,96.7,results/v2/csv/all_runs.csv,E4-fins-s1.000-PCG-IC0,T_max_C
+run:E4-fins-s1.000-PCG-IC0:dof|int,45 707,results/v2/csv/all_runs.csv,E4-fins-s1.000-PCG-IC0,dof
+run:E4-pinfin-s1.000-PCG-IC0:R_th_K_per_W|%.2f,3.42,results/v2/csv/all_runs.csv,E4-pinfin-s1.000-PCG-IC0,R_th_K_per_W
+run:E4-pinfin-s1.000-PCG-IC0:T_max_C|%.1f,127.7,results/v2/csv/all_runs.csv,E4-pinfin-s1.000-PCG-IC0,T_max_C
+run:E4-pinfin-s1.000-PCG-IC0:dof|int,56 832,results/v2/csv/all_runs.csv,E4-pinfin-s1.000-PCG-IC0,dof
+run:E4-plate-s1.000-PCG-IC0:R_th_K_per_W|%.2f,12.69,results/v2/csv/all_runs.csv,E4-plate-s1.000-PCG-IC0,R_th_K_per_W
+run:E4-plate-s1.000-PCG-IC0:T_max_C|%.1f,405.7,results/v2/csv/all_runs.csv,E4-plate-s1.000-PCG-IC0,T_max_C
+run:E4-plate-s1.000-PCG-IC0:dof|int,15 447,results/v2/csv/all_runs.csv,E4-plate-s1.000-PCG-IC0,dof
 run:E6-HS7-s0.397-AMG-PCG-noobs-p20:total_s_median|%.2f,2.07,results/v2/csv/all_runs.csv,E6-HS7-s0.397-AMG-PCG-noobs-p20,total_s_median
 run:E6-HS7-s0.397-AMG-PCG-noobs-p4:total_s_median|%.2f,1.38,results/v2/csv/all_runs.csv,E6-HS7-s0.397-AMG-PCG-noobs-p4,total_s_median
 run:E6-HS7-s0.397-AMG-PCG-noobs:total_s_median|%.2f,1.57,results/v2/csv/all_runs.csv,E6-HS7-s0.397-AMG-PCG-noobs,total_s_median
 run:E6-HS7-s0.397-PCG-J-noobs-p20:total_s_median|%.1f,5.5,results/v2/csv/all_runs.csv,E6-HS7-s0.397-PCG-J-noobs-p20,total_s_median
 run:E6-HS7-s0.397-PCG-J-noobs:dof|int,568 152,results/v2/csv/all_runs.csv,E6-HS7-s0.397-PCG-J-noobs,dof
 run:E6-HS7-s0.397-PCG-J-noobs:total_s_median|%.1f,14.6,results/v2/csv/all_runs.csv,E6-HS7-s0.397-PCG-J-noobs,total_s_median
+run:E7-HS7-s0.794-DIRECT-NAT:factor_flops|/1e9|%.0f,845,results/v2/csv/all_runs.csv,E7-HS7-s0.794-DIRECT-NAT,factor_flops
+run:E7-HS7-s0.794-DIRECT-NAT:factor_nnz|int,246 819 591,results/v2/csv/all_runs.csv,E7-HS7-s0.794-DIRECT-NAT,factor_nnz
+run:E7-HS7-s0.794-DIRECT-NAT:total_s_median|%.0f,294,results/v2/csv/all_runs.csv,E7-HS7-s0.794-DIRECT-NAT,total_s_median
+run:E8-HS7-s0.500-PCG-IC0-noshift-noobs:iterations|int,347,results/v2/csv/all_runs.csv,E8-HS7-s0.500-PCG-IC0-noshift-noobs,iterations
 slope:AMG-PCG:iterations|%.2f,−0.17,results/v2/csv/all_runs.csv,8 E2 rows of AMG-PCG (fit),log iterations vs log dof
+slope:AMG-PCG:peak_ws_bytes|%.2f,0.99,results/v2/csv/all_runs.csv,8 E2 rows of AMG-PCG (fit),log peak_ws_bytes vs log dof
+slope:AMG-PCG:setup_s|%.2f,1.01,results/v2/csv/all_runs.csv,8 E2 rows of AMG-PCG (fit),log setup_s vs log dof
+slope:AMG-PCG:solve_s_median|%.2f,0.91,results/v2/csv/all_runs.csv,8 E2 rows of AMG-PCG (fit),log solve_s_median vs log dof
 slope:AMG-PCG:total_s_median|%.2f,0.93,results/v2/csv/all_runs.csv,8 E2 rows of AMG-PCG (fit),log total_s_median vs log dof
 slope:AMG:iterations|%.2f,−0.35,results/v2/csv/all_runs.csv,8 E2 rows of AMG (fit),log iterations vs log dof
+slope:AMG:peak_ws_bytes|%.2f,0.99,results/v2/csv/all_runs.csv,8 E2 rows of AMG (fit),log peak_ws_bytes vs log dof
+slope:AMG:setup_s|%.2f,1.01,results/v2/csv/all_runs.csv,8 E2 rows of AMG (fit),log setup_s vs log dof
+slope:AMG:solve_s_median|%.2f,0.73,results/v2/csv/all_runs.csv,8 E2 rows of AMG (fit),log solve_s_median vs log dof
+slope:AMG:total_s_median|%.2f,0.75,results/v2/csv/all_runs.csv,8 E2 rows of AMG (fit),log total_s_median vs log dof
+slope:DIRECT-ND:peak_ws_bytes|%.2f,1.26,results/v2/csv/all_runs.csv,5 E2 rows of DIRECT-ND (fit),log peak_ws_bytes vs log dof
+slope:DIRECT-ND:setup_s|%.2f,1.85,results/v2/csv/all_runs.csv,5 E2 rows of DIRECT-ND (fit),log setup_s vs log dof
+slope:DIRECT-ND:solve_s_median|%.2f,1.27,results/v2/csv/all_runs.csv,5 E2 rows of DIRECT-ND (fit),log solve_s_median vs log dof
 slope:DIRECT-ND:total_s_median|%.2f,1.84,results/v2/csv/all_runs.csv,5 E2 rows of DIRECT-ND (fit),log total_s_median vs log dof
+slope:DIRECT-RCM:peak_ws_bytes|%.2f,1.48,results/v2/csv/all_runs.csv,4 E2 rows of DIRECT-RCM (fit),log peak_ws_bytes vs log dof
+slope:DIRECT-RCM:setup_s|%.2f,2.12,results/v2/csv/all_runs.csv,4 E2 rows of DIRECT-RCM (fit),log setup_s vs log dof
+slope:DIRECT-RCM:solve_s_median|%.2f,1.48,results/v2/csv/all_runs.csv,4 E2 rows of DIRECT-RCM (fit),log solve_s_median vs log dof
 slope:DIRECT-RCM:total_s_median|%.2f,2.11,results/v2/csv/all_runs.csv,4 E2 rows of DIRECT-RCM (fit),log total_s_median vs log dof
 slope:PCG-IC0:iterations|%.2f,0.34,results/v2/csv/all_runs.csv,8 E2 rows of PCG-IC0 (fit),log iterations vs log dof
+slope:PCG-IC0:peak_ws_bytes|%.2f,0.99,results/v2/csv/all_runs.csv,8 E2 rows of PCG-IC0 (fit),log peak_ws_bytes vs log dof
+slope:PCG-IC0:setup_s|%.2f,1.04,results/v2/csv/all_runs.csv,8 E2 rows of PCG-IC0 (fit),log setup_s vs log dof
+slope:PCG-IC0:solve_s_median|%.2f,1.41,results/v2/csv/all_runs.csv,8 E2 rows of PCG-IC0 (fit),log solve_s_median vs log dof
 slope:PCG-IC0:total_s_median|%.2f,1.40,results/v2/csv/all_runs.csv,8 E2 rows of PCG-IC0 (fit),log total_s_median vs log dof
 slope:PCG-J:iterations|%.2f,0.23,results/v2/csv/all_runs.csv,8 E2 rows of PCG-J (fit),log iterations vs log dof
+slope:PCG-J:peak_ws_bytes|%.2f,0.98,results/v2/csv/all_runs.csv,8 E2 rows of PCG-J (fit),log peak_ws_bytes vs log dof
+slope:PCG-J:setup_s|%.2f,1.08,results/v2/csv/all_runs.csv,8 E2 rows of PCG-J (fit),log setup_s vs log dof
+slope:PCG-J:solve_s_median|%.2f,1.34,results/v2/csv/all_runs.csv,8 E2 rows of PCG-J (fit),log solve_s_median vs log dof
 slope:PCG-J:total_s_median|%.2f,1.34,results/v2/csv/all_runs.csv,8 E2 rows of PCG-J (fit),log total_s_median vs log dof
 status:Breakdown,4,results/v2/numbers.json,per_status,Breakdown
 status:Converged,228,results/v2/numbers.json,per_status,Converged
@@ -84,3 +165,25 @@ table:E0,table E0,results/v2/csv/all_runs.csv,all E0 solve rows,total_s_median /
 table:E2,table E2,results/v2/csv/all_runs.csv,all E2 solve rows,total_s_median / iterations
 table:E3,table E3,results/v2/csv/all_runs.csv,all E3 solve rows,total_s_median / iterations
 table:E4,table E4,results/v2/csv/all_runs.csv,all E4 solve rows,total_s_median / iterations
+tta:HS7-s0.250:AMG-PCG:time_to_1mK_s|sig3,2.97,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 AMG-PCG,time_to_1mK_s
+tta:HS7-s0.250:AMG-PCG:time_to_1pct_disc_s|sig3,3.40,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 AMG-PCG,time_to_1pct_disc_s
+tta:HS7-s0.250:AMG:time_to_1mK_s|sig3,6.28,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 AMG,time_to_1mK_s
+tta:HS7-s0.250:AMG:time_to_1pct_disc_s|sig3,8.35,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 AMG,time_to_1pct_disc_s
+tta:HS7-s0.250:PCG-IC0:time_to_1mK_s|sig3,23.9,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 PCG-IC0,time_to_1mK_s
+tta:HS7-s0.250:PCG-IC0:time_to_1pct_disc_s|sig3,26.9,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 PCG-IC0,time_to_1pct_disc_s
+tta:HS7-s0.250:PCG-J:disc_error_estimate_K|*1000|%.1f,2.8,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 PCG-J,disc_error_estimate_K
+tta:HS7-s0.250:PCG-J:time_to_1mK_s|sig3,46.1,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 PCG-J,time_to_1mK_s
+tta:HS7-s0.250:PCG-J:time_to_1pct_disc_s|sig3,50.4,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.250 PCG-J,time_to_1pct_disc_s
+tta:HS7-s0.500:AMG-PCG:disc_error_estimate_K|*1000|%.1f,6.5,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 AMG-PCG,disc_error_estimate_K
+tta:HS7-s0.500:AMG-PCG:time_to_1mK_s|sig3,0.476,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 AMG-PCG,time_to_1mK_s
+tta:HS7-s0.500:AMG:time_to_1mK_s|sig3,1.10,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 AMG,time_to_1mK_s
+tta:HS7-s0.500:DIRECT-ND:time_to_1mK_s|sig3,70.1,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 DIRECT-ND,time_to_1mK_s
+tta:HS7-s0.500:PCG-IC0:time_to_1mK_s|sig3,1.92,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 PCG-IC0,time_to_1mK_s
+tta:HS7-s0.500:PCG-J:disc_error_estimate_K|*1000|%.1f,6.5,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 PCG-J,disc_error_estimate_K
+tta:HS7-s0.500:PCG-J:time_to_1mK_s|sig3,4.10,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.500 PCG-J,time_to_1mK_s
+tta:HS7-s0.794:AMG-PCG:time_to_1mK_s|sig3,0.160,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.794 AMG-PCG,time_to_1mK_s
+tta:HS7-s0.794:AMG:time_to_1mK_s|sig3,0.433,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.794 AMG,time_to_1mK_s
+tta:HS7-s0.794:DIRECT-ND:time_to_1mK_s|sig3,9.65,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.794 DIRECT-ND,time_to_1mK_s
+tta:HS7-s0.794:PCG-IC0:time_to_1mK_s|sig3,0.365,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.794 PCG-IC0,time_to_1mK_s
+tta:HS7-s0.794:PCG-J:disc_error_estimate_K|*1000|%.1f,15.4,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.794 PCG-J,disc_error_estimate_K
+tta:HS7-s0.794:PCG-J:time_to_1mK_s|sig3,0.835,results/v2/csv/E2_time_to_accuracy.csv,HS7-s0.794 PCG-J,time_to_1mK_s

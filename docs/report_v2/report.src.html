@@ -71,7 +71,7 @@
   <b class="d">direct</b> solver is the fastest only on the small, slender v1 bar and runs out of
   its 8 GB budget at {{run:E2-HS7-s0.397-DIRECT-RCM:dof|int}} DOF (RCM ordering) and
   {{run:E2-HS7-s0.315-DIRECT-ND:dof|int}} DOF (nested dissection). <b class="p">PCG with Jacobi</b>
-  wins on the compact cube and uses the least memory. Figure 25 (section 8) is the decision chart.</p>
+  wins on the compact cube and uses the least memory. Figure 25 (section 9) is the decision chart.</p>
 </div>
 <p>The evidence is {{numbers:runs}} runs of one official batch on an idle machine (Intel Core
 i5-14600K, one pinned performance core unless stated), each run in its own process, with
@@ -166,6 +166,18 @@ Figure 9 compares the middle fin with 1D fin theory.</p>
 1D fin theory with the same base temperature. The theory assumes a uniform temperature across the
 fin's 40 mm length, which the 3D field does not have, so the two curves do not coincide.</div></div>
 
+<h3>What each design feature does to the temperature</h3>
+<p>The complexity ladder of experiment E4 (s = 1 mm, same die and 30 W) shows what each feature
+contributes thermally, as well as what it does to the solvers (section 7). Every solver gives the
+same values; the table uses the PCG-IC0 rows.</p>
+<table>
+  <tr><th>Design</th><th class="n">DOF</th><th class="n">Peak temperature (°C)</th><th class="n">Thermal resistance (K/W)</th><th>Reading</th></tr>
+  <tr><td>Base plate and die only</td><td class="n">{{run:E4-plate-s1.000-PCG-IC0:dof|int}}</td><td class="n">{{run:E4-plate-s1.000-PCG-IC0:T_max_C|%.1f}}</td><td class="n">{{run:E4-plate-s1.000-PCG-IC0:R_th_K_per_W|%.2f}}</td><td>too little surface to shed 30 W by convection</td></tr>
+  <tr><td>Plate + 7 fins (no TIM)</td><td class="n">{{run:E4-fins-s1.000-PCG-IC0:dof|int}}</td><td class="n">{{run:E4-fins-s1.000-PCG-IC0:T_max_C|%.1f}}</td><td class="n">{{run:E4-fins-s1.000-PCG-IC0:R_th_K_per_W|%.2f}}</td><td>the fins cut the resistance {{ratio:E4-plate-s1.000-PCG-IC0:R_th_K_per_W:E4-fins-s1.000-PCG-IC0:R_th_K_per_W|%.1f}}×</td></tr>
+  <tr><td>HS-7 (fins + 0.1 mm TIM)</td><td class="n">{{run:E4-HS7-s1.000-PCG-IC0:dof|int}}</td><td class="n">{{run:E4-HS7-s1.000-PCG-IC0:T_max_C|%.1f}}</td><td class="n">{{run:E4-HS7-s1.000-PCG-IC0:R_th_K_per_W|%.2f}}</td><td>the TIM adds {{diff:E4-HS7-s1.000-PCG-IC0:T_max_C:E4-fins-s1.000-PCG-IC0:T_max_C|%.1f}} K to the die</td></tr>
+  <tr><td>Pin fins (8 × 6 pins, 2 mm)</td><td class="n">{{run:E4-pinfin-s1.000-PCG-IC0:dof|int}}</td><td class="n">{{run:E4-pinfin-s1.000-PCG-IC0:T_max_C|%.1f}}</td><td class="n">{{run:E4-pinfin-s1.000-PCG-IC0:R_th_K_per_W|%.2f}}</td><td>less wetted area than the plate fins at this pin size</td></tr>
+</table>
+
 <h2 class="pb">6. How each solver was built</h2>
 <p>All three solvers take the same CSR matrix, share one set of sparse kernels (matrix–vector
 product, dot products, vector updates on a thread pool with fixed-size chunks, so results are
@@ -240,6 +252,22 @@ iterative solvers stop at a relative residual of 10⁻¹⁰ and every answer is 
 reference solution. All solvers are implemented to a similar level of optimisation, so the
 transferable results are <i>slopes and crossovers</i>, not absolute times.</p>
 
+<h3>Same answer from every solver</h3>
+<p>Before comparing cost, the answers were compared. At s = 0.5 mm all six variants ran; at
+3.76 M DOF the direct solvers were over budget and the reference came from AMG-PCG solved to
+10⁻¹². The error against the reference is far below the discretisation error of the mesh
+({{tta:HS7-s0.500:AMG-PCG:disc_error_estimate_K|*1000|%.1f}} mK at s = 0.5 mm, estimated by Richardson
+extrapolation), and every run closes the energy balance to round-off.</p>
+<table>
+  <tr><th>Solver</th><th class="n">Peak (°C), 0.5 mm</th><th class="n">Max error vs reference (K), 0.5 mm</th><th class="n">Max error (K), 3.76 M DOF</th><th class="n">Energy imbalance, 3.76 M DOF</th></tr>
+  <tr><td>DIRECT-ND</td><td class="n">{{run:E2-HS7-s0.500-DIRECT-ND:T_max_C|%.4f}}</td><td class="n">reference</td><td class="n">over 8 GB</td><td class="n">–</td></tr>
+  <tr><td>DIRECT-RCM</td><td class="n">{{run:E2-HS7-s0.500-DIRECT-RCM:T_max_C|%.4f}}</td><td class="n">{{run:E2-HS7-s0.500-DIRECT-RCM:err_vs_ref_K|e}}</td><td class="n">over 8 GB</td><td class="n">–</td></tr>
+  <tr><td>PCG-J</td><td class="n">{{run:E2-HS7-s0.500-PCG-J:T_max_C|%.4f}}</td><td class="n">{{run:E2-HS7-s0.500-PCG-J:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-PCG-J:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-PCG-J:rel_imbalance|e}}</td></tr>
+  <tr><td>PCG-IC0</td><td class="n">{{run:E2-HS7-s0.500-PCG-IC0:T_max_C|%.4f}}</td><td class="n">{{run:E2-HS7-s0.500-PCG-IC0:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-PCG-IC0:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-PCG-IC0:rel_imbalance|e}}</td></tr>
+  <tr><td>AMG</td><td class="n">{{run:E2-HS7-s0.500-AMG:T_max_C|%.4f}}</td><td class="n">{{run:E2-HS7-s0.500-AMG:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-AMG:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-AMG:rel_imbalance|e}}</td></tr>
+  <tr><td>AMG-PCG</td><td class="n">{{run:E2-HS7-s0.500-AMG-PCG:T_max_C|%.4f}}</td><td class="n">{{run:E2-HS7-s0.500-AMG-PCG:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-AMG-PCG:err_vs_ref_K|e}}</td><td class="n">{{run:E2-HS7-s0.198-AMG-PCG:rel_imbalance|e}}</td></tr>
+</table>
+
 <h3>E2: refinement on HS-7</h3>
 <p>Figure 14 shows the time to solve HS-7 once as the mesh grows by a factor of 67. Direct
 solvers grow fastest (fitted slopes {{slope:DIRECT-RCM:total_s_median|%.2f}} for RCM and
@@ -278,6 +306,43 @@ grows fastest of all.</p>
 <div class="cap"><b>Figure 19.</b> Error against the reference vs time: when is the answer good enough. Data: history/*.csv.</div></div>
 </div>
 
+<h3>Measured growth with problem size</h3>
+<p>Fitting a power law t ∝ n<sup>p</sup> to every converged E2 run gives the exponents below (DOF from
+56 k to 3.76 M; direct only up to its memory wall). An exponent of 1 means linear growth. The
+direct solver's setup (ordering and factorisation) grows fastest of all; one solve with the
+finished factor is cheap in absolute time ({{run:E2-HS7-s0.630-DIRECT-RCM:solve_s_median|%.2f}} s at
+{{run:E2-HS7-s0.630-DIRECT-RCM:dof|/1e3|%.0f}} k DOF against {{run:E2-HS7-s0.630-DIRECT-RCM:setup_s|%.1f}} s of setup),
+which is why repeated load cases are its best case. The multigrid exponents are at or below 1,
+because their iteration counts fall as the mesh is refined.</p>
+<table>
+  <tr><th>Solver</th><th class="n">Setup</th><th class="n">Solve</th><th class="n">Setup + solve</th><th class="n">Iterations</th><th class="n">Peak memory</th><th class="n">Work per solve at 3.76 M DOF (matrix–vector products)</th></tr>
+  <tr><td>DIRECT-ND</td><td class="n">{{slope:DIRECT-ND:setup_s|%.2f}}</td><td class="n">{{slope:DIRECT-ND:solve_s_median|%.2f}}</td><td class="n">{{slope:DIRECT-ND:total_s_median|%.2f}}</td><td class="n">–</td><td class="n">{{slope:DIRECT-ND:peak_ws_bytes|%.2f}}</td><td class="n">over 8 GB</td></tr>
+  <tr><td>DIRECT-RCM</td><td class="n">{{slope:DIRECT-RCM:setup_s|%.2f}}</td><td class="n">{{slope:DIRECT-RCM:solve_s_median|%.2f}}</td><td class="n">{{slope:DIRECT-RCM:total_s_median|%.2f}}</td><td class="n">–</td><td class="n">{{slope:DIRECT-RCM:peak_ws_bytes|%.2f}}</td><td class="n">over 8 GB</td></tr>
+  <tr><td>PCG-J</td><td class="n">{{slope:PCG-J:setup_s|%.2f}}</td><td class="n">{{slope:PCG-J:solve_s_median|%.2f}}</td><td class="n">{{slope:PCG-J:total_s_median|%.2f}}</td><td class="n">{{slope:PCG-J:iterations|%.2f}}</td><td class="n">{{slope:PCG-J:peak_ws_bytes|%.2f}}</td><td class="n">{{run:E2-HS7-s0.198-PCG-J:spmv_eq|int}}</td></tr>
+  <tr><td>PCG-IC0</td><td class="n">{{slope:PCG-IC0:setup_s|%.2f}}</td><td class="n">{{slope:PCG-IC0:solve_s_median|%.2f}}</td><td class="n">{{slope:PCG-IC0:total_s_median|%.2f}}</td><td class="n">{{slope:PCG-IC0:iterations|%.2f}}</td><td class="n">{{slope:PCG-IC0:peak_ws_bytes|%.2f}}</td><td class="n">{{run:E2-HS7-s0.198-PCG-IC0:spmv_eq|int}}</td></tr>
+  <tr><td>AMG</td><td class="n">{{slope:AMG:setup_s|%.2f}}</td><td class="n">{{slope:AMG:solve_s_median|%.2f}}</td><td class="n">{{slope:AMG:total_s_median|%.2f}}</td><td class="n">{{slope:AMG:iterations|%.2f}}</td><td class="n">{{slope:AMG:peak_ws_bytes|%.2f}}</td><td class="n">{{run:E2-HS7-s0.198-AMG:spmv_eq|int}}</td></tr>
+  <tr><td>AMG-PCG</td><td class="n">{{slope:AMG-PCG:setup_s|%.2f}}</td><td class="n">{{slope:AMG-PCG:solve_s_median|%.2f}}</td><td class="n">{{slope:AMG-PCG:total_s_median|%.2f}}</td><td class="n">{{slope:AMG-PCG:iterations|%.2f}}</td><td class="n">{{slope:AMG-PCG:peak_ws_bytes|%.2f}}</td><td class="n">{{run:E2-HS7-s0.198-AMG-PCG:spmv_eq|int}}</td></tr>
+</table>
+<p>The last column counts the work of one solve in units of one matrix–vector product with K
+(preconditioner and smoother work converted to the same unit). AMG-PCG does
+{{ratio:E2-HS7-s0.198-PCG-IC0:spmv_eq:E2-HS7-s0.198-AMG-PCG:spmv_eq|%.0f}}× less work than PCG-IC0, which
+is where its speed comes from; each of its iterations costs more, but it needs far fewer.</p>
+
+<h3>Time to an engineering answer</h3>
+<p>A residual of 10⁻¹⁰ is much stricter than an engineer needs. The error observer records when
+each iterative solver's peak temperature first comes within 1 mK of the reference, and within
+1 % of the mesh's own discretisation error. Loosening the tolerance shortens every iterative
+solve and does not help the direct solver at all; the ranking of the solvers stays the same.</p>
+<table>
+  <tr><th>Mesh</th><th class="n">Discretisation error (mK)</th><th class="n">DIRECT-ND</th><th class="n">PCG-J</th><th class="n">PCG-IC0</th><th class="n">AMG</th><th class="n">AMG-PCG</th></tr>
+  <tr><td>s = 0.794 mm, {{run:E2-HS7-s0.794-PCG-J:dof|int}} DOF, time to 1 mK (s)</td><td class="n">{{tta:HS7-s0.794:PCG-J:disc_error_estimate_K|*1000|%.1f}}</td><td class="n">{{tta:HS7-s0.794:DIRECT-ND:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.794:PCG-J:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.794:PCG-IC0:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.794:AMG:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.794:AMG-PCG:time_to_1mK_s|sig3}}</td></tr>
+  <tr><td>s = 0.5 mm, {{run:E2-HS7-s0.500-PCG-J:dof|int}} DOF, time to 1 mK (s)</td><td class="n">{{tta:HS7-s0.500:PCG-J:disc_error_estimate_K|*1000|%.1f}}</td><td class="n">{{tta:HS7-s0.500:DIRECT-ND:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.500:PCG-J:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.500:PCG-IC0:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.500:AMG:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.500:AMG-PCG:time_to_1mK_s|sig3}}</td></tr>
+  <tr><td>s = 0.25 mm, {{run:E2-HS7-s0.250-PCG-J:dof|int}} DOF, time to 1 mK (s)</td><td class="n">{{tta:HS7-s0.250:PCG-J:disc_error_estimate_K|*1000|%.1f}}</td><td class="n">over 8 GB</td><td class="n">{{tta:HS7-s0.250:PCG-J:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.250:PCG-IC0:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.250:AMG:time_to_1mK_s|sig3}}</td><td class="n">{{tta:HS7-s0.250:AMG-PCG:time_to_1mK_s|sig3}}</td></tr>
+  <tr><td>s = 0.25 mm, time to 1 % of the discretisation error (s)</td><td class="n">–</td><td class="n">over 8 GB</td><td class="n">{{tta:HS7-s0.250:PCG-J:time_to_1pct_disc_s|sig3}}</td><td class="n">{{tta:HS7-s0.250:PCG-IC0:time_to_1pct_disc_s|sig3}}</td><td class="n">{{tta:HS7-s0.250:AMG:time_to_1pct_disc_s|sig3}}</td><td class="n">{{tta:HS7-s0.250:AMG-PCG:time_to_1pct_disc_s|sig3}}</td></tr>
+</table>
+<p class="small">Times include setup. For the direct solver the "time to 1 mK" is its full solve: it has no
+intermediate answer. Data: E2_time_to_accuracy.csv.</p>
+
 <h3>E3: conditioning (convection, TIM conductivity and thickness)</h3>
 <p>At s = 0.5 mm ({{run:E3-HS7-s0.500-PCG-J:dof|int}} DOF) the convection coefficient was swept from
 5 to 500 W/(m²·K) and the TIM conductivity from 0.5 to 200 W/(m·K), with TIM thicknesses of
@@ -309,6 +374,22 @@ plate-like parts have small separators, so the direct solver is cheaper on them 
 block of the same size; the iterative solvers hardly notice the shape.</p>
 <div class="fig">{{fig:P15_complexity_ladder}}
 <div class="cap"><b>Figure 22.</b> Complexity ladder at s = 1 mm: fastest and slowest solver per design. Data: E4.csv.</div></div>
+
+<h3>E7: why the ordering matters for the direct solver</h3>
+<p>The same factorisation with the unknowns in their natural (mesh) order fills in far more. At
+{{run:E2-HS7-s0.794-DIRECT-ND:dof|int}} DOF:</p>
+<table>
+  <tr><th>Ordering</th><th class="n">Non-zeros in L</th><th class="n">Floating-point operations</th><th class="n">Setup + solve (s)</th></tr>
+  <tr><td>natural</td><td class="n">{{run:E7-HS7-s0.794-DIRECT-NAT:factor_nnz|int}}</td><td class="n">{{run:E7-HS7-s0.794-DIRECT-NAT:factor_flops|/1e9|%.0f}} G</td><td class="n">{{run:E7-HS7-s0.794-DIRECT-NAT:total_s_median|%.0f}}</td></tr>
+  <tr><td>reverse Cuthill–McKee</td><td class="n">{{run:E2-HS7-s0.794-DIRECT-RCM:factor_nnz|int}}</td><td class="n">{{run:E2-HS7-s0.794-DIRECT-RCM:factor_flops|/1e9|%.1f}} G</td><td class="n">{{run:E2-HS7-s0.794-DIRECT-RCM:total_s_median|%.1f}}</td></tr>
+  <tr><td>nested dissection</td><td class="n">{{run:E2-HS7-s0.794-DIRECT-ND:factor_nnz|int}}</td><td class="n">{{run:E2-HS7-s0.794-DIRECT-ND:factor_flops|/1e9|%.1f}} G</td><td class="n">{{run:E2-HS7-s0.794-DIRECT-ND:total_s_median|%.1f}}</td></tr>
+</table>
+<p>Nested dissection keeps {{ratio:E7-HS7-s0.794-DIRECT-NAT:factor_nnz:E2-HS7-s0.794-DIRECT-ND:factor_nnz|%.1f}}×
+fewer entries than the natural order. RCM has more fill than ND but its simpler structure runs
+faster on meshes up to {{run:E2-HS7-s0.630-DIRECT-RCM:dof|/1e3|%.0f}} k DOF; from
+{{run:E2-HS7-s0.500-DIRECT-ND:dof|/1e3|%.0f}} k DOF nested dissection is faster
+({{run:E2-HS7-s0.500-DIRECT-ND:total_s_median|%.0f}} s vs {{run:E2-HS7-s0.500-DIRECT-RCM:total_s_median|%.0f}} s) and
+reaches a larger mesh before the memory wall.</p>
 
 <h3>E5: several load cases</h3>
 <p>A factorisation (or a hierarchy) built once can be reused for every further load case, so
@@ -342,7 +423,38 @@ singular cases; no run crashed, stagnated or hit a time cap.</p>
 <div class="cap"><b>Figure 24.</b> Failure modes: what each solver reports on the singular case, and all
 runs by outcome. Data: E8.csv, all_runs.csv.</div></div>
 
-<h2 class="pb">8. Which solver for which scenario</h2>
+<h2 class="pb">8. Hypotheses stated before the experiments, and what was measured</h2>
+<p>The hypotheses below were written into the build specification before any official run, so
+the experiments could refute them. Three were confirmed or supported, three only partly, two
+were refuted, and one effect was not observed.</p>
+<table>
+  <tr><th>#</th><th>Hypothesis (before)</th><th>Outcome (after)</th></tr>
+  <tr><td>H1</td><td>Same temperatures on both simple objects; on the slender bar direct wins clearly</td>
+      <td><b>Partly.</b> Same answers to {{run:E0-bar-s2.500-AMG:err_vs_ref_K|e}} K. Direct (RCM) wins the 1.8 k and 10 k DOF bars, AMG-PCG the smallest bar, PCG-J every cube (E0)</td></tr>
+  <tr><td>H2</td><td>Direct (ND) wins below a crossover size n₁, AMG-PCG above; PCG-J never wins on time but uses least memory</td>
+      <td><b>Refuted as stated:</b> no crossover; AMG-PCG wins from the smallest HS-7 mesh ({{run:E2-HS7-s1.000-AMG-PCG:total_s_median|%.2f}} s vs {{run:E2-HS7-s1.000-DIRECT-ND:total_s_median|%.1f}} s for ND). PCG-J: least memory, confirmed (E2)</td></tr>
+  <tr><td>H3</td><td>PCG iterations ∝ n<sup>1/3</sup>; AMG iterations about flat</td>
+      <td><b>Confirmed:</b> slopes {{slope:PCG-J:iterations|%.2f}} and {{slope:PCG-IC0:iterations|%.2f}} for PCG, {{slope:AMG-PCG:iterations|%.2f}} for AMG-PCG (E2)</td></tr>
+  <tr><td>H4</td><td>Low Biot number, high TIM contrast and thin TIM raise κ; PCG iterations ∝ √κ; AMG rises little; direct cost unchanged</td>
+      <td><b>Partly.</b> κ_est changes {{ratio:E3-HS7-h5-s0.500-PCG-IC0:kappa_est:E3-HS7-h500-s0.500-PCG-IC0:kappa_est|%.0f}}× over h, PCG-IC0 iterations only {{ratio:E3-HS7-h5-s0.500-PCG-IC0:iterations:E3-HS7-h500-s0.500-PCG-IC0:iterations|%.2f}}×; AMG-PCG and direct nearly unchanged (E3)</td></tr>
+  <tr><td>H5</td><td>With many load cases the direct/iterative crossover moves to larger meshes</td>
+      <td><b>Refuted:</b> AMG-PCG reuses its setup too and still wins for 20 load cases; direct does overtake PCG-IC0 up to {{run:E2-HS7-s0.630-DIRECT-RCM:dof|/1e3|%.0f}} k DOF (E5)</td></tr>
+  <tr><td>H6</td><td>Plate-like fins keep the direct factor's fill below that of a compact block</td>
+      <td><b>Supported:</b> fill per DOF {{ratio:E4-fins-s1.000-DIRECT-ND:factor_nnz:E4-fins-s1.000-DIRECT-ND:dof|%.0f}} (fins) vs {{ratio:E4-cube-s1.000-DIRECT-ND:factor_nnz:E4-cube-s1.000-DIRECT-ND:dof|%.0f}} (cube) (E4)</td></tr>
+  <tr><td>H7</td><td>On all cores PCG-J closes much of the gap to serial AMG; speed-up limited by memory bandwidth</td>
+      <td><b>Partly:</b> {{ratio:E6-HS7-s0.397-PCG-J-noobs:total_s_median:E6-HS7-s0.397-PCG-J-noobs-p20:total_s_median|%.1f}}× speed-up, flat beyond 4 threads, still {{ratio:E6-HS7-s0.397-PCG-J-noobs-p20:total_s_median:E6-HS7-s0.397-AMG-PCG-noobs:total_s_median|%.1f}}× slower than serial AMG-PCG (E6)</td></tr>
+  <tr><td>H8</td><td>IC(0) breaks down without a diagonal shift on thin, stretched TIM cells</td>
+      <td><b>Not observed:</b> no shift needed in any run; without the shift ladder IC(0) converged in {{run:E8-HS7-s0.500-PCG-IC0-noshift-noobs:iterations|int}} iterations (E3, E8)</td></tr>
+  <tr><td>H9</td><td>On a singular case (all faces insulated) every solver detects and reports it</td>
+      <td><b>Confirmed:</b> all six report a breakdown, none returns temperatures (E8)</td></tr>
+</table>
+<p>Two refutations are the most useful results of the study. The planned story was a crossover:
+direct for small problems, multigrid for large ones. On a real 3D assembly with a working AMG
+there is no such crossover down to 56 k DOF, and the "many load cases favour direct" argument
+fails because multigrid amortises its setup as well. The direct solver keeps its place for
+small, slender or plate-like problems and as the robust fallback.</p>
+
+<h2 class="pb">9. Which solver for which scenario</h2>
 <div class="fig">{{fig:P16_decision_chart}}
 <div class="cap"><b>Figure 25.</b> Decision chart: the measured fastest solver for each mesh size and number
 of load cases on HS-7, with its lead over the runner-up. Data: E5_load_cases.csv, E2.csv, E6.csv.</div></div>
@@ -370,7 +482,7 @@ iterations grow with it, while the direct solver and, as a preconditioner, AMG a
 unaffected (E3). A realistic engineering assembly is large, mixed in shape and badly
 conditioned, which is why AMG-PCG is the default recommendation.</p>
 
-<h2>9. Limitations and next steps</h2>
+<h2>10. Limitations and next steps</h2>
 <ul>
   <li>All solvers are the author's own, at a similar optimisation level. Industrial direct
   solvers are supernodal and multithreaded and would move the direct curves down; the slopes and

@@ -9,7 +9,9 @@ so it can be traced to one row and column of a CSV under results/:
     {{run:ID:column|fmt}}            row ID of results/v2/csv/all_runs.csv
     {{sup:ID:column|fmt}}            row ID of results/v2_superseded/amg_theta008/runs (θ₀ = 0.08)
     {{e5:SYSTEM:SOLVER:column|fmt}}  results/v2/csv/E5_load_cases.csv
+    {{tta:SYSTEM:SOLVER:column|fmt}} results/v2/csv/E2_time_to_accuracy.csv
     {{ratio:ID1:col1:ID2:col2|fmt}}  value of the first run over the second (all_runs.csv)
+    {{diff:ID1:col1:ID2:col2|fmt}}   value of the first run minus the second (all_runs.csv)
     {{slope:SOLVER:column|fmt}}      least-squares slope of log(column) vs log(DOF) over the
                                      converged E2 rows of SOLVER (all_runs.csv, E2-HS7-s*-SOLVER)
     {{status:STATUS}}                number of runs with that outcome (results/v2/numbers.json)
@@ -49,6 +51,7 @@ def read_csv(path):
 
 RUNS = {r["id"]: r for r in read_csv(RES / "csv" / "all_runs.csv")}
 E5 = {(r["system"], r["solver"]): r for r in read_csv(RES / "csv" / "E5_load_cases.csv")}
+TTA = {(r["system"], r["solver"]): r for r in read_csv(RES / "csv" / "E2_time_to_accuracy.csv")}
 NUMBERS = json.loads((RES / "numbers.json").read_text(encoding="utf-8"))
 
 
@@ -207,11 +210,22 @@ def resolve(token):
             fail(f"E5 {parts}: not found")
         v = number(row[parts[2]], token)
         where = ("results/v2/csv/E5_load_cases.csv", f"{parts[0]} {parts[1]}", parts[2])
+    elif kind == "tta" and len(parts) == 3:
+        row = TTA.get((parts[0], parts[1]))
+        if row is None or parts[2] not in row:
+            fail(f"time-to-accuracy {parts}: not found")
+        v = number(row[parts[2]], token)
+        where = ("results/v2/csv/E2_time_to_accuracy.csv", f"{parts[0]} {parts[1]}", parts[2])
     elif kind == "ratio" and len(parts) == 4:
         a, _ = run_value(parts[0], parts[1])
         b, _ = run_value(parts[2], parts[3])
         v = a / b
         where = ("results/v2/csv/all_runs.csv", f"{parts[0]} / {parts[2]}", f"{parts[1]} / {parts[3]}")
+    elif kind == "diff" and len(parts) == 4:
+        a, _ = run_value(parts[0], parts[1])
+        b, _ = run_value(parts[2], parts[3])
+        v = a - b
+        where = ("results/v2/csv/all_runs.csv", f"{parts[0]} − {parts[2]}", f"{parts[1]} − {parts[3]}")
     elif kind == "slope" and len(parts) == 2:
         v, ids = slope(parts[0], parts[1])
         where = ("results/v2/csv/all_runs.csv", f"{len(ids)} E2 rows of {parts[0]} (fit)",

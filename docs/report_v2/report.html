@@ -71,7 +71,7 @@
   <b class="d">direct</b> solver is the fastest only on the small, slender v1 bar and runs out of
   its 8 GB budget at 568 152 DOF (RCM ordering) and
   1 022 979 DOF (nested dissection). <b class="p">PCG with Jacobi</b>
-  wins on the compact cube and uses the least memory. Figure 25 (section 8) is the decision chart.</p>
+  wins on the compact cube and uses the least memory. Figure 25 (section 9) is the decision chart.</p>
 </div>
 <p>The evidence is 241 runs of one official batch on an idle machine (Intel Core
 i5-14600K, one pinned performance core unless stated), each run in its own process, with
@@ -789,6 +789,18 @@ Figure 9 compares the middle fin with 1D fin theory.</p>
 1D fin theory with the same base temperature. The theory assumes a uniform temperature across the
 fin's 40 mm length, which the 3D field does not have, so the two curves do not coincide.</div></div>
 
+<h3>What each design feature does to the temperature</h3>
+<p>The complexity ladder of experiment E4 (s = 1 mm, same die and 30 W) shows what each feature
+contributes thermally, as well as what it does to the solvers (section 7). Every solver gives the
+same values; the table uses the PCG-IC0 rows.</p>
+<table>
+  <tr><th>Design</th><th class="n">DOF</th><th class="n">Peak temperature (°C)</th><th class="n">Thermal resistance (K/W)</th><th>Reading</th></tr>
+  <tr><td>Base plate and die only</td><td class="n">15 447</td><td class="n">405.7</td><td class="n">12.69</td><td>too little surface to shed 30 W by convection</td></tr>
+  <tr><td>Plate + 7 fins (no TIM)</td><td class="n">45 707</td><td class="n">96.7</td><td class="n">2.39</td><td>the fins cut the resistance 5.3×</td></tr>
+  <tr><td>HS-7 (fins + 0.1 mm TIM)</td><td class="n">56 015</td><td class="n">99.1</td><td class="n">2.47</td><td>the TIM adds 2.4 K to the die</td></tr>
+  <tr><td>Pin fins (8 × 6 pins, 2 mm)</td><td class="n">56 832</td><td class="n">127.7</td><td class="n">3.42</td><td>less wetted area than the plate fins at this pin size</td></tr>
+</table>
+
 <h2 class="pb">6. How each solver was built</h2>
 <p>All three solvers take the same CSR matrix, share one set of sparse kernels (matrix–vector
 product, dot products, vector updates on a thread pool with fixed-size chunks, so results are
@@ -1086,6 +1098,22 @@ repetitions depending on run time (median reported); setup and solve timed separ
 iterative solvers stop at a relative residual of 10⁻¹⁰ and every answer is compared with a
 reference solution. All solvers are implemented to a similar level of optimisation, so the
 transferable results are <i>slopes and crossovers</i>, not absolute times.</p>
+
+<h3>Same answer from every solver</h3>
+<p>Before comparing cost, the answers were compared. At s = 0.5 mm all six variants ran; at
+3.76 M DOF the direct solvers were over budget and the reference came from AMG-PCG solved to
+10⁻¹². The error against the reference is far below the discretisation error of the mesh
+(6.5 mK at s = 0.5 mm, estimated by Richardson
+extrapolation), and every run closes the energy balance to round-off.</p>
+<table>
+  <tr><th>Solver</th><th class="n">Peak (°C), 0.5 mm</th><th class="n">Max error vs reference (K), 0.5 mm</th><th class="n">Max error (K), 3.76 M DOF</th><th class="n">Energy imbalance, 3.76 M DOF</th></tr>
+  <tr><td>DIRECT-ND</td><td class="n">99.0812</td><td class="n">reference</td><td class="n">over 8 GB</td><td class="n">–</td></tr>
+  <tr><td>DIRECT-RCM</td><td class="n">99.0812</td><td class="n">5.5e−9</td><td class="n">over 8 GB</td><td class="n">–</td></tr>
+  <tr><td>PCG-J</td><td class="n">99.0812</td><td class="n">2.3e−9</td><td class="n">6.6e−11</td><td class="n">3.7e−11</td></tr>
+  <tr><td>PCG-IC0</td><td class="n">99.0812</td><td class="n">2.4e−9</td><td class="n">2.0e−10</td><td class="n">3.7e−11</td></tr>
+  <tr><td>AMG</td><td class="n">99.0812</td><td class="n">2.4e−9</td><td class="n">1.5e−10</td><td class="n">3.7e−11</td></tr>
+  <tr><td>AMG-PCG</td><td class="n">99.0812</td><td class="n">2.3e−9</td><td class="n">2.0e−11</td><td class="n">3.7e−11</td></tr>
+</table>
 
 <h3>E2: refinement on HS-7</h3>
 <p>Figure 14 shows the time to solve HS-7 once as the mesh grows by a factor of 67. Direct
@@ -1862,6 +1890,43 @@ grows fastest of all.</p>
 <div class="cap"><b>Figure 19.</b> Error against the reference vs time: when is the answer good enough. Data: history/*.csv.</div></div>
 </div>
 
+<h3>Measured growth with problem size</h3>
+<p>Fitting a power law t ∝ n<sup>p</sup> to every converged E2 run gives the exponents below (DOF from
+56 k to 3.76 M; direct only up to its memory wall). An exponent of 1 means linear growth. The
+direct solver's setup (ordering and factorisation) grows fastest of all; one solve with the
+finished factor is cheap in absolute time (0.14 s at
+171 k DOF against 24.4 s of setup),
+which is why repeated load cases are its best case. The multigrid exponents are at or below 1,
+because their iteration counts fall as the mesh is refined.</p>
+<table>
+  <tr><th>Solver</th><th class="n">Setup</th><th class="n">Solve</th><th class="n">Setup + solve</th><th class="n">Iterations</th><th class="n">Peak memory</th><th class="n">Work per solve at 3.76 M DOF (matrix–vector products)</th></tr>
+  <tr><td>DIRECT-ND</td><td class="n">1.85</td><td class="n">1.27</td><td class="n">1.84</td><td class="n">–</td><td class="n">1.26</td><td class="n">over 8 GB</td></tr>
+  <tr><td>DIRECT-RCM</td><td class="n">2.12</td><td class="n">1.48</td><td class="n">2.11</td><td class="n">–</td><td class="n">1.48</td><td class="n">over 8 GB</td></tr>
+  <tr><td>PCG-J</td><td class="n">1.08</td><td class="n">1.34</td><td class="n">1.34</td><td class="n">0.23</td><td class="n">0.98</td><td class="n">3 093</td></tr>
+  <tr><td>PCG-IC0</td><td class="n">1.04</td><td class="n">1.41</td><td class="n">1.40</td><td class="n">0.34</td><td class="n">0.99</td><td class="n">2 006</td></tr>
+  <tr><td>AMG</td><td class="n">1.01</td><td class="n">0.73</td><td class="n">0.75</td><td class="n">−0.35</td><td class="n">0.99</td><td class="n">350</td></tr>
+  <tr><td>AMG-PCG</td><td class="n">1.01</td><td class="n">0.91</td><td class="n">0.93</td><td class="n">−0.17</td><td class="n">0.99</td><td class="n">116</td></tr>
+</table>
+<p>The last column counts the work of one solve in units of one matrix–vector product with K
+(preconditioner and smoother work converted to the same unit). AMG-PCG does
+17× less work than PCG-IC0, which
+is where its speed comes from; each of its iterations costs more, but it needs far fewer.</p>
+
+<h3>Time to an engineering answer</h3>
+<p>A residual of 10⁻¹⁰ is much stricter than an engineer needs. The error observer records when
+each iterative solver's peak temperature first comes within 1 mK of the reference, and within
+1 % of the mesh's own discretisation error. Loosening the tolerance shortens every iterative
+solve and does not help the direct solver at all; the ranking of the solvers stays the same.</p>
+<table>
+  <tr><th>Mesh</th><th class="n">Discretisation error (mK)</th><th class="n">DIRECT-ND</th><th class="n">PCG-J</th><th class="n">PCG-IC0</th><th class="n">AMG</th><th class="n">AMG-PCG</th></tr>
+  <tr><td>s = 0.794 mm, 93 921 DOF, time to 1 mK (s)</td><td class="n">15.4</td><td class="n">9.65</td><td class="n">0.835</td><td class="n">0.365</td><td class="n">0.433</td><td class="n">0.160</td></tr>
+  <tr><td>s = 0.5 mm, 285 532 DOF, time to 1 mK (s)</td><td class="n">6.5</td><td class="n">70.1</td><td class="n">4.10</td><td class="n">1.92</td><td class="n">1.10</td><td class="n">0.476</td></tr>
+  <tr><td>s = 0.25 mm, 1 867 768 DOF, time to 1 mK (s)</td><td class="n">2.8</td><td class="n">over 8 GB</td><td class="n">46.1</td><td class="n">23.9</td><td class="n">6.28</td><td class="n">2.97</td></tr>
+  <tr><td>s = 0.25 mm, time to 1 % of the discretisation error (s)</td><td class="n">–</td><td class="n">over 8 GB</td><td class="n">50.4</td><td class="n">26.9</td><td class="n">8.35</td><td class="n">3.40</td></tr>
+</table>
+<p class="small">Times include setup. For the direct solver the "time to 1 mK" is its full solve: it has no
+intermediate answer. Data: E2_time_to_accuracy.csv.</p>
+
 <h3>E3: conditioning (convection, TIM conductivity and thickness)</h3>
 <p>At s = 0.5 mm (285 532 DOF) the convection coefficient was swept from
 5 to 500 W/(m²·K) and the TIM conductivity from 0.5 to 200 W/(m·K), with TIM thicknesses of
@@ -2225,6 +2290,22 @@ block of the same size; the iterative solvers hardly notice the shape.</p>
 
 <div class="cap"><b>Figure 22.</b> Complexity ladder at s = 1 mm: fastest and slowest solver per design. Data: E4.csv.</div></div>
 
+<h3>E7: why the ordering matters for the direct solver</h3>
+<p>The same factorisation with the unknowns in their natural (mesh) order fills in far more. At
+93 921 DOF:</p>
+<table>
+  <tr><th>Ordering</th><th class="n">Non-zeros in L</th><th class="n">Floating-point operations</th><th class="n">Setup + solve (s)</th></tr>
+  <tr><td>natural</td><td class="n">246 819 591</td><td class="n">845 G</td><td class="n">294</td></tr>
+  <tr><td>reverse Cuthill–McKee</td><td class="n">44 149 272</td><td class="n">27.4 G</td><td class="n">7.3</td></tr>
+  <tr><td>nested dissection</td><td class="n">31 021 545</td><td class="n">27.7 G</td><td class="n">9.7</td></tr>
+</table>
+<p>Nested dissection keeps 8.0×
+fewer entries than the natural order. RCM has more fill than ND but its simpler structure runs
+faster on meshes up to 171 k DOF; from
+286 k DOF nested dissection is faster
+(70 s vs 90 s) and
+reaches a larger mesh before the memory wall.</p>
+
 <h3>E5: several load cases</h3>
 <p>A factorisation (or a hierarchy) built once can be reused for every further load case, so
 more load cases favour solvers with expensive setup and cheap solves. For 20 load cases at
@@ -2398,7 +2479,38 @@ singular cases; no run crashed, stagnated or hit a time cap.</p>
 <div class="cap"><b>Figure 24.</b> Failure modes: what each solver reports on the singular case, and all
 runs by outcome. Data: E8.csv, all_runs.csv.</div></div>
 
-<h2 class="pb">8. Which solver for which scenario</h2>
+<h2 class="pb">8. Hypotheses stated before the experiments, and what was measured</h2>
+<p>The hypotheses below were written into the build specification before any official run, so
+the experiments could refute them. Three were confirmed or supported, three only partly, two
+were refuted, and one effect was not observed.</p>
+<table>
+  <tr><th>#</th><th>Hypothesis (before)</th><th>Outcome (after)</th></tr>
+  <tr><td>H1</td><td>Same temperatures on both simple objects; on the slender bar direct wins clearly</td>
+      <td><b>Partly.</b> Same answers to 8.5e−6 K. Direct (RCM) wins the 1.8 k and 10 k DOF bars, AMG-PCG the smallest bar, PCG-J every cube (E0)</td></tr>
+  <tr><td>H2</td><td>Direct (ND) wins below a crossover size n₁, AMG-PCG above; PCG-J never wins on time but uses least memory</td>
+      <td><b>Refuted as stated:</b> no crossover; AMG-PCG wins from the smallest HS-7 mesh (0.19 s vs 3.7 s for ND). PCG-J: least memory, confirmed (E2)</td></tr>
+  <tr><td>H3</td><td>PCG iterations ∝ n<sup>1/3</sup>; AMG iterations about flat</td>
+      <td><b>Confirmed:</b> slopes 0.23 and 0.34 for PCG, −0.17 for AMG-PCG (E2)</td></tr>
+  <tr><td>H4</td><td>Low Biot number, high TIM contrast and thin TIM raise κ; PCG iterations ∝ √κ; AMG rises little; direct cost unchanged</td>
+      <td><b>Partly.</b> κ_est changes 93× over h, PCG-IC0 iterations only 1.39×; AMG-PCG and direct nearly unchanged (E3)</td></tr>
+  <tr><td>H5</td><td>With many load cases the direct/iterative crossover moves to larger meshes</td>
+      <td><b>Refuted:</b> AMG-PCG reuses its setup too and still wins for 20 load cases; direct does overtake PCG-IC0 up to 171 k DOF (E5)</td></tr>
+  <tr><td>H6</td><td>Plate-like fins keep the direct factor's fill below that of a compact block</td>
+      <td><b>Supported:</b> fill per DOF 197 (fins) vs 1025 (cube) (E4)</td></tr>
+  <tr><td>H7</td><td>On all cores PCG-J closes much of the gap to serial AMG; speed-up limited by memory bandwidth</td>
+      <td><b>Partly:</b> 2.6× speed-up, flat beyond 4 threads, still 3.5× slower than serial AMG-PCG (E6)</td></tr>
+  <tr><td>H8</td><td>IC(0) breaks down without a diagonal shift on thin, stretched TIM cells</td>
+      <td><b>Not observed:</b> no shift needed in any run; without the shift ladder IC(0) converged in 347 iterations (E3, E8)</td></tr>
+  <tr><td>H9</td><td>On a singular case (all faces insulated) every solver detects and reports it</td>
+      <td><b>Confirmed:</b> all six report a breakdown, none returns temperatures (E8)</td></tr>
+</table>
+<p>Two refutations are the most useful results of the study. The planned story was a crossover:
+direct for small problems, multigrid for large ones. On a real 3D assembly with a working AMG
+there is no such crossover down to 56 k DOF, and the "many load cases favour direct" argument
+fails because multigrid amortises its setup as well. The direct solver keeps its place for
+small, slender or plate-like problems and as the robust fallback.</p>
+
+<h2 class="pb">9. Which solver for which scenario</h2>
 <div class="fig"><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="640" viewBox="0 0 1400 640" font-family="Inter, 'Segoe UI', Arial, sans-serif">
 <rect width="100%" height="100%" fill="#FFFFFF"/>
 <text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Which solver when: measured winners on HS-7 (single thread)</text>
@@ -2543,7 +2655,7 @@ iterations grow with it, while the direct solver and, as a preconditioner, AMG a
 unaffected (E3). A realistic engineering assembly is large, mixed in shape and badly
 conditioned, which is why AMG-PCG is the default recommendation.</p>
 
-<h2>9. Limitations and next steps</h2>
+<h2>10. Limitations and next steps</h2>
 <ul>
   <li>All solvers are the author's own, at a similar optimisation level. Industrial direct
   solvers are supernodal and multithreaded and would move the direct curves down; the slopes and
@@ -2654,19 +2766,60 @@ tim = TIM thickness; c2 = two cells through the TIM; baseline h = 25, kTim = 3, 
 file, row and column behind each one (files under results/; "v2_superseded" holds the AMG rows
 measured before the threshold fix).</p>
 <table class="prov"><tr><th>Value</th><th>File</th><th>Run / row</th><th>Column</th></tr>
+<tr><td class="n">6.28</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 AMG</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">8.35</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 AMG</td><td>time_to_1pct_disc_s</td></tr>
+<tr><td class="n">2.97</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 AMG-PCG</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">3.40</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 AMG-PCG</td><td>time_to_1pct_disc_s</td></tr>
+<tr><td class="n">23.9</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 PCG-IC0</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">26.9</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 PCG-IC0</td><td>time_to_1pct_disc_s</td></tr>
+<tr><td class="n">2.8</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 PCG-J</td><td>disc_error_estimate_K</td></tr>
+<tr><td class="n">46.1</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 PCG-J</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">50.4</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.250 PCG-J</td><td>time_to_1pct_disc_s</td></tr>
+<tr><td class="n">1.10</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 AMG</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">6.5</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 AMG-PCG</td><td>disc_error_estimate_K</td></tr>
+<tr><td class="n">0.476</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 AMG-PCG</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">70.1</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 DIRECT-ND</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">1.92</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 PCG-IC0</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">6.5</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 PCG-J</td><td>disc_error_estimate_K</td></tr>
+<tr><td class="n">4.10</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.500 PCG-J</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">0.433</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.794 AMG</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">0.160</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.794 AMG-PCG</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">9.65</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.794 DIRECT-ND</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">0.365</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.794 PCG-IC0</td><td>time_to_1mK_s</td></tr>
+<tr><td class="n">15.4</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.794 PCG-J</td><td>disc_error_estimate_K</td></tr>
+<tr><td class="n">0.835</td><td>v2/csv/E2_time_to_accuracy.csv</td><td>HS7-s0.794 PCG-J</td><td>time_to_1mK_s</td></tr>
 <tr><td class="n">8.3</td><td>v2/csv/E5_load_cases.csv</td><td>HS7-s0.630 AMG-PCG</td><td>total_k20_s</td></tr>
 <tr><td class="n">27.3</td><td>v2/csv/E5_load_cases.csv</td><td>HS7-s0.630 DIRECT-RCM</td><td>total_k20_s</td></tr>
 <tr><td class="n">30.4</td><td>v2/csv/E5_load_cases.csv</td><td>HS7-s0.630 PCG-IC0</td><td>total_k20_s</td></tr>
 <tr><td class="n">2.99</td><td>v2/csv/E5_load_cases.csv</td><td>HS7-s1.000 AMG-PCG</td><td>total_k20_s</td></tr>
 <tr><td class="n">3.38</td><td>v2/csv/E5_load_cases.csv</td><td>HS7-s1.000 DIRECT-RCM</td><td>total_k20_s</td></tr>
+<tr><td class="n">1.48</td><td>v2/csv/all_runs.csv</td><td>4 E2 rows of DIRECT-RCM (fit)</td><td>log peak_ws_bytes vs log dof</td></tr>
+<tr><td class="n">2.12</td><td>v2/csv/all_runs.csv</td><td>4 E2 rows of DIRECT-RCM (fit)</td><td>log setup_s vs log dof</td></tr>
+<tr><td class="n">1.48</td><td>v2/csv/all_runs.csv</td><td>4 E2 rows of DIRECT-RCM (fit)</td><td>log solve_s_median vs log dof</td></tr>
 <tr><td class="n">2.11</td><td>v2/csv/all_runs.csv</td><td>4 E2 rows of DIRECT-RCM (fit)</td><td>log total_s_median vs log dof</td></tr>
+<tr><td class="n">1.26</td><td>v2/csv/all_runs.csv</td><td>5 E2 rows of DIRECT-ND (fit)</td><td>log peak_ws_bytes vs log dof</td></tr>
+<tr><td class="n">1.85</td><td>v2/csv/all_runs.csv</td><td>5 E2 rows of DIRECT-ND (fit)</td><td>log setup_s vs log dof</td></tr>
+<tr><td class="n">1.27</td><td>v2/csv/all_runs.csv</td><td>5 E2 rows of DIRECT-ND (fit)</td><td>log solve_s_median vs log dof</td></tr>
 <tr><td class="n">1.84</td><td>v2/csv/all_runs.csv</td><td>5 E2 rows of DIRECT-ND (fit)</td><td>log total_s_median vs log dof</td></tr>
 <tr><td class="n">−0.35</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG (fit)</td><td>log iterations vs log dof</td></tr>
+<tr><td class="n">0.99</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG (fit)</td><td>log peak_ws_bytes vs log dof</td></tr>
+<tr><td class="n">1.01</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG (fit)</td><td>log setup_s vs log dof</td></tr>
+<tr><td class="n">0.73</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG (fit)</td><td>log solve_s_median vs log dof</td></tr>
+<tr><td class="n">0.75</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG (fit)</td><td>log total_s_median vs log dof</td></tr>
 <tr><td class="n">−0.17</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG-PCG (fit)</td><td>log iterations vs log dof</td></tr>
+<tr><td class="n">0.99</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG-PCG (fit)</td><td>log peak_ws_bytes vs log dof</td></tr>
+<tr><td class="n">1.01</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG-PCG (fit)</td><td>log setup_s vs log dof</td></tr>
+<tr><td class="n">0.91</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG-PCG (fit)</td><td>log solve_s_median vs log dof</td></tr>
 <tr><td class="n">0.93</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of AMG-PCG (fit)</td><td>log total_s_median vs log dof</td></tr>
 <tr><td class="n">0.34</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-IC0 (fit)</td><td>log iterations vs log dof</td></tr>
+<tr><td class="n">0.99</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-IC0 (fit)</td><td>log peak_ws_bytes vs log dof</td></tr>
+<tr><td class="n">1.04</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-IC0 (fit)</td><td>log setup_s vs log dof</td></tr>
+<tr><td class="n">1.41</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-IC0 (fit)</td><td>log solve_s_median vs log dof</td></tr>
 <tr><td class="n">1.40</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-IC0 (fit)</td><td>log total_s_median vs log dof</td></tr>
 <tr><td class="n">0.23</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-J (fit)</td><td>log iterations vs log dof</td></tr>
+<tr><td class="n">0.98</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-J (fit)</td><td>log peak_ws_bytes vs log dof</td></tr>
+<tr><td class="n">1.08</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-J (fit)</td><td>log setup_s vs log dof</td></tr>
+<tr><td class="n">1.34</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-J (fit)</td><td>log solve_s_median vs log dof</td></tr>
 <tr><td class="n">1.34</td><td>v2/csv/all_runs.csv</td><td>8 E2 rows of PCG-J (fit)</td><td>log total_s_median vs log dof</td></tr>
 <tr><td class="n">8.5e−6</td><td>v2/csv/all_runs.csv</td><td>E0-bar-s2.500-AMG</td><td>err_vs_ref_K</td></tr>
 <tr><td class="n">10 050</td><td>v2/csv/all_runs.csv</td><td>E0-bar-s2.500-DIRECT-RCM</td><td>dof</td></tr>
@@ -2678,46 +2831,102 @@ measured before the threshold fix).</p>
 <tr><td class="n">3.0176</td><td>v2/csv/all_runs.csv</td><td>E1-verify-fin</td><td>check_fe</td></tr>
 <tr><td class="n">3.0177</td><td>v2/csv/all_runs.csv</td><td>E1-verify-fin</td><td>check_reference</td></tr>
 <tr><td class="n">4.00</td><td>v2/csv/all_runs.csv</td><td>E1-verify-mms16 / E1-verify-mms32</td><td>check_fe / check_fe</td></tr>
+<tr><td class="n">1.5e−10</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG</td><td>err_vs_ref_K</td></tr>
+<tr><td class="n">3.7e−11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG</td><td>rel_imbalance</td></tr>
+<tr><td class="n">350</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG</td><td>spmv_eq</td></tr>
 <tr><td class="n">2.5</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG / E2-HS7-s0.198-AMG-PCG</td><td>total_s_median / total_s_median</td></tr>
 <tr><td class="n">2.470</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>R_th_K_per_W</td></tr>
 <tr><td class="n">99.09</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>T_max_C</td></tr>
 <tr><td class="n">3.76</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>dof</td></tr>
+<tr><td class="n">2.0e−11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>err_vs_ref_K</td></tr>
 <tr><td class="n">23</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>iterations</td></tr>
 <tr><td class="n">3.00</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>peak_ws_bytes</td></tr>
 <tr><td class="n">3.7e−11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>rel_imbalance</td></tr>
+<tr><td class="n">116</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>spmv_eq</td></tr>
 <tr><td class="n">9.5</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-AMG-PCG</td><td>total_s_median</td></tr>
+<tr><td class="n">2.0e−10</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-IC0</td><td>err_vs_ref_K</td></tr>
+<tr><td class="n">3.7e−11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-IC0</td><td>rel_imbalance</td></tr>
+<tr><td class="n">2 006</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-IC0</td><td>spmv_eq</td></tr>
 <tr><td class="n">107</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-IC0</td><td>total_s_median</td></tr>
+<tr><td class="n">17</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-IC0 / E2-HS7-s0.198-AMG-PCG</td><td>spmv_eq / spmv_eq</td></tr>
 <tr><td class="n">11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-IC0 / E2-HS7-s0.198-AMG-PCG</td><td>total_s_median / total_s_median</td></tr>
 <tr><td class="n">3.5</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>assembly_s</td></tr>
 <tr><td class="n">3 759 720</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>dof</td></tr>
+<tr><td class="n">6.6e−11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>err_vs_ref_K</td></tr>
 <tr><td class="n">1.22</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>matrix_bytes</td></tr>
 <tr><td class="n">96.5</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>nnz</td></tr>
 <tr><td class="n">1.66</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>peak_ws_bytes</td></tr>
+<tr><td class="n">3.7e−11</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>rel_imbalance</td></tr>
+<tr><td class="n">3 093</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>spmv_eq</td></tr>
 <tr><td class="n">154</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J</td><td>total_s_median</td></tr>
 <tr><td class="n">2.7</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.198-PCG-J / E2-HS7-s0.198-PCG-IC0</td><td>iterations / iterations</td></tr>
+<tr><td class="n">1 867 768</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.250-PCG-J</td><td>dof</td></tr>
 <tr><td class="n">1 022 979</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.315-DIRECT-ND</td><td>dof</td></tr>
 <tr><td class="n">1.02</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.315-DIRECT-ND</td><td>dof</td></tr>
 <tr><td class="n">568 152</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.397-DIRECT-RCM</td><td>dof</td></tr>
 <tr><td class="n">568</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.397-DIRECT-RCM</td><td>dof</td></tr>
+<tr><td class="n">99.0812</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-AMG</td><td>T_max_C</td></tr>
+<tr><td class="n">2.4e−9</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-AMG</td><td>err_vs_ref_K</td></tr>
+<tr><td class="n">99.0812</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-AMG-PCG</td><td>T_max_C</td></tr>
+<tr><td class="n">2.3e−9</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-AMG-PCG</td><td>err_vs_ref_K</td></tr>
+<tr><td class="n">99.0812</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-DIRECT-ND</td><td>T_max_C</td></tr>
+<tr><td class="n">286</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-DIRECT-ND</td><td>dof</td></tr>
+<tr><td class="n">70</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-DIRECT-ND</td><td>total_s_median</td></tr>
+<tr><td class="n">99.0812</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-DIRECT-RCM</td><td>T_max_C</td></tr>
+<tr><td class="n">5.5e−9</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-DIRECT-RCM</td><td>err_vs_ref_K</td></tr>
+<tr><td class="n">90</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-DIRECT-RCM</td><td>total_s_median</td></tr>
+<tr><td class="n">99.0812</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-PCG-IC0</td><td>T_max_C</td></tr>
+<tr><td class="n">2.4e−9</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-PCG-IC0</td><td>err_vs_ref_K</td></tr>
+<tr><td class="n">99.0812</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-PCG-J</td><td>T_max_C</td></tr>
+<tr><td class="n">285 532</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-PCG-J</td><td>dof</td></tr>
+<tr><td class="n">2.3e−9</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.500-PCG-J</td><td>err_vs_ref_K</td></tr>
 <tr><td class="n">171</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-AMG-PCG</td><td>dof</td></tr>
+<tr><td class="n">171</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-DIRECT-RCM</td><td>dof</td></tr>
 <tr><td class="n">170 634</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-DIRECT-RCM</td><td>dof</td></tr>
+<tr><td class="n">24.4</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-DIRECT-RCM</td><td>setup_s</td></tr>
+<tr><td class="n">0.14</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-DIRECT-RCM</td><td>solve_s_median</td></tr>
 <tr><td class="n">170 634</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-PCG-J</td><td>dof</td></tr>
 <tr><td class="n">2.876</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-PCG-J</td><td>solve_s_median</td></tr>
 <tr><td class="n">2.880</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.630-PCG-J-noobs</td><td>solve_s_median</td></tr>
+<tr><td class="n">93 921</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-ND</td><td>dof</td></tr>
+<tr><td class="n">27.7</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-ND</td><td>factor_flops</td></tr>
+<tr><td class="n">31 021 545</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-ND</td><td>factor_nnz</td></tr>
+<tr><td class="n">9.7</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-ND</td><td>total_s_median</td></tr>
+<tr><td class="n">27.4</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-RCM</td><td>factor_flops</td></tr>
+<tr><td class="n">44 149 272</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-RCM</td><td>factor_nnz</td></tr>
+<tr><td class="n">7.3</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-DIRECT-RCM</td><td>total_s_median</td></tr>
+<tr><td class="n">93 921</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s0.794-PCG-J</td><td>dof</td></tr>
 <tr><td class="n">365</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s1.000-AMG</td><td>iterations</td></tr>
 <tr><td class="n">99.06</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s1.000-AMG-PCG</td><td>T_max_C</td></tr>
+<tr><td class="n">0.19</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s1.000-AMG-PCG</td><td>total_s_median</td></tr>
+<tr><td class="n">3.7</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s1.000-DIRECT-ND</td><td>total_s_median</td></tr>
 <tr><td class="n">56 015</td><td>v2/csv/all_runs.csv</td><td>E2-HS7-s1.000-PCG-J</td><td>dof</td></tr>
 <tr><td class="n">361</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-h5-s0.500-PCG-IC0</td><td>iterations</td></tr>
+<tr><td class="n">1.39</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-h5-s0.500-PCG-IC0 / E3-HS7-h500-s0.500-PCG-IC0</td><td>iterations / iterations</td></tr>
 <tr><td class="n">93</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-h5-s0.500-PCG-IC0 / E3-HS7-h500-s0.500-PCG-IC0</td><td>kappa_est / kappa_est</td></tr>
 <tr><td class="n">260</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-h500-s0.500-PCG-IC0</td><td>iterations</td></tr>
 <tr><td class="n">285 532</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-s0.500-PCG-J</td><td>dof</td></tr>
 <tr><td class="n">40</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG</td><td>iterations</td></tr>
 <tr><td class="n">23</td><td>v2/csv/all_runs.csv</td><td>E3-HS7-tim0.5mm-s0.500-AMG-PCG</td><td>iterations</td></tr>
 <tr><td class="n">296</td><td>v2/csv/all_runs.csv</td><td>E4-HS7-s1.000-DIRECT-ND / E4-HS7-s1.000-DIRECT-ND</td><td>factor_nnz / dof</td></tr>
+<tr><td class="n">2.47</td><td>v2/csv/all_runs.csv</td><td>E4-HS7-s1.000-PCG-IC0</td><td>R_th_K_per_W</td></tr>
+<tr><td class="n">99.1</td><td>v2/csv/all_runs.csv</td><td>E4-HS7-s1.000-PCG-IC0</td><td>T_max_C</td></tr>
+<tr><td class="n">56 015</td><td>v2/csv/all_runs.csv</td><td>E4-HS7-s1.000-PCG-IC0</td><td>dof</td></tr>
+<tr><td class="n">2.4</td><td>v2/csv/all_runs.csv</td><td>E4-HS7-s1.000-PCG-IC0 − E4-fins-s1.000-PCG-IC0</td><td>T_max_C − T_max_C</td></tr>
 <tr><td class="n">15</td><td>v2/csv/all_runs.csv</td><td>E4-cube-s1.000-AMG</td><td>iterations</td></tr>
 <tr><td class="n">1025</td><td>v2/csv/all_runs.csv</td><td>E4-cube-s1.000-DIRECT-ND / E4-cube-s1.000-DIRECT-ND</td><td>factor_nnz / dof</td></tr>
 <tr><td class="n">197</td><td>v2/csv/all_runs.csv</td><td>E4-fins-s1.000-DIRECT-ND / E4-fins-s1.000-DIRECT-ND</td><td>factor_nnz / dof</td></tr>
+<tr><td class="n">2.39</td><td>v2/csv/all_runs.csv</td><td>E4-fins-s1.000-PCG-IC0</td><td>R_th_K_per_W</td></tr>
+<tr><td class="n">96.7</td><td>v2/csv/all_runs.csv</td><td>E4-fins-s1.000-PCG-IC0</td><td>T_max_C</td></tr>
+<tr><td class="n">45 707</td><td>v2/csv/all_runs.csv</td><td>E4-fins-s1.000-PCG-IC0</td><td>dof</td></tr>
+<tr><td class="n">3.42</td><td>v2/csv/all_runs.csv</td><td>E4-pinfin-s1.000-PCG-IC0</td><td>R_th_K_per_W</td></tr>
+<tr><td class="n">127.7</td><td>v2/csv/all_runs.csv</td><td>E4-pinfin-s1.000-PCG-IC0</td><td>T_max_C</td></tr>
+<tr><td class="n">56 832</td><td>v2/csv/all_runs.csv</td><td>E4-pinfin-s1.000-PCG-IC0</td><td>dof</td></tr>
 <tr><td class="n">194</td><td>v2/csv/all_runs.csv</td><td>E4-plate-s1.000-DIRECT-ND / E4-plate-s1.000-DIRECT-ND</td><td>factor_nnz / dof</td></tr>
+<tr><td class="n">12.69</td><td>v2/csv/all_runs.csv</td><td>E4-plate-s1.000-PCG-IC0</td><td>R_th_K_per_W</td></tr>
+<tr><td class="n">405.7</td><td>v2/csv/all_runs.csv</td><td>E4-plate-s1.000-PCG-IC0</td><td>T_max_C</td></tr>
+<tr><td class="n">15 447</td><td>v2/csv/all_runs.csv</td><td>E4-plate-s1.000-PCG-IC0</td><td>dof</td></tr>
+<tr><td class="n">5.3</td><td>v2/csv/all_runs.csv</td><td>E4-plate-s1.000-PCG-IC0 / E4-fins-s1.000-PCG-IC0</td><td>R_th_K_per_W / R_th_K_per_W</td></tr>
 <tr><td class="n">1.57</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-AMG-PCG-noobs</td><td>total_s_median</td></tr>
 <tr><td class="n">2.07</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-AMG-PCG-noobs-p20</td><td>total_s_median</td></tr>
 <tr><td class="n">1.38</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-AMG-PCG-noobs-p4</td><td>total_s_median</td></tr>
@@ -2725,6 +2934,12 @@ measured before the threshold fix).</p>
 <tr><td class="n">14.6</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-PCG-J-noobs</td><td>total_s_median</td></tr>
 <tr><td class="n">2.6</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-PCG-J-noobs / E6-HS7-s0.397-PCG-J-noobs-p20</td><td>total_s_median / total_s_median</td></tr>
 <tr><td class="n">5.5</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-PCG-J-noobs-p20</td><td>total_s_median</td></tr>
+<tr><td class="n">3.5</td><td>v2/csv/all_runs.csv</td><td>E6-HS7-s0.397-PCG-J-noobs-p20 / E6-HS7-s0.397-AMG-PCG-noobs</td><td>total_s_median / total_s_median</td></tr>
+<tr><td class="n">845</td><td>v2/csv/all_runs.csv</td><td>E7-HS7-s0.794-DIRECT-NAT</td><td>factor_flops</td></tr>
+<tr><td class="n">246 819 591</td><td>v2/csv/all_runs.csv</td><td>E7-HS7-s0.794-DIRECT-NAT</td><td>factor_nnz</td></tr>
+<tr><td class="n">294</td><td>v2/csv/all_runs.csv</td><td>E7-HS7-s0.794-DIRECT-NAT</td><td>total_s_median</td></tr>
+<tr><td class="n">8.0</td><td>v2/csv/all_runs.csv</td><td>E7-HS7-s0.794-DIRECT-NAT / E2-HS7-s0.794-DIRECT-ND</td><td>factor_nnz / factor_nnz</td></tr>
+<tr><td class="n">347</td><td>v2/csv/all_runs.csv</td><td>E8-HS7-s0.500-PCG-IC0-noshift-noobs</td><td>iterations</td></tr>
 <tr><td class="n">table E0</td><td>v2/csv/all_runs.csv</td><td>all E0 solve rows</td><td>total_s_median / iterations</td></tr>
 <tr><td class="n">table E2</td><td>v2/csv/all_runs.csv</td><td>all E2 solve rows</td><td>total_s_median / iterations</td></tr>
 <tr><td class="n">table E3</td><td>v2/csv/all_runs.csv</td><td>all E3 solve rows</td><td>total_s_median / iterations</td></tr>
