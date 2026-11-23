@@ -2692,122 +2692,122 @@ fails because multigrid amortises its setup as well. The direct solver keeps its
 small, slender or plate-like problems and as the robust fallback.</p>
 
 <h2>9. Which solver for which scenario</h2>
-<div class="fig"><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="640" viewBox="0 0 1400 640" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<div class="fig"><svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480" font-family="Inter, 'Segoe UI', Arial, sans-serif">
 <rect width="100%" height="100%" fill="#FFFFFF"/>
-<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Which solver when: measured winners on HS-7 (single thread)</text>
-<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Each cell is a measured mesh (E2) and number of load cases (E5: setup + k · solve). Colour = fastest family; number = lead over the runner-up.</text>
-<text x="124.00" y="170.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-weight="600">k = 20</text>
-<line x1="140.00" y1="220.00" x2="1060.00" y2="220.00" stroke="#D3D9E1" stroke-width="1.00"/>
-<rect x="971.68" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="1005.68" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="1005.68" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">15.56×</text>
-<rect x="838.37" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="872.37" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="872.37" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">10.52×</text>
-<rect x="723.66" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="757.66" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="757.66" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">8.74×</text>
-<rect x="611.61" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="645.61" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="645.61" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">6.69×</text>
-<rect x="480.51" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="514.51" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="514.51" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">5.02×</text>
-<rect x="382.41" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="416.41" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="416.41" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">3.30×</text>
-<rect x="268.64" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="302.64" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="302.64" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.68×</text>
-<rect x="170.16" y="124.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="204.16" y="163.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="204.16" y="180.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.13×</text>
-<text x="124.00" y="280.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-weight="600">k = 5</text>
-<line x1="140.00" y1="330.00" x2="1060.00" y2="330.00" stroke="#D3D9E1" stroke-width="1.00"/>
-<rect x="971.68" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="1005.68" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="1005.68" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">14.68×</text>
-<rect x="838.37" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="872.37" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="872.37" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">9.95×</text>
-<rect x="723.66" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="757.66" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="757.66" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">8.30×</text>
-<rect x="611.61" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="645.61" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="645.61" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">6.36×</text>
-<rect x="480.51" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="514.51" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="514.51" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">4.76×</text>
-<rect x="382.41" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="416.41" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="416.41" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">3.53×</text>
-<rect x="268.64" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="302.64" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="302.64" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">2.35×</text>
-<rect x="170.16" y="234.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="204.16" y="273.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="204.16" y="290.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.79×</text>
-<text x="124.00" y="390.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-weight="600">k = 1</text>
-<line x1="140.00" y1="440.00" x2="1060.00" y2="440.00" stroke="#D3D9E1" stroke-width="1.00"/>
-<rect x="971.68" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="1005.68" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="1005.68" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">11.28×</text>
-<rect x="838.37" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="872.37" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="872.37" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">7.73×</text>
-<rect x="723.66" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="757.66" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="757.66" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">6.57×</text>
-<rect x="611.61" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="645.61" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="645.61" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">5.07×</text>
-<rect x="480.51" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="514.51" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="514.51" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">3.76×</text>
-<rect x="382.41" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="416.41" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="416.41" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">2.92×</text>
-<rect x="268.64" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="302.64" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="302.64" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.98×</text>
-<rect x="170.16" y="344.00" width="68.00" height="82.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="6.00"/>
-<text x="204.16" y="383.00" font-size="11.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
-<text x="204.16" y="400.00" font-size="11.50" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.52×</text>
-<line x1="140.00" y1="440.00" x2="1060.00" y2="440.00" stroke="#1A1E24" stroke-width="1.00"/>
-<line x1="182.52" y1="440.00" x2="182.52" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="182.52" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">5×10⁴</text>
-<line x1="314.59" y1="440.00" x2="314.59" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="314.59" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">10⁵</text>
-<line x1="446.67" y1="440.00" x2="446.67" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="446.67" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">2×10⁵</text>
-<line x1="621.26" y1="440.00" x2="621.26" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="621.26" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">5×10⁵</text>
-<line x1="753.33" y1="440.00" x2="753.33" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="753.33" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">10⁶</text>
-<line x1="885.41" y1="440.00" x2="885.41" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="885.41" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">2×10⁶</text>
-<line x1="1060.00" y1="440.00" x2="1060.00" y2="446.00" stroke="#1A1E24" stroke-width="1.00"/>
-<text x="1060.00" y="462.00" font-size="12.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">5×10⁶</text>
-<text x="600.00" y="486.00" font-size="13.00" text-anchor="middle" fill="#1A1E24">DOF (HS-7 spacing ladder 1.0 → 0.2 mm)</text>
-<line x1="717.66" y1="104.00" x2="717.66" y2="440.00" stroke="#0072B2" stroke-width="1.40" stroke-dasharray="6 4"/>
-<text x="713.66" y="98.00" font-size="11.50" text-anchor="end" fill="#0072B2">direct ND over 8 GB from here</text>
-<rect x="1100.00" y="130.00" width="18.00" height="14.00" fill="#0072B2" stroke="none" stroke-width="1.00"/>
-<text x="1126.00" y="142.00" font-size="12.50" text-anchor="start" fill="#1A1E24">direct (Cholesky)</text>
-<rect x="1100.00" y="156.00" width="18.00" height="14.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
-<text x="1126.00" y="168.00" font-size="12.50" text-anchor="start" fill="#1A1E24">PCG (Jacobi, IC(0))</text>
-<rect x="1100.00" y="182.00" width="18.00" height="14.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
-<text x="1126.00" y="194.00" font-size="12.50" text-anchor="start" fill="#1A1E24">AMG-PCG</text>
-<text x="1100.00" y="240.00" font-size="12.00" text-anchor="start" fill="#59616E">Read: pick the column of your</text>
-<text x="1100.00" y="256.80" font-size="12.00" text-anchor="start" fill="#59616E">mesh size and the row of your</text>
-<text x="1100.00" y="273.60" font-size="12.00" text-anchor="start" fill="#59616E">number of load cases. Stand-alone</text>
-<text x="1100.00" y="290.40" font-size="12.00" text-anchor="start" fill="#59616E">AMG is left out: AMG-PCG uses</text>
-<text x="1100.00" y="307.20" font-size="12.00" text-anchor="start" fill="#59616E">the same hierarchy and is</text>
-<text x="1100.00" y="324.00" font-size="12.00" text-anchor="start" fill="#59616E">always faster.</text>
-<text x="1100.00" y="340.80" font-size="12.00" text-anchor="start" fill="#59616E"></text>
-<text x="1100.00" y="357.60" font-size="12.00" text-anchor="start" fill="#59616E">All cores (E6): PCG-J gains</text>
-<text x="1100.00" y="374.40" font-size="12.00" text-anchor="start" fill="#59616E">2.6× and AMG-PCG 1.13×;</text>
-<text x="1100.00" y="391.20" font-size="12.00" text-anchor="start" fill="#59616E">serial AMG-PCG still wins.</text>
+<text x="20.00" y="32.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Which solver when: measured winners on HS-7 (single thread)</text>
+<text x="20.00" y="54.00" font-size="13.00" text-anchor="start" fill="#59616E">Each cell: one measured mesh (E2) and number of load cases k (E5: setup + k · solve).</text>
+<text x="20.00" y="72.00" font-size="13.00" text-anchor="start" fill="#59616E">Colour = fastest family; number = its lead over the runner-up.</text>
+<text x="78.00" y="167.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-weight="600">k = 20</text>
+<line x1="92.00" y1="208.00" x2="676.00" y2="208.00" stroke="#D3D9E1" stroke-width="1.00"/>
+<rect x="622.21" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="653.21" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="653.21" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">15.56×</text>
+<rect x="533.49" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="564.49" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="564.49" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">10.52×</text>
+<rect x="457.14" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="488.14" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="488.14" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">8.74×</text>
+<rect x="382.57" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="413.57" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="413.57" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">6.69×</text>
+<rect x="295.31" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="326.31" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="326.31" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">5.02×</text>
+<rect x="230.03" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="261.03" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="261.03" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">3.30×</text>
+<rect x="154.31" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="185.31" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="185.31" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.68×</text>
+<rect x="88.77" y="126.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="119.77" y="159.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="119.77" y="178.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.13×</text>
+<text x="78.00" y="259.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-weight="600">k = 5</text>
+<line x1="92.00" y1="300.00" x2="676.00" y2="300.00" stroke="#D3D9E1" stroke-width="1.00"/>
+<rect x="622.21" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="653.21" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="653.21" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">14.68×</text>
+<rect x="533.49" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="564.49" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="564.49" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">9.95×</text>
+<rect x="457.14" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="488.14" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="488.14" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">8.30×</text>
+<rect x="382.57" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="413.57" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="413.57" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">6.36×</text>
+<rect x="295.31" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="326.31" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="326.31" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">4.76×</text>
+<rect x="230.03" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="261.03" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="261.03" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">3.53×</text>
+<rect x="154.31" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="185.31" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="185.31" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">2.35×</text>
+<rect x="88.77" y="218.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="119.77" y="251.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="119.77" y="270.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.79×</text>
+<text x="78.00" y="351.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-weight="600">k = 1</text>
+<line x1="92.00" y1="392.00" x2="676.00" y2="392.00" stroke="#D3D9E1" stroke-width="1.00"/>
+<rect x="622.21" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="653.21" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="653.21" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">11.28×</text>
+<rect x="533.49" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="564.49" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="564.49" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">7.73×</text>
+<rect x="457.14" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="488.14" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="488.14" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">6.57×</text>
+<rect x="382.57" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="413.57" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="413.57" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">5.07×</text>
+<rect x="295.31" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="326.31" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="326.31" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">3.76×</text>
+<rect x="230.03" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="261.03" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="261.03" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">2.92×</text>
+<rect x="154.31" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="185.31" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="185.31" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.98×</text>
+<rect x="88.77" y="310.00" width="62.00" height="72.00" fill="#009E73" stroke="none" stroke-width="1.00" rx="5.00"/>
+<text x="119.77" y="343.00" font-size="12.00" text-anchor="middle" fill="#FFFFFF" font-weight="600">AMG-PCG</text>
+<text x="119.77" y="362.00" font-size="13.00" text-anchor="middle" fill="#FFFFFF" font-family="'JetBrains Mono', Consolas, monospace">1.52×</text>
+<line x1="92.00" y1="392.00" x2="676.00" y2="392.00" stroke="#1A1E24" stroke-width="1.00"/>
+<line x1="105.36" y1="392.00" x2="105.36" y2="398.00" stroke="#1A1E24" stroke-width="1.00"/>
+<text x="105.36" y="414.00" font-size="13.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">5×10⁴</text>
+<line x1="193.26" y1="392.00" x2="193.26" y2="398.00" stroke="#1A1E24" stroke-width="1.00"/>
+<text x="193.26" y="414.00" font-size="13.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">10⁵</text>
+<line x1="281.16" y1="392.00" x2="281.16" y2="398.00" stroke="#1A1E24" stroke-width="1.00"/>
+<text x="281.16" y="414.00" font-size="13.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">2×10⁵</text>
+<line x1="397.36" y1="392.00" x2="397.36" y2="398.00" stroke="#1A1E24" stroke-width="1.00"/>
+<text x="397.36" y="414.00" font-size="13.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">5×10⁵</text>
+<line x1="485.26" y1="392.00" x2="485.26" y2="398.00" stroke="#1A1E24" stroke-width="1.00"/>
+<text x="485.26" y="414.00" font-size="13.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">10⁶</text>
+<line x1="573.16" y1="392.00" x2="573.16" y2="398.00" stroke="#1A1E24" stroke-width="1.00"/>
+<text x="573.16" y="414.00" font-size="13.00" text-anchor="middle" fill="#59616E" font-family="'JetBrains Mono', Consolas, monospace">2×10⁶</text>
+<text x="384.00" y="438.00" font-size="14.00" text-anchor="middle" fill="#1A1E24">DOF (HS-7 spacing ladder 1.0 → 0.2 mm)</text>
+<line x1="452.14" y1="108.00" x2="452.14" y2="392.00" stroke="#0072B2" stroke-width="1.40" stroke-dasharray="6 4"/>
+<text x="448.14" y="104.00" font-size="13.00" text-anchor="end" fill="#0072B2">direct ND over 8 GB from here</text>
+<rect x="704.00" y="112.00" width="18.00" height="14.00" fill="#0072B2" stroke="none" stroke-width="1.00"/>
+<text x="730.00" y="124.00" font-size="13.50" text-anchor="start" fill="#1A1E24">direct (Cholesky)</text>
+<rect x="704.00" y="138.00" width="18.00" height="14.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
+<text x="730.00" y="150.00" font-size="13.50" text-anchor="start" fill="#1A1E24">PCG (Jacobi, IC(0))</text>
+<rect x="704.00" y="164.00" width="18.00" height="14.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="730.00" y="176.00" font-size="13.50" text-anchor="start" fill="#1A1E24">AMG-PCG</text>
+<text x="704.00" y="214.00" font-size="13.00" text-anchor="start" fill="#59616E">Read: pick the column of</text>
+<text x="704.00" y="232.20" font-size="13.00" text-anchor="start" fill="#59616E">your mesh size and the row</text>
+<text x="704.00" y="250.40" font-size="13.00" text-anchor="start" fill="#59616E">of your number of load</text>
+<text x="704.00" y="268.60" font-size="13.00" text-anchor="start" fill="#59616E">cases. Stand-alone AMG is</text>
+<text x="704.00" y="286.80" font-size="13.00" text-anchor="start" fill="#59616E">left out: AMG-PCG uses the</text>
+<text x="704.00" y="305.00" font-size="13.00" text-anchor="start" fill="#59616E">same hierarchy and is</text>
+<text x="704.00" y="323.20" font-size="13.00" text-anchor="start" fill="#59616E">always faster.</text>
+<text x="704.00" y="341.40" font-size="13.00" text-anchor="start" fill="#59616E"></text>
+<text x="704.00" y="359.60" font-size="13.00" text-anchor="start" fill="#59616E">All cores (E6): PCG-J gains</text>
+<text x="704.00" y="377.80" font-size="13.00" text-anchor="start" fill="#59616E">2.6× and AMG-PCG 1.13×;</text>
+<text x="704.00" y="396.00" font-size="13.00" text-anchor="start" fill="#59616E">serial AMG-PCG still wins.</text>
 </svg>
 
 <div class="cap"><b>Figure 25.</b> Decision chart: the measured fastest solver for each mesh size and number

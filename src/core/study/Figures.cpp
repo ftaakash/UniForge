@@ -1455,38 +1455,43 @@ Result<void> figP16(Ctx& ctx) {
     if (pts.empty()) {
         return makeError(ErrorCode::InvalidInput, "P16 needs results/v2/csv/E5_load_cases.csv");
     }
-    SvgCanvas c(1400, 640, "P16 decision chart");
-    heading(c, "Which solver when: measured winners on HS-7 (single thread)",
-            "Each cell is a measured mesh (E2) and number of load cases (E5: setup + k · solve). "
-            "Colour = fastest family; number = lead over the runner-up.");
-    const double x0 = 140, x1 = 1060, yTop = 110, rowH = 110;
-    const double lx0 = std::log10(4e4), lx1 = std::log10(5e6);
+    // 900 units wide so the text prints as large as the line plots (about 7 pt at full width).
+    SvgCanvas c(900, 480, "P16 decision chart");
+    c.text(20, 32, "Which solver when: measured winners on HS-7 (single thread)", 18, "start", kInk,
+           true);
+    c.text(20, 54,
+           "Each cell: one measured mesh (E2) and number of load cases k (E5: setup + k · solve).",
+           13, "start", kMuted);
+    c.text(20, 72, "Colour = fastest family; number = its lead over the runner-up.", 13, "start",
+           kMuted);
+    const double x0 = 92, x1 = 676, yTop = 116, rowH = 92;
+    const double lx0 = std::log10(4.5e4), lx1 = std::log10(4.5e6);
     const auto xOf = [&](double dof) {
         return x0 + (std::log10(dof) - lx0) / (lx1 - lx0) * (x1 - x0);
     };
     const std::vector<int> ks = {20, 5, 1};
     for (std::size_t row = 0; row < ks.size(); ++row) {
         const double y = yTop + rowH * static_cast<double>(row);
-        c.text(x0 - 16, y + rowH / 2 + 5, "k = " + std::to_string(ks[row]), 13, "end", kInk, true);
+        c.text(x0 - 14, y + rowH / 2 + 5, "k = " + std::to_string(ks[row]), 15, "end", kInk, true);
         c.line(x0, y + rowH, x1, y + rowH, "#D3D9E1", 1.0);
         for (const Point& p : pts) {
             if (p.k != ks[row]) {
                 continue;
             }
             const double x = xOf(p.dof);
-            c.rect(x - 34, y + 14, 68, rowH - 28, familyColor(p.winner), "none", 1.0, 6.0);
-            c.text(x, y + rowH / 2 - 2, p.winner, 11, "middle", "#FFFFFF", true);
-            c.text(x, y + rowH / 2 + 15, fmt(p.margin, "%.2f") + "×", 11.5, "middle", "#FFFFFF",
+            c.rect(x - 31, y + 10, 62, rowH - 20, familyColor(p.winner), "none", 1.0, 5.0);
+            c.text(x, y + rowH / 2 - 3, p.winner, 12, "middle", "#FFFFFF", true);
+            c.text(x, y + rowH / 2 + 16, fmt(p.margin, "%.2f") + "×", 13, "middle", "#FFFFFF",
                    false, true);
         }
     }
     const double yAxis = yTop + rowH * 3;
     c.line(x0, yAxis, x1, yAxis, kInk, 1.0);
-    for (const double d : {5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6}) {
+    for (const double d : {5e4, 1e5, 2e5, 5e5, 1e6, 2e6}) {
         c.line(xOf(d), yAxis, xOf(d), yAxis + 6, kInk);
-        c.text(xOf(d), yAxis + 22, powerOfTenLabel(d), 12, "middle", kMuted, false, true);
+        c.text(xOf(d), yAxis + 22, powerOfTenLabel(d), 13, "middle", kMuted, false, true);
     }
-    c.text((x0 + x1) / 2, yAxis + 46, "DOF (HS-7 spacing ladder 1.0 → 0.2 mm)", 13, "middle");
+    c.text((x0 + x1) / 2, yAxis + 46, "DOF (HS-7 spacing ladder 1.0 → 0.2 mm)", 14, "middle");
     // Memory wall of the direct solver.
     double wall = kNaN;
     for (const Row* r : ctx.res.where([](const Row& q) {
@@ -1496,21 +1501,23 @@ Result<void> figP16(Ctx& ctx) {
         wall = std::isfinite(wall) ? std::min(wall, num(*r, "dof")) : num(*r, "dof");
     }
     if (std::isfinite(wall)) {
-        c.line(xOf(wall) - 40, yTop - 6, xOf(wall) - 40, yAxis, kDirect, 1.4, true);
-        c.text(xOf(wall) - 44, yTop - 12, "direct ND over 8 GB from here", 11.5, "end", kDirect);
+        const double xw = xOf(wall) - 36;
+        c.line(xw, yTop - 8, xw, yAxis, kDirect, 1.4, true);
+        c.text(xw - 4, yTop - 12, "direct ND over 8 GB from here", 13, "end", kDirect);
     }
-    c.rect(1100, 130, 18, 14, kDirect);
-    c.text(1126, 142, "direct (Cholesky)", 12.5);
-    c.rect(1100, 156, 18, 14, kPcg);
-    c.text(1126, 168, "PCG (Jacobi, IC(0))", 12.5);
-    c.rect(1100, 182, 18, 14, kAmg);
-    c.text(1126, 194, "AMG-PCG", 12.5);
-    c.textBlock(
-        1100, 240,
-        "Read: pick the column of your\nmesh size and the row of your\nnumber of load cases. "
-        "Stand-alone\nAMG is left out: AMG-PCG uses\nthe same hierarchy and is\nalways faster."
-        "\n\nAll cores (E6): PCG-J gains\n2.6× and AMG-PCG 1.13×;\nserial AMG-PCG still wins.",
-        12, 1.4, kMuted);
+    const double lx = 704;
+    c.rect(lx, 112, 18, 14, kDirect);
+    c.text(lx + 26, 124, "direct (Cholesky)", 13.5);
+    c.rect(lx, 138, 18, 14, kPcg);
+    c.text(lx + 26, 150, "PCG (Jacobi, IC(0))", 13.5);
+    c.rect(lx, 164, 18, 14, kAmg);
+    c.text(lx + 26, 176, "AMG-PCG", 13.5);
+    c.textBlock(lx, 214,
+                "Read: pick the column of\nyour mesh size and the row\nof your number of load\n"
+                "cases. Stand-alone AMG is\nleft out: AMG-PCG uses the\nsame hierarchy and is\n"
+                "always faster.\n\nAll cores (E6): PCG-J gains\n2.6× and AMG-PCG 1.13×;\n"
+                "serial AMG-PCG still wins.",
+                13, 1.4, kMuted);
     return ctx.canvas("P16", "P16_decision_chart.svg", c, "Decision chart: which solver when",
                       "results/v2/csv/E5_load_cases.csv, E2.csv, E6.csv");
 }
