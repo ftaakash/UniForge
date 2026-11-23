@@ -5,20 +5,31 @@ thermal results, solves a 1D thermal finite-element problem, benchmarks serial v
 batch solves, and demonstrates simulated embedded-hardware adapters. All backend logic,
 numerics, file processing and concurrency are written in C++17.
 
-> **Status: v1.0.0, submitted.** Candidate ID RA2311042010060 (Aakash G S). Tasks A–F are
-> complete. 289 tests pass, and the package was tested from Unicode, read-only and WARP paths.
-> Start with the [report](docs/report/report.pdf) (5 pages), then the
+> **Status (2026-11-24): v1.0.0 and V2 (`v2.0.0`) both submitted.** Candidate ID
+> RA2311042010060 (Aakash G S). V2, the Assignment Extension, was sent as the
+> [V2 report](docs/report_v2/UniForge_V2_Report.pdf) (22 pages) on 2026-11-24; see the section
+> below. v1: tasks A–F complete, 289 tests pass, and the package was tested from Unicode,
+> read-only and WARP paths; start with the [report](docs/report/report.pdf) (5 pages), then the
 > [screenshots](docs/demo/screenshots/), the [ownership statement](docs/ownership.md) and the
 > [AI-use log](docs/ai_usage_log.md).
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
-## V2: three solvers on a 3D thermal problem (in progress, branch `v2`)
+## V2: three solvers on a 3D thermal problem (complete, release `v2.0.0`, submitted 2026-11-24)
 
 PASS SCIENCE WORKS sent an Assignment Extension Notice: apply three different types of solver
 to the same thermal analysis, on a more complex 3D object than the v1 bar, and justify which
-works best in which scenario. The deliverable is a single PDF report. V2 is built on branch
-`v2` phase by phase; `main` and the `v1.0.0` tag stay as submitted.
+works best in which scenario. The deliverable is a single PDF report. V2 was built on branch
+`v2` phase by phase and released as `v2.0.0`; the report was sent on 2026-11-24. `main` and the
+`v1.0.0` tag stay as submitted for v1.
+
+- **Report:** [UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf) (22 pages, no
+  source code); every number in it is filled in from `results/v2` and listed with its source in
+  [provenance.csv](docs/report_v2/provenance.csv).
+- **Answer:** all six solver variants give the same temperatures; AMG-PCG is the fastest at every
+  measured HS-7 size (56 k to 3.76 M unknowns) and for 1 to 20 load cases. The direct solver wins
+  only on small, slender problems and reaches its 8 GB memory wall at 0.57 M (RCM) and 1.02 M
+  (nested dissection) unknowns; Jacobi-PCG wins on the compact cube and uses the least memory.
 
 - **Object:** HS-7, a finned aluminium heat sink on a heated silicon die with a thin thermal
   interface layer (dimensions from v1's `data/geometry/heatsink_fins.stl`), plus a complexity
@@ -44,13 +55,14 @@ works best in which scenario. The deliverable is a single PDF report. V2 is buil
 | V2-8 | Experiment harness (`uniforge_cli study`: plan, one process per run, memory cap, P-core pinning, resume, collect) and the official batch (241 runs, results in `results/v2/`) | `v2-phase-8` | Done |
 | V2-9 | Figures: CPU rasteriser, spy plots, PNG writer with deflate (`core/viz`), `uniforge_cli study figures` → P1–P22 in [docs/report_v2/fig](docs/report_v2/fig/figures.md) | `v2-phase-9` | Done |
 | V2-9.1 | Fixes: renders as separate PNG files (packaging hygiene scan); AMG strength threshold 0.08 → 0.02 for trilinear hexahedra and the 72 AMG rows re-run officially ([before/after](docs/v2_experiments.md)) | `v2-phase-9.1` | Done |
-| V2-10 | PDF report ([UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf), 22 pages): numbers filled from `results/v2` with provenance, figures inline, references verified, markers resolved; review fixes applied | – | Built, for review |
+| V2-10 | PDF report ([UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf), 22 pages): numbers filled from `results/v2` with provenance, figures inline, references verified, markers resolved; review fixes applied | `v2-phase-10` | Done |
+| Release | `v2.0.0`: CI green on Windows and Linux; actual effort 6.05 h of working sessions ([effort log](docs/effort_log.md)); report sent 2026-11-24 | `v2.0.0` | Submitted |
 
 So far 424 tests pass on Windows (Release and Debug); 136 of them are new in V2. How the
 experiments are run is described in [docs/v2_experiments.md](docs/v2_experiments.md). The 3D model
 reproduces v1's bar result (188.2 °C at x = 0.42 m, 0.42 / 0.58 W through the ends) and
 converges at second order on a manufactured solution. Every phase tag
-also runs the Linux ASan/TSan CI. The V2 code lives in `src/core/sparse/`, `src/core/fem3d/`
+also runs the Linux ASan/TSan CI; the release tag passed all three jobs. The V2 code lives in `src/core/sparse/`, `src/core/fem3d/`
 and `src/core/solvers/`; build and test it exactly like v1 (see [Build from source](#build-from-source)).
 To run only the V2 tests:
 
@@ -58,9 +70,8 @@ To run only the V2 tests:
 ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ic0|Amg\.|Ordering\.|DirectCholesky|SolverFactory|StudyPlan|StudyRecord|StudyRun|study_batch|study_figures|Viz\.|SvgPlotExtras|PngWriter\.(Compressed|Flat)|v2_module_rules"
 ```
 
-The V2 report is [docs/report_v2/UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf); every
-number in it is filled in from `results/v2` and listed with its source in
-[docs/report_v2/provenance.csv](docs/report_v2/provenance.csv).
+To rebuild the report from the committed results (needs Python 3 with pypdf and Microsoft
+Edge): `uniforge_cli study figures`, then `tools/report_v2/build_report_v2.ps1`.
 
 ## Features
 
