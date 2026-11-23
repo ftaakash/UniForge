@@ -104,8 +104,11 @@ struct SolverOptions {
     // Direct solver: leaf size below which nested dissection stops splitting a subgraph.
     int dissectionLeafSize = 64;
     // Smoothed-aggregation AMG (build spec §5.4).
-    double amgStrengthThreshold =
-        0.08;                      // j is a strong neighbour of i if |a_ij| ≥ θ·sqrt(a_ii·a_jj)
+    // j is a strong neighbour of i if |a_ij| ≥ θ·sqrt(a_ii·a_jj). 0.02, not the 0.08 tuned in
+    // V2-7 on a 7-point finite-difference Laplacian: for trilinear hexahedra of aspect ratio 1
+    // the largest coupling is 1/16 of the diagonal, so 0.08 made every coupling weak and AMG
+    // stagnated (V2-9 candidate check, docs/v2_experiments.md).
+    double amgStrengthThreshold = 0.02;
     double amgStrengthDecay = 0.5; // θ on level l = amgStrengthThreshold · decay^l
     int amgCoarseSize = 500;       // stop coarsening at this many rows (then direct solve)
     int amgMaxLevels = 20;

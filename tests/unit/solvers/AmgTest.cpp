@@ -4,6 +4,7 @@
 
 #include "core/solvers/amg/Amg.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <memory>
@@ -27,6 +28,7 @@ using uniforge::sparse::Offset;
 using uniforge::sparse::toSize;
 using uniforge::testing::laplacian2d;
 using uniforge::testing::laplacian3d;
+using uniforge::testing::q1Laplacian3d;
 
 namespace {
 
@@ -152,13 +154,17 @@ TEST(Amg, VcyclePreconditionerIsSymmetricPositiveDefinite) {
 }
 
 TEST(Amg, ConvergenceDoesNotDegradeWithMeshSize) {
+    // 7-point stencil at the θ₀ = 0.08 it was tuned on in V2-7 (all its couplings are 1/6 of the
+    // diagonal). The default θ₀ = 0.02 is checked on Q1 hexahedra below.
     KernelPool pool(1);
     std::vector<int> amgIts;
+    SolverOptions o = smallCoarse();
+    o.amgStrengthThreshold = 0.08;
     for (const Index m : {10, 16, 24}) {
         const CsrMatrix A = laplacian3d(m);
         const Vector f = randomVec(toSize(A.rows), 7);
         AmgSolver amg;
-        auto su = amg.setup(A, {}, pool, smallCoarse());
+        auto su = amg.setup(A, {}, pool, o);
         ASSERT_TRUE(su.ok());
         ASSERT_EQ(su.value().status, SolveStatus::Converged);
         Vector x(f.size(), 0.0);
@@ -178,6 +184,47 @@ TEST(Amg, ConvergenceDoesNotDegradeWithMeshSize) {
         amgIts.push_back(r.value().iterations);
     }
     EXPECT_LE(amgIts.back(), amgIts.front() + 4) << "iterations roughly independent of size";
+}
+
+// The V2-9 finding: on trilinear hexahedra of aspect ratio 1 every coupling is at most 1/16 of
+// the diagonal, so θ₀ = 0.08 marks all of them weak and no node is aggregated: on this uniform
+// grid the hierarchy has no coarse level at all (on the HS-7 meshes, partly, which left many
+// nodes with smoothing only and AMG stagnated). The default θ₀ = 0.02 keeps them strong and
+// converges in a size-independent number of cycles.
+TEST(Amg, DefaultThresholdHandlesTrilinearHexahedra) {
+    KernelPool pool(1);
+    EXPECT_DOUBLE_EQ(SolverOptions{}.amgStrengthThreshold, 0.02);
+    std::vector<int> its;
+    for (const Index m : {10, 16, 24}) {
+        const CsrMatrix A = q1Laplacian3d(m);
+        const Vector f = randomVec(toSize(A.rows), 11);
+        AmgSolver amg;
+        auto su = amg.setup(A, {}, pool, smallCoarse());
+        ASSERT_TRUE(su.ok());
+        EXPECT_GE(su.value().levels.size(), 3u);
+        Vector x(f.size(), 0.0);
+        SolveControl c;
+        c.relTol = 1e-8;
+        c.maxIterations = 200;
+        auto r = amg.solve(f, x, c);
+        ASSERT_TRUE(r.ok());
+        ASSERT_EQ(r.value().status, SolveStatus::Converged) << r.value().detail;
+        std::printf("[amg q1 %d³] levels %zu, %d cycles\n", m, su.value().levels.size(),
+                    r.value().iterations);
+        its.push_back(r.value().iterations);
+    }
+    EXPECT_LE(its.back(), 30);
+    EXPECT_LE(its.back(), its.front() + 6) << "cycles roughly independent of size";
+
+    // The old threshold: every coupling is weak, so no node is aggregated.
+    const CsrMatrix A = q1Laplacian3d(16);
+    Index count = 0;
+    const auto old = aggregate(A, strongConnections(A, 0.08), count);
+    EXPECT_EQ(count, 0);
+    EXPECT_TRUE(std::all_of(old.begin(), old.end(), [](Index g) { return g == -1; }));
+    const auto now = aggregate(A, strongConnections(A, 0.02), count);
+    EXPECT_GT(count, 0);
+    EXPECT_TRUE(std::none_of(now.begin(), now.end(), [](Index g) { return g == -1; }));
 }
 
 TEST(Amg, AmgPcgBeatsIc0AndJacobiOnALarger3dGrid) {

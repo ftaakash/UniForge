@@ -88,6 +88,41 @@ inline sparse::CsrMatrix laplacian3d(sparse::Index m) {
     return sparse::fromTriplets(m * m * m, m * m * m, std::move(t)).value();
 }
 
+// 3D Laplacian from trilinear (Q1) hexahedra of aspect ratio 1 on an m × m × m interior grid
+// (Dirichlet boundary eliminated), scaled by 1/h: diagonal 8/3, face-diagonal neighbours −1/6,
+// body-diagonal neighbours −1/12, axis neighbours 0. Unlike the 7-point stencil, its largest
+// coupling is only 1/16 of the diagonal, which is what the AMG strength threshold must handle.
+inline sparse::CsrMatrix q1Laplacian3d(sparse::Index m) {
+    std::vector<sparse::Triplet> t;
+    const auto id = [m](sparse::Index i, sparse::Index j, sparse::Index k) {
+        return i + m * (j + m * k);
+    };
+    for (sparse::Index k = 0; k < m; ++k) {
+        for (sparse::Index j = 0; j < m; ++j) {
+            for (sparse::Index i = 0; i < m; ++i) {
+                const sparse::Index r = id(i, j, k);
+                t.push_back({r, r, 8.0 / 3.0});
+                for (sparse::Index dk = -1; dk <= 1; ++dk) {
+                    for (sparse::Index dj = -1; dj <= 1; ++dj) {
+                        for (sparse::Index di = -1; di <= 1; ++di) {
+                            const int nonzero = (di != 0) + (dj != 0) + (dk != 0);
+                            if (nonzero < 2) {
+                                continue; // the node itself and axis neighbours (coupling 0)
+                            }
+                            const sparse::Index a = i + di, b = j + dj, c = k + dk;
+                            if (a < 0 || a >= m || b < 0 || b >= m || c < 0 || c >= m) {
+                                continue;
+                            }
+                            t.push_back({r, id(a, b, c), nonzero == 2 ? -1.0 / 6.0 : -1.0 / 12.0});
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return sparse::fromTriplets(m * m * m, m * m * m, std::move(t)).value();
+}
+
 // Symmetric permutation P·A·Pᵀ with a fixed pseudo-random P (to hide the natural grid order).
 inline sparse::CsrMatrix shuffled(const sparse::CsrMatrix& A, std::uint64_t seed) {
     std::vector<sparse::Index> p(static_cast<std::size_t>(A.rows));
