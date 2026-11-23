@@ -247,7 +247,8 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
     const double h = spec.height;
     const double left = kMarginLeft;
     const double top = kMarginTop;
-    const double plotW = w - kMarginLeft - kMarginRight;
+    const double gutter = static_cast<double>(std::max(0, spec.labelGutter));
+    const double plotW = w - kMarginLeft - kMarginRight - gutter;
     const double plotH = h - kMarginTop - kMarginBottom;
     const double bottom = top + plotH;
     const double right = left + plotW;
@@ -322,14 +323,37 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
         }
     }
     svg += "</g>\n";
+    // Annotations: labels that would overlap (same anchor, close in x and within one line height
+    // in y) are pushed apart vertically, top to bottom, so fitted-slope labels at nearby line
+    // ends stay readable. Labels that do not collide keep their exact position.
+    struct Placed {
+        const PlotAnnotation* a;
+        double x, y;
+    };
+    std::vector<Placed> placed;
     for (const PlotAnnotation& a : spec.annotations) {
         if ((spec.logX && a.x <= 0.0) || (spec.logY && a.y <= 0.0) || !std::isfinite(a.x) ||
             !std::isfinite(a.y)) {
             continue;
         }
-        svg += "<text x=\"" + num(px(a.x) + a.dx) + "\" y=\"" + num(py(a.y) + a.dy) +
-               "\" font-size=\"11.5\" text-anchor=\"" + a.anchor + "\" fill=\"" + a.color + "\">" +
-               escapeXml(a.text) + "</text>\n";
+        placed.push_back({&a, px(a.x) + a.dx, py(a.y) + a.dy});
+    }
+    std::stable_sort(placed.begin(), placed.end(),
+                     [](const Placed& p, const Placed& q) { return p.y < q.y; });
+    constexpr double kLineGap = 13.0;
+    for (std::size_t j = 1; j < placed.size(); ++j) {
+        for (std::size_t i = 0; i < j; ++i) {
+            const bool near = placed[i].a->anchor == placed[j].a->anchor &&
+                              std::fabs(placed[i].x - placed[j].x) < 70.0;
+            if (near && placed[j].y - placed[i].y < kLineGap) {
+                placed[j].y = placed[i].y + kLineGap;
+            }
+        }
+    }
+    for (const Placed& p : placed) {
+        svg += "<text x=\"" + num(p.x) + "\" y=\"" + num(p.y) +
+               "\" font-size=\"11.5\" text-anchor=\"" + p.a->anchor + "\" fill=\"" + p.a->color +
+               "\">" + escapeXml(p.a->text) + "</text>\n";
     }
     if (!spec.note.empty()) {
         svg += "<text x=\"" + num(w - 8.0) + "\" y=\"" + num(h - 4.0) +
@@ -338,7 +362,7 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
     }
 
     // Legend, right of the plot area.
-    const double lx = right + 18.0;
+    const double lx = right + gutter + 18.0;
     svg += "<g font-size=\"12\" fill=\"" + std::string(plotcolor::kReference) + "\">\n";
     for (std::size_t i = 0; i < spec.series.size(); ++i) {
         const PlotSeries& s = spec.series[i];
@@ -388,7 +412,24 @@ Result<std::string> renderSvgBars(const BarChartSpec& spec) {
         }
         top = std::max(top, sum);
     }
-    const Axis ay = linearAxis(0.0, top > 0.0 ? top * 1.08 : 1.0);
+    // Log axis: bars start at the axis floor (below the smallest first segment); each segment
+    // spans its cumulative interval, so on a log scale the top segment shows its share of the
+    // total even when it is small.
+    double smallest = std::numeric_limits<double>::infinity();
+    for (std::size_t c = 0; c < spec.categories.size(); ++c) {
+        double base = 0.0;
+        for (const BarStack& s : spec.stacks) {
+            if (s.values[c] > 0.0) {
+                smallest = std::min(smallest, base + s.values[c]);
+            }
+            base += s.values[c];
+        }
+    }
+    if (spec.logY && !(top > 0.0 && std::isfinite(smallest))) {
+        return invalid("log axis needs positive values");
+    }
+    const Axis ay =
+        spec.logY ? logAxis(smallest, top * 1.5) : linearAxis(0.0, top > 0.0 ? top * 1.08 : 1.0);
     const double w = spec.width;
     const double h = spec.height;
     const double left = kMarginLeft;
@@ -415,7 +456,8 @@ Result<std::string> renderSvgBars(const BarChartSpec& spec) {
     svg += "</g>\n<g font-size=\"12\" fill=\"" + std::string(plotcolor::kTextSecondary) + "\">\n";
     for (const double t : ay.ticks) {
         svg += "<text x=\"" + num(left - 8.0) + "\" y=\"" + num(py(t) + 4.0) +
-               "\" text-anchor=\"end\">" + tickLabel(t) + "</text>\n";
+               "\" text-anchor=\"end\">" + (spec.logY ? powerOfTenLabel(t) : tickLabel(t)) +
+               "</text>\n";
     }
     svg += "</g>\n";
     const double slot = plotW / static_cast<double>(spec.categories.size());
@@ -427,8 +469,9 @@ Result<std::string> renderSvgBars(const BarChartSpec& spec) {
         for (const BarStack& s : spec.stacks) {
             const double v = s.values[c];
             if (v > 0.0) {
+                const double from = spec.logY ? std::max(base, ay.lo) : base;
                 svg += "<rect x=\"" + num(cx - barW / 2.0) + "\" y=\"" + num(py(base + v)) +
-                       "\" width=\"" + num(barW) + "\" height=\"" + num(py(base) - py(base + v)) +
+                       "\" width=\"" + num(barW) + "\" height=\"" + num(py(from) - py(base + v)) +
                        "\" fill=\"" + (own ? spec.barColors[c] : s.color) + "\"" +
                        (s.light ? " fill-opacity=\"0.4\"" : "") + "/>\n";
             }

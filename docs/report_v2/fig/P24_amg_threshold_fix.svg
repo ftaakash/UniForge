@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>AMG strength threshold: before (θ₀ = 0.08) and after (θ₀ = 0.02), HS-7</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
+<line x1="147.13" y1="48.00" x2="147.13" y2="368.00"/>
+<line x1="214.26" y1="48.00" x2="214.26" y2="368.00"/>
+<line x1="303.00" y1="48.00" x2="303.00" y2="368.00"/>
+<line x1="370.13" y1="48.00" x2="370.13" y2="368.00"/>
+<line x1="437.26" y1="48.00" x2="437.26" y2="368.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="368.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="320.82" x2="526.00" y2="320.82"/>
+<line x1="80.00" y1="285.13" x2="526.00" y2="285.13"/>
+<line x1="80.00" y1="249.44" x2="526.00" y2="249.44"/>
+<line x1="80.00" y1="202.25" x2="526.00" y2="202.25"/>
+<line x1="80.00" y1="166.56" x2="526.00" y2="166.56"/>
+<line x1="80.00" y1="130.87" x2="526.00" y2="130.87"/>
+<line x1="80.00" y1="83.69" x2="526.00" y2="83.69"/>
+<line x1="80.00" y1="48.00" x2="526.00" y2="48.00"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="80.00" y="386.00" text-anchor="middle">5×10⁴</text>
+<text x="147.13" y="386.00" text-anchor="middle">10⁵</text>
+<text x="214.26" y="386.00" text-anchor="middle">2×10⁵</text>
+<text x="303.00" y="386.00" text-anchor="middle">5×10⁵</text>
+<text x="370.13" y="386.00" text-anchor="middle">10⁶</text>
+<text x="437.26" y="386.00" text-anchor="middle">2×10⁶</text>
+<text x="526.00" y="386.00" text-anchor="middle">5×10⁶</text>
+<text x="72.00" y="372.00" text-anchor="end">20</text>
+<text x="72.00" y="324.82" text-anchor="end">50</text>
+<text x="72.00" y="289.13" text-anchor="end">100</text>
+<text x="72.00" y="253.44" text-anchor="end">200</text>
+<text x="72.00" y="206.25" text-anchor="end">500</text>
+<text x="72.00" y="170.56" text-anchor="end">10³</text>
+<text x="72.00" y="134.87" text-anchor="end">2×10³</text>
+<text x="72.00" y="87.69" text-anchor="end">5×10³</text>
+<text x="72.00" y="52.00" text-anchor="end">10⁴</text>
+</g>
+<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">AMG strength threshold: before (θ₀ = 0.08) and after (θ₀ = 0.02), HS-7</text>
+<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">DOF</text>
+<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">iterations / cycles to 1e-10</text>
+<g clip-path="url(#plot-area)">
+<polyline fill="none" stroke="#7A828E" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,318.80 141.06,291.71 198.88,237.13 248.74,229.95 315.38,211.85 372.33,198.39 430.63,186.73 498.39,173.62"/>
+<polygon points="91.00,314.60 95.00,321.80 87.00,321.80" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="141.06,287.51 145.06,294.71 137.06,294.71" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="198.88,232.93 202.88,240.13 194.88,240.13" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="248.74,225.75 252.74,232.95 244.74,232.95" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="315.38,207.65 319.38,214.85 311.38,214.85" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="372.33,194.19 376.33,201.39 368.33,201.39" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="430.63,182.53 434.63,189.73 426.63,189.73" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="498.39,169.42 502.39,176.62 494.39,176.62" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<polygon points="91.00,67.96 95.00,75.16 87.00,75.16" fill="#7A828E"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,320.82 141.06,329.80 198.88,339.18 248.74,345.43 315.38,350.67 372.33,354.49 430.63,354.49 498.39,360.80"/>
+<polygon points="91.00,316.62 95.00,323.82 87.00,323.82" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="141.06,325.60 145.06,332.80 137.06,332.80" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="198.88,334.98 202.88,342.18 194.88,342.18" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="248.74,341.23 252.74,348.43 244.74,348.43" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="315.38,346.47 319.38,353.67 311.38,353.67" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="372.33,350.29 376.33,357.49 368.33,357.49" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="430.63,350.29 434.63,357.49 426.63,357.49" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="498.39,356.60 502.39,363.80 494.39,363.80" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" points="91.00,218.46 141.06,239.20 198.88,257.80 248.74,270.44 315.38,281.64 372.33,289.42 430.63,288.31 498.39,299.94"/>
+<polygon points="91.00,214.26 95.00,221.46 87.00,221.46" fill="#009E73"/>
+<polygon points="141.06,235.00 145.06,242.20 137.06,242.20" fill="#009E73"/>
+<polygon points="198.88,253.60 202.88,260.80 194.88,260.80" fill="#009E73"/>
+<polygon points="248.74,266.24 252.74,273.44 244.74,273.44" fill="#009E73"/>
+<polygon points="315.38,277.44 319.38,284.64 311.38,284.64" fill="#009E73"/>
+<polygon points="372.33,285.22 376.33,292.42 368.33,292.42" fill="#009E73"/>
+<polygon points="430.63,284.11 434.63,291.31 426.63,291.31" fill="#009E73"/>
+<polygon points="498.39,295.74 502.39,302.94 494.39,302.94" fill="#009E73"/>
+<path d="M136.56 126.37 L145.56 135.37 M136.56 135.37 L145.56 126.37" stroke="#7A828E" stroke-width="1.8"/>
+<path d="M194.38 126.37 L203.38 135.37 M194.38 135.37 L203.38 126.37" stroke="#7A828E" stroke-width="1.8"/>
+<path d="M244.24 126.37 L253.24 135.37 M244.24 135.37 L253.24 126.37" stroke="#7A828E" stroke-width="1.8"/>
+<path d="M310.88 126.37 L319.88 135.37 M310.88 135.37 L319.88 126.37" stroke="#7A828E" stroke-width="1.8"/>
+<path d="M367.83 126.37 L376.83 135.37 M367.83 135.37 L376.83 126.37" stroke="#7A828E" stroke-width="1.8"/>
+<path d="M426.13 126.37 L435.13 135.37 M426.13 135.37 L435.13 126.37" stroke="#7A828E" stroke-width="1.8"/>
+<path d="M493.89 126.37 L502.89 135.37 M493.89 135.37 L502.89 126.37" stroke="#7A828E" stroke-width="1.8"/>
+</g>
+<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2_superseded/amg_theta008/compare_theta008_vs_002.csv</text>
+<g font-size="12" fill="#1A1E24">
+<line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#7A828E" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,57.80 626.00,65.00 618.00,65.00" fill="#FFFFFF" stroke="#7A828E" stroke-width="1.5"/>
+<text x="644.00" y="66.00">AMG-PCG, θ₀ = 0.08 (before)</text>
+<line x1="608.00" y1="84.00" x2="636.00" y2="84.00" fill="none" stroke="#7A828E" stroke-width="1.50" stroke-linejoin="round"/>
+<polygon points="622.00,79.80 626.00,87.00 618.00,87.00" fill="#7A828E"/>
+<text x="644.00" y="88.00">AMG, θ₀ = 0.08 (before)</text>
+<line x1="608.00" y1="106.00" x2="636.00" y2="106.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,101.80 626.00,109.00 618.00,109.00" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<text x="644.00" y="110.00">AMG-PCG, θ₀ = 0.02 (after)</text>
+<line x1="608.00" y1="128.00" x2="636.00" y2="128.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round"/>
+<polygon points="622.00,123.80 626.00,131.00 618.00,131.00" fill="#009E73"/>
+<text x="644.00" y="132.00">AMG, θ₀ = 0.02 (after)</text>
+<path d="M617.50 145.50 L626.50 154.50 M617.50 154.50 L626.50 145.50" stroke="#7A828E" stroke-width="1.8"/>
+<text x="644.00" y="154.00">stopped by the stagnation check</text>
+</g>
+</svg>

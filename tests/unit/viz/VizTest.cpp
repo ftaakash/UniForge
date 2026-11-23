@@ -204,5 +204,50 @@ TEST(SvgPlotExtras, StackedBarsValidateAndLabelTotals) {
     EXPECT_FALSE(renderSvgBars(spec));
 }
 
+TEST(SvgPlotExtras, LogBarsStartAtTheAxisFloorAndNeedPositiveTotals) {
+    BarChartSpec spec;
+    spec.title = "log bars";
+    spec.yLabel = "ms";
+    spec.logY = true;
+    spec.categories = {"a", "b"};
+    spec.stacks = {{"setup", "#0072B2", {0.2, 3000.0}, true}, {"solve", "#0072B2", {5.0, 1.0}}};
+    const auto svg = renderSvgBars(spec);
+    ASSERT_TRUE(svg);
+    EXPECT_NE(svg.value().find("10³"), std::string::npos); // power-of-ten ticks
+    EXPECT_EQ(svg.value().find("height=\"-"), std::string::npos);
+    spec.stacks = {{"setup", "#0072B2", {0.0, 1.0}}, {"solve", "#0072B2", {0.0, 1.0}}};
+    spec.categories = {"zero", "one"};
+    spec.stacks[0].values = {0.0, 0.0};
+    spec.stacks[1].values = {0.0, 0.0};
+    EXPECT_FALSE(renderSvgBars(spec)); // nothing positive to put on a log axis
+}
+
+TEST(SvgPlotExtras, OverlappingLabelsArePushedApartAndTheGutterMovesTheLegend) {
+    PlotSpec spec;
+    spec.title = "labels";
+    PlotSeries s;
+    s.x = {1.0, 2.0};
+    s.y = {1.0, 1.0};
+    s.label = "series";
+    spec.series = {s};
+    spec.annotations = {{2.0, 1.0, "first"}, {2.0, 1.0, "second"}};
+    const auto y = [](const std::string& svg, const std::string& text) {
+        const std::size_t at = svg.rfind("y=\"", svg.find(">" + text + "<"));
+        return std::stod(svg.substr(at + 3));
+    };
+    const auto a = renderSvgPlot(spec);
+    ASSERT_TRUE(a);
+    EXPECT_GE(y(a.value(), "second") - y(a.value(), "first"), 13.0 - 1e-9);
+    const auto legendX = [](const std::string& svg) {
+        const std::size_t at = svg.rfind("x=\"", svg.find(">series<"));
+        return std::stod(svg.substr(at + 3));
+    };
+    spec.labelGutter = 64;
+    const auto b = renderSvgPlot(spec);
+    ASSERT_TRUE(b);
+    EXPECT_NEAR(legendX(b.value()), legendX(a.value()), 1e-9); // legend keeps its place …
+    EXPECT_NE(a.value(), b.value());                           // … the plot area shrinks
+}
+
 } // namespace
 } // namespace uniforge::viz

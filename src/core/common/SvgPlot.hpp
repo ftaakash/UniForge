@@ -53,6 +53,7 @@ struct PlotSpec {
     std::vector<PlotAnnotation> annotations;
     bool powerTicks = false; // log axes: label 2×10⁵ / 10⁶ instead of 200000 / 1e+06
     std::string note; // one line of small text in the bottom right corner (data file, caveat)
+    int labelGutter = 0; // px between plot area and legend for labels at line ends (slopes)
 };
 
 // Stacked bar chart (setup + solve times, build spec §12.1 P14/P22): one bar per category, each
@@ -73,6 +74,7 @@ struct BarChartSpec {
     int width = 820;
     int height = 500;
     std::string note;
+    bool logY = false; // log axis: bars rise from the axis floor; all totals must be > 0
 };
 
 [[nodiscard]] Result<std::string> renderSvgBars(const BarChartSpec& spec);

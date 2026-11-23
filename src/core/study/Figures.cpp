@@ -438,8 +438,15 @@ struct Ctx {
     const Results& res;
     std::vector<FigureEntry>& entries;
 
-    Result<void> plot(const std::string& id, const std::string& file, const PlotSpec& spec,
+    Result<void> plot(const std::string& id, const std::string& file, const PlotSpec& in,
                       const std::string& sources) {
+        // Every plot is printed at full page width; 820 × 430 keeps it compact and its text
+        // readable (build spec §12.2).
+        PlotSpec spec = in;
+        if (spec.height == 500) {
+            spec.height = 430;
+        }
+        spec.labelGutter = 64; // slope and speed-up labels sit between the lines and the legend
         if (auto r = saveSvgPlot(spec, opt.out / file); !r) {
             return r;
         }
@@ -1704,66 +1711,94 @@ Result<void> figP20(Ctx& ctx) {
 
 // P21: failure modes.
 Result<void> figP21(Ctx& ctx) {
-    SvgCanvas c(1400, 560, "P21 failure modes");
-    heading(
-        c, "Failure modes: what each solver reports instead of a wrong answer",
-        "Left: E8, HS-7 with every face insulated (K singular). Right: all 241 official runs by "
-        "outcome.");
-    double y = 100;
-    c.text(30, y, "solver", 12.5, "start", kMuted, true);
-    c.text(190, y, "setup", 12.5, "start", kMuted, true);
-    c.text(320, y, "solve", 12.5, "start", kMuted, true);
-    c.text(450, y, "what it saw", 12.5, "start", kMuted, true);
+    // Rows first (the canvas height follows the content, so there is no empty area).
+    struct Line {
+        std::string solver, setup, solve;
+        std::vector<std::string> detail;
+    };
+    std::vector<Line> lines;
     for (const std::string& solver : solverOrder()) {
         const Row* r = ctx.res.find("E8-HS7-singular-s2.000-" + solver + "-noobs");
         if (r == nullptr) {
             continue;
         }
-        y += 30;
-        c.rect(24, y - 18, 1, 24, familyColor(solver));
-        c.text(30, y, solver, 13, "start", familyColor(solver), true);
-        c.text(190, y, str(*r, "setup_status"), 12.5, "start", kInk, false, true);
-        c.text(320, y, str(*r, "solve_status"), 12.5, "start", kInk, false, true);
         std::string detail = str(*r, "detail");
         // Result rows are ASCII (RunRecord::toCsv turned the superscript T into '?').
         for (std::size_t at = detail.find("p?Kp"); at != std::string::npos;
              at = detail.find("p?Kp")) {
             detail.replace(at, 4, "pᵀKp");
         }
-        if (detail.size() > 62) {
-            detail = detail.substr(0, 59) + "…";
+        // Wrap at word boundaries, about 60 characters per line, at most four lines.
+        std::vector<std::string> wrapped;
+        std::string cur;
+        std::size_t pos = 0;
+        while (pos < detail.size()) {
+            std::size_t sp = detail.find(' ', pos);
+            const std::string word =
+                detail.substr(pos, sp == std::string::npos ? std::string::npos : sp - pos);
+            if (!cur.empty() && cur.size() + 1 + word.size() > 60) {
+                wrapped.push_back(cur);
+                cur.clear();
+            }
+            cur += (cur.empty() ? "" : " ") + word;
+            pos = sp == std::string::npos ? detail.size() : sp + 1;
         }
-        c.text(450, y, detail, 11.5, "start", kMuted);
+        if (!cur.empty()) {
+            wrapped.push_back(cur);
+        }
+        if (wrapped.size() > 4) {
+            wrapped.resize(4);
+            wrapped.back() += " …";
+        }
+        lines.push_back({solver, str(*r, "setup_status"), str(*r, "solve_status"), wrapped});
     }
-    y += 36;
-    const Row* ic = ctx.res.find("E8-HS7-s0.500-PCG-IC0-noshift-noobs");
-    if (ic != nullptr) {
-        c.text(30, y,
-               "IC(0) without the shift ladder on HS-7 at 0.5 mm: " + str(*ic, "solve_status") +
-                   " in " + fmt(num(*ic, "iterations"), "%.0f") + " iterations (no breakdown seen)",
-               12.5);
-    }
-    // Outcome counts.
     std::map<std::string, int> counts;
     for (const Row& r : ctx.res.runs) {
-        const std::string s = str(r, "solve_status");
-        counts[s == "not run" ? "setup " + str(r, "setup_status")
-                              : (s.empty() ? "reference/check" : s)]++;
+        const std::string st = str(r, "solve_status");
+        counts[st == "not run" ? "setup " + str(r, "setup_status")
+                               : (st.empty() ? "reference/check" : st)]++;
     }
-    double yy = 100;
-    c.text(1000, yy, "outcome", 12.5, "start", kMuted, true);
-    c.text(1340, yy, "runs", 12.5, "end", kMuted, true);
+    double rowsH = 0.0;
+    for (const Line& l : lines) {
+        rowsH += 12.0 + 19.0 * static_cast<double>(std::max<std::size_t>(1, l.detail.size()));
+    }
+    const double height = 110.0 + rowsH + 50.0 + 26.0 * static_cast<double>(counts.size()) + 40.0;
+    SvgCanvas c(1000, static_cast<int>(height), "P21 failure modes");
+    heading(c, "Failure modes: what each solver reports instead of a wrong answer",
+            "Top: E8, HS-7 with every face insulated (K singular). Bottom: all " +
+                std::to_string(ctx.res.runs.size()) + " official runs by outcome.");
+    double y = 96;
+    c.text(24, y, "solver", 14, "start", kMuted, true);
+    c.text(170, y, "setup", 14, "start", kMuted, true);
+    c.text(290, y, "solve", 14, "start", kMuted, true);
+    c.text(410, y, "what it reported", 14, "start", kMuted, true);
+    y += 8;
+    for (const Line& l : lines) {
+        y += 22;
+        c.rect(18, y - 16, 2, 19.0 * static_cast<double>(l.detail.size()), familyColor(l.solver));
+        c.text(24, y, l.solver, 15, "start", familyColor(l.solver), true);
+        c.text(170, y, l.setup, 14, "start", kInk, false, true);
+        c.text(290, y, l.solve, 14, "start", kInk, false, true);
+        for (std::size_t k = 0; k < l.detail.size(); ++k) {
+            c.text(410, y + 19.0 * static_cast<double>(k), l.detail[k], 13.5, "start", kMuted);
+        }
+        y += 19.0 * static_cast<double>(std::max<std::size_t>(1, l.detail.size())) - 10.0;
+    }
+    y += 40;
+    c.line(18, y - 24, 982, y - 24, "#D3D9E1", 1.0);
+    c.text(24, y, "outcome (all runs)", 14, "start", kMuted, true);
+    c.text(360, y, "runs", 14, "end", kMuted, true);
     for (const auto& [k, n] : counts) {
-        yy += 26;
-        c.text(1000, yy, k, 13);
-        c.text(1340, yy, std::to_string(n), 13, "end", kInk, false, true);
+        y += 26;
+        c.text(24, y, k, 15);
+        c.text(360, y, std::to_string(n), 15, "end", kInk, false, true);
     }
-    yy += 34;
-    c.textBlock(1000, yy,
-                "No run crashed, hit a time cap\nor was killed by the memory cap.\nBreakdowns: "
-                "the singular E8\ncases only. Over budget: direct\nbeyond 568 k (RCM) / 1.02 M "
-                "(ND)\nDOF.",
-                12, 1.4, kMuted);
+    c.textBlock(410, y - 26.0 * static_cast<double>(counts.size()) + 6.0,
+                "No run crashed, hit a time cap or was killed by the memory cap.\n"
+                "Breakdowns: the singular E8 cases only.\n"
+                "Over budget: the direct solvers on the largest meshes, refused\n"
+                "by the symbolic size check before any memory was allocated.",
+                14, 1.45, kMuted);
     return ctx.canvas("P21", "P21_failure_modes.svg", c, "Failure-mode table and E8 outcomes",
                       "results/v2/csv/E8.csv, all_runs.csv");
 }
@@ -1772,7 +1807,8 @@ Result<void> figP21(Ctx& ctx) {
 Result<void> figP22(Ctx& ctx) {
     BarChartSpec spec;
     spec.title = "Same physics, two simple objects: v1 bar (10 k DOF) vs cube (16 k DOF)";
-    spec.yLabel = "setup + solve (ms)";
+    spec.yLabel = "setup + solve (ms, log scale)";
+    spec.logY = true;
     BarStack setup{"setup (light)", kInk, {}, true};
     BarStack solve{"solve", kInk, {}, false};
     for (const auto& [obj, sys] : std::vector<std::pair<std::string, std::string>>{
@@ -1782,7 +1818,10 @@ Result<void> figP22(Ctx& ctx) {
             if (r == nullptr || !converged(*r)) {
                 continue;
             }
-            spec.categories.push_back(solver + "\n" + obj);
+            // "ND" / "RCM": the colour already says direct, and the full names collide.
+            const std::string shortName =
+                solver.rfind("DIRECT-", 0) == 0 ? solver.substr(7) : solver;
+            spec.categories.push_back(shortName + "\n" + obj);
             setup.values.push_back(num(*r, "setup_s") * 1e3);
             solve.values.push_back(num(*r, "solve_s_median") * 1e3);
             spec.barColors.push_back(familyColor(solver));
@@ -1792,10 +1831,125 @@ Result<void> figP22(Ctx& ctx) {
         return makeError(ErrorCode::InvalidInput, "P22 needs results/v2/csv/E0.csv");
     }
     spec.stacks = {setup, solve};
-    spec.width = 1300;
+    spec.width = 1000;
+    spec.height = 460;
     spec.note =
         "data: results/v2/csv/E0.csv; all six give the same peak temperature (188.2 °C, 100.0 °C)";
     return ctx.bars("P22", "P22_bar_vs_cube.svg", spec, "results/v2/csv/E0.csv");
+}
+
+// P23: E6 thread scaling of PCG-J and AMG-PCG.
+Result<void> figP23(Ctx& ctx) {
+    PlotSpec spec;
+    spec.title = "All cores: time vs threads (HS-7, 568 k DOF, E6)";
+    spec.xLabel = "threads";
+    spec.yLabel = "setup + solve (s)";
+    spec.logX = spec.logY = true;
+    double serialJ = kNaN;
+    for (const std::string solver : {"PCG-J", "AMG-PCG"}) {
+        auto rows = ctx.res.where([&](const Row& r) {
+            return str(r, "experiment") == "E6" && str(r, "solver") == solver && converged(r);
+        });
+        std::sort(rows.begin(), rows.end(), [](const Row* a, const Row* b) {
+            return num(*a, "threads") < num(*b, "threads");
+        });
+        PlotSeries ser = styled(solver);
+        for (const Row* r : rows) {
+            ser.x.push_back(num(*r, "threads"));
+            ser.y.push_back(num(*r, "total_s_median"));
+        }
+        if (ser.x.empty()) {
+            continue;
+        }
+        if (solver == "PCG-J") {
+            serialJ = ser.y.front();
+        }
+        spec.annotations.push_back({ser.x.back(), ser.y.back(),
+                                    "speed-up " + fmt(ser.y.front() / ser.y.back(), "%.2f") +
+                                        "× at " + fmt(ser.x.back(), "%.0f") + " threads",
+                                    ser.color, 8.0, 4.0});
+        spec.series.push_back(ser);
+    }
+    if (spec.series.empty()) {
+        return makeError(ErrorCode::InvalidInput, "P23 needs the E6 rows of all_runs.csv");
+    }
+    if (std::isfinite(serialJ)) {
+        spec.series.push_back(
+            reference("ideal speed-up from serial PCG-J", {1.0, 20.0}, {serialJ, serialJ / 20.0}));
+    }
+    spec.height = 430;
+    spec.note = "data: results/v2/csv/E6.csv (one process per run, medians)";
+    return ctx.plot("P23", "P23_thread_scaling.svg", spec, "results/v2/csv/E6.csv");
+}
+
+// P24: the AMG strength-threshold fix, before (θ₀ = 0.08) and after (0.02), on the E2 sweep.
+Result<void> figP24(Ctx& ctx) {
+    const auto file = ctx.opt.results.parent_path() / "v2_superseded" / "amg_theta008" /
+                      "compare_theta008_vs_002.csv";
+    auto rows = readCsv(file);
+    if (!rows) {
+        return std::move(rows).error();
+    }
+    PlotSpec spec;
+    spec.title = "AMG strength threshold: before (θ₀ = 0.08) and after (θ₀ = 0.02), HS-7";
+    spec.xLabel = "DOF";
+    spec.yLabel = "iterations / cycles to 1e-10";
+    spec.logX = spec.logY = true;
+    spec.powerTicks = true;
+    struct Pick {
+        std::string solver, theta, label;
+        bool after;
+    };
+    const std::vector<Pick> picks = {{"AMG-PCG", "008", "AMG-PCG, θ₀ = 0.08 (before)", false},
+                                     {"AMG", "008", "AMG, θ₀ = 0.08 (before)", false},
+                                     {"AMG-PCG", "002", "AMG-PCG, θ₀ = 0.02 (after)", true},
+                                     {"AMG", "002", "AMG, θ₀ = 0.02 (after)", true}};
+    PlotSeries stalled;
+    stalled.label = "stopped by the stagnation check";
+    stalled.color = kGrey;
+    stalled.line = false;
+    stalled.marker = PlotMarker::Cross;
+    for (const Pick& pk : picks) {
+        std::vector<std::pair<double, double>> pts;
+        for (const Row& r : rows.value()) {
+            const std::string id = str(r, "id");
+            const std::string suffix = "-" + pk.solver;
+            if (id.rfind("E2-HS7-s", 0) != 0 || id.size() < suffix.size() ||
+                id.compare(id.size() - suffix.size(), suffix.size(), suffix) != 0) {
+                continue;
+            }
+            const double it = num(r, "iterations_" + pk.theta);
+            if (str(r, "status_" + pk.theta) == "Stagnated") {
+                stalled.x.push_back(num(r, "dof"));
+                stalled.y.push_back(it);
+                continue;
+            }
+            pts.emplace_back(num(r, "dof"), it);
+        }
+        std::sort(pts.begin(), pts.end());
+        PlotSeries ser = styled(pk.solver);
+        ser.label = pk.label;
+        if (!pk.after) {
+            ser.color = kGrey;
+        }
+        for (const auto& [x, y] : pts) {
+            ser.x.push_back(x);
+            ser.y.push_back(y);
+        }
+        if (!ser.x.empty()) {
+            spec.series.push_back(ser);
+        }
+    }
+    if (!stalled.x.empty()) {
+        spec.series.push_back(stalled);
+    }
+    if (spec.series.empty()) {
+        return makeError(ErrorCode::InvalidInput, "P24: no E2 rows in " + file.u8string());
+    }
+    spec.height = 430;
+    spec.note = "data: results/v2_superseded/amg_theta008/compare_theta008_vs_002.csv";
+    return ctx.plot("P24", "P24_amg_threshold_fix.svg", spec,
+                    "results/v2_superseded/amg_theta008/compare_theta008_vs_002.csv");
 }
 
 bool wanted(const FigureOptions& o, const std::string& id) {
@@ -1845,7 +1999,8 @@ Result<std::vector<FigureEntry>> makeFigures(const FigureOptions& options) {
         {"P15", [&] { return figP15(ctx); }}, {"P16", [&] { return figP16(ctx); }},
         {"P17", [&] { return figP17(ctx); }}, {"P18", [&] { return figP18(ctx); }},
         {"P19", [&] { return figP19(ctx); }}, {"P20", [&] { return figP20(ctx); }},
-        {"P21", [&] { return figP21(ctx); }}, {"P22", [&] { return figP22(ctx); }}};
+        {"P21", [&] { return figP21(ctx); }}, {"P22", [&] { return figP22(ctx); }},
+        {"P23", [&] { return figP23(ctx); }}, {"P24", [&] { return figP24(ctx); }}};
     for (const auto& [id, f] : simple) {
         if (auto r = run(id, f); !r) {
             return std::move(r).error();

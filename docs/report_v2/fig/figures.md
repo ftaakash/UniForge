@@ -32,3 +32,5 @@ Written by `uniforge_cli study figures` from `results/v2` (build spec §12.1). E
 | P20 | [P20_iterations_vs_sqrt_kappa.svg](P20_iterations_vs_sqrt_kappa.svg) | Iterations vs √κ estimate (E2 sizes and E3 conditioning sweep) | results/v2/csv/E2.csv, E3.csv |
 | P21 | [P21_failure_modes.svg](P21_failure_modes.svg) | Failure-mode table and E8 outcomes | results/v2/csv/E8.csv, all_runs.csv |
 | P22 | [P22_bar_vs_cube.svg](P22_bar_vs_cube.svg) | Same physics, two simple objects: v1 bar (10 k DOF) vs cube (16 k DOF) | results/v2/csv/E0.csv |
+| P23 | [P23_thread_scaling.svg](P23_thread_scaling.svg) | All cores: time vs threads (HS-7, 568 k DOF, E6) | results/v2/csv/E6.csv |
+| P24 | [P24_amg_threshold_fix.svg](P24_amg_threshold_fix.svg) | AMG strength threshold: before (θ₀ = 0.08) and after (θ₀ = 0.02), HS-7 | results/v2_superseded/amg_theta008/compare_theta008_vs_002.csv |
