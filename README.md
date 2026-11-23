@@ -13,19 +13,30 @@ numerics, file processing and concurrency are written in C++17.
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
-## V2 status (work in progress on branch [`v2`](https://github.com/ftaakash/UniForge/tree/v2))
+## V2: complete (release [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0), branch [`v2`](https://github.com/ftaakash/UniForge/tree/v2))
 
 This branch (`main`) and the tag `v1.0.0` are the submitted v1 and stay unchanged apart from
 this note. V2 answers the Assignment Extension Notice: three different solver types applied to
 the same steady thermal analysis on a more complex 3D object, delivered as one PDF report.
 
+- **Report:** [UniForge_V2_Report.pdf](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/report_v2/UniForge_V2_Report.pdf)
+  (22 pages, no source code). Every number in it is filled in from the committed results and
+  listed with its source in [provenance.csv](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/report_v2/provenance.csv).
 - **Object:** HS-7, a finned heat sink on a heated die with a thin thermal interface layer, plus
   a complexity ladder from the v1 bar and a cube to a pin-fin variant.
 - **Solvers:** sparse direct Cholesky (RCM and nested-dissection orderings), preconditioned
   conjugate gradients (Jacobi, IC(0)) and smoothed-aggregation algebraic multigrid, written from
   scratch on shared, deterministic sparse kernels.
-- **Specification:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2/docs/design/v2/UniForge_V2_Build_Spec.md);
-  progress and build notes in the [`v2` README](https://github.com/ftaakash/UniForge/blob/v2/README.md).
+- **Answer:** all six variants give the same temperatures; AMG-PCG is the fastest at every
+  measured HS-7 size (56 k to 3.76 M unknowns) and for 1 to 20 load cases. The direct solver
+  wins only on small, slender problems and reaches its 8 GB memory wall at 0.57 M (RCM) and
+  1.02 M (nested dissection) unknowns; Jacobi-PCG wins on the compact cube and uses the least
+  memory.
+- **Evidence:** one official batch of 241 runs (`results/v2` on the `v2` branch); the 72 AMG
+  rows were re-run after a strength-threshold fix found by the batch, with the earlier rows kept
+  for comparison.
+- **Specification and build notes:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/design/v2/UniForge_V2_Build_Spec.md),
+  [`v2` README](https://github.com/ftaakash/UniForge/blob/v2.0.0/README.md).
 
 | Phase | Content | Status (2026-11-23) |
 |---|---|---|
@@ -37,17 +48,16 @@ the same steady thermal analysis on a more complex 3D object, delivered as one P
 | V2-5 | Sparse direct Cholesky (RCM and nested-dissection orderings) | Done, tag `v2-phase-5` |
 | V2-6 | IC(0) preconditioner with shift ladder (PCG-IC0) | Done, tag `v2-phase-6` |
 | V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG): all six solver variants built | Done, tag `v2-phase-7` |
-| V2-8 | Experiment harness and the official overnight batch (241 runs, all left a result; 205 converged) | Done, tag `v2-phase-8` |
-| V2-9 | Figures P1–P22: CPU rasteriser, sparsity plots, compressed PNG, `study figures` | Built, tag `v2-phase-9`; CI failed (see below) |
-| V2-10 | PDF report | Planned |
+| V2-8 | Experiment harness and the official overnight batch (241 runs) | Done, tag `v2-phase-8` |
+| V2-9 | Figures: CPU rasteriser, sparsity plots, compressed PNG, `study figures` | Done, tag `v2-phase-9` |
+| V2-9.1 | Fixes: renders as separate PNG files; AMG strength threshold 0.08 → 0.02 and the AMG rows re-run | Done, tag `v2-phase-9.1` |
+| V2-10 | PDF report with numbers traced to the results | Done, tag `v2-phase-10` = release `v2.0.0` |
 
-Each phase tag runs the Windows and Linux (ASan/TSan) CI. All pass except `v2-phase-5` and `v2-phase-9`. `v2-phase-5`'s
-Linux build failed on a GCC 13 false-positive warning; the one-line fix is in the next commit and
-passed CI with `v2-phase-6`. `v2-phase-9` failed CI twice: a GCC sign-conversion error in a new test
-(fixed on `v2` in the next commit, not yet re-run) and the packaging hygiene scan, which flags the
-base64 images embedded in the new figure SVGs (open). No V2 results are final until the report is written: the official
-batch showed a suspected AMG tuning weakness (strength threshold), checked as a candidate and
-awaiting a decision before the report.
+Each phase tag runs the Windows and Linux (ASan/UBSan, TSan) CI. The release commit passed all
+three jobs. Two earlier phase tags failed CI and were fixed in the next tag: `v2-phase-5` (a
+GCC 13 false-positive warning, green from `v2-phase-6`) and `v2-phase-9` (a GCC sign-conversion
+error in a test and the packaging hygiene scan flagging base64 images in the figure SVGs; both
+fixed and green in `v2-phase-9.1`).
 
 ## Features
 
