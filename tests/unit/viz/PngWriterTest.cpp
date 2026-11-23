@@ -35,8 +35,10 @@ public:
             if (type == 0) {
                 bit_ = 0; // byte align
                 ++pos_;
-                const std::uint32_t len = z_[pos_] | (z_[pos_ + 1] << 8);
-                const std::uint32_t nlen = z_[pos_ + 2] | (z_[pos_ + 3] << 8);
+                const std::uint32_t len =
+                    std::uint32_t{z_[pos_]} | (std::uint32_t{z_[pos_ + 1]} << 8U);
+                const std::uint32_t nlen =
+                    std::uint32_t{z_[pos_ + 2]} | (std::uint32_t{z_[pos_ + 3]} << 8U);
                 if ((len ^ 0xFFFFU) != nlen) {
                     throw std::runtime_error("bad stored length");
                 }
@@ -60,7 +62,8 @@ private:
             if (pos_ >= z_.size()) {
                 throw std::runtime_error("out of data");
             }
-            v |= static_cast<std::uint32_t>((z_[pos_] >> bit_) & 1U) << i;
+            v |= ((std::uint32_t{z_[pos_]} >> static_cast<unsigned>(bit_)) & 1U)
+                 << static_cast<unsigned>(i);
             if (++bit_ == 8) {
                 bit_ = 0;
                 ++pos_;
