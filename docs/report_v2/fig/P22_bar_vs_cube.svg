@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="500" viewBox="0 0 1300 500" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>Same physics, two simple objects: v1 bar (10 k DOF) vs cube (16 k DOF)</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="416.00" x2="1070.00" y2="416.00"/>
+<line x1="80.00" y1="293.33" x2="1070.00" y2="293.33"/>
+<line x1="80.00" y1="170.67" x2="1070.00" y2="170.67"/>
+<line x1="80.00" y1="48.00" x2="1070.00" y2="48.00"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="72.00" y="420.00" text-anchor="end">0</text>
+<text x="72.00" y="297.33" text-anchor="end">2000</text>
+<text x="72.00" y="174.67" text-anchor="end">4000</text>
+<text x="72.00" y="52.00" text-anchor="end">6000</text>
+</g>
+<rect x="97.10" y="414.30" width="55.80" height="1.70" fill="#0072B2" fill-opacity="0.4"/>
+<rect x="97.10" y="414.25" width="55.80" height="0.04" fill="#0072B2"/>
+<text x="125.00" y="409.25" font-size="11" text-anchor="middle" fill="#1A1E24">28.5</text>
+<text x="125.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">DIRECT-ND</text>
+<text x="125.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">bar</text>
+<rect x="187.10" y="415.62" width="55.80" height="0.38" fill="#0072B2" fill-opacity="0.4"/>
+<rect x="187.10" y="415.60" width="55.80" height="0.02" fill="#0072B2"/>
+<text x="215.00" y="410.60" font-size="11" text-anchor="middle" fill="#1A1E24">6.46</text>
+<text x="215.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">DIRECT-RCM</text>
+<text x="215.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">bar</text>
+<rect x="277.10" y="415.99" width="55.80" height="0.01" fill="#E69F00" fill-opacity="0.4"/>
+<rect x="277.10" y="413.65" width="55.80" height="2.34" fill="#E69F00"/>
+<text x="305.00" y="408.65" font-size="11" text-anchor="middle" fill="#1A1E24">38.3</text>
+<text x="305.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">PCG-J</text>
+<text x="305.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">bar</text>
+<rect x="367.10" y="415.92" width="55.80" height="0.08" fill="#E69F00" fill-opacity="0.4"/>
+<rect x="367.10" y="413.98" width="55.80" height="1.94" fill="#E69F00"/>
+<text x="395.00" y="408.98" font-size="11" text-anchor="middle" fill="#1A1E24">33</text>
+<text x="395.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">PCG-IC0</text>
+<text x="395.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">bar</text>
+<rect x="457.10" y="415.71" width="55.80" height="0.29" fill="#009E73" fill-opacity="0.4"/>
+<rect x="457.10" y="413.13" width="55.80" height="2.59" fill="#009E73"/>
+<text x="485.00" y="408.13" font-size="11" text-anchor="middle" fill="#1A1E24">46.9</text>
+<text x="485.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">AMG-PCG</text>
+<text x="485.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">bar</text>
+<rect x="547.10" y="263.04" width="55.80" height="152.96" fill="#0072B2" fill-opacity="0.4"/>
+<rect x="547.10" y="262.47" width="55.80" height="0.57" fill="#0072B2"/>
+<text x="575.00" y="257.47" font-size="11" text-anchor="middle" fill="#1A1E24">2.5e+03</text>
+<text x="575.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">DIRECT-ND</text>
+<text x="575.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">cube</text>
+<rect x="637.10" y="101.89" width="55.80" height="314.11" fill="#0072B2" fill-opacity="0.4"/>
+<rect x="637.10" y="100.70" width="55.80" height="1.19" fill="#0072B2"/>
+<text x="665.00" y="95.70" font-size="11" text-anchor="middle" fill="#1A1E24">5.14e+03</text>
+<text x="665.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">DIRECT-RCM</text>
+<text x="665.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">cube</text>
+<rect x="727.10" y="415.98" width="55.80" height="0.02" fill="#E69F00" fill-opacity="0.4"/>
+<rect x="727.10" y="415.73" width="55.80" height="0.25" fill="#E69F00"/>
+<text x="755.00" y="410.73" font-size="11" text-anchor="middle" fill="#1A1E24">4.4</text>
+<text x="755.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">PCG-J</text>
+<text x="755.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">cube</text>
+<rect x="817.10" y="415.83" width="55.80" height="0.17" fill="#E69F00" fill-opacity="0.4"/>
+<rect x="817.10" y="415.19" width="55.80" height="0.64" fill="#E69F00"/>
+<text x="845.00" y="410.19" font-size="11" text-anchor="middle" fill="#1A1E24">13.2</text>
+<text x="845.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">PCG-IC0</text>
+<text x="845.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">cube</text>
+<rect x="907.10" y="415.65" width="55.80" height="0.35" fill="#009E73" fill-opacity="0.4"/>
+<rect x="907.10" y="393.73" width="55.80" height="21.91" fill="#009E73"/>
+<text x="935.00" y="388.73" font-size="11" text-anchor="middle" fill="#1A1E24">363</text>
+<text x="935.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">AMG</text>
+<text x="935.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">cube</text>
+<rect x="997.10" y="415.63" width="55.80" height="0.37" fill="#009E73" fill-opacity="0.4"/>
+<rect x="997.10" y="414.33" width="55.80" height="1.30" fill="#009E73"/>
+<text x="1025.00" y="409.33" font-size="11" text-anchor="middle" fill="#1A1E24">27.3</text>
+<text x="1025.00" y="433.00" font-size="11.5" text-anchor="middle" fill="#1A1E24">AMG-PCG</text>
+<text x="1025.00" y="448.00" font-size="11.5" text-anchor="middle" fill="#59616E">cube</text>
+<line x1="80.00" y1="416.00" x2="1070.00" y2="416.00" stroke="#1A1E24"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">Same physics, two simple objects: v1 bar (10 k DOF) vs cube (16 k DOF)</text>
+<text transform="translate(20 232.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">setup + solve (ms)</text>
+<rect x="1088.00" y="55.00" width="22" height="14" fill="#1A1E24" fill-opacity="0.45"/>
+<text x="1118.00" y="66.00" font-size="12" fill="#1A1E24">setup (light)</text>
+<rect x="1088.00" y="77.00" width="22" height="14" fill="#1A1E24"/>
+<text x="1118.00" y="88.00" font-size="12" fill="#1A1E24">solve</text>
+<text x="1292.00" y="496.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2/csv/E0.csv; all six give the same peak temperature (188.2 °C, 100.0 °C)</text>
+</svg>

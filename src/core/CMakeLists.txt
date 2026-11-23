@@ -48,6 +48,7 @@ add_library(uniforge_core STATIC
     sparse/SparseOps.cpp
     sparse/VectorOps.cpp
     study/Collect.cpp
+    study/Figures.cpp
     study/Plan.cpp
     study/Runner.cpp
     thermal/Analytical.cpp
@@ -57,7 +58,13 @@ add_library(uniforge_core STATIC
     thermal/ErrorAnalysis.cpp
     thermal/RodProblem.cpp
     thermal/RodSolver.cpp
-    thermal/ThomasSolver.cpp)
+    thermal/ThomasSolver.cpp
+    viz/Colormap.cpp
+    viz/Image.cpp
+    viz/PngWriter.cpp
+    viz/Raster3D.cpp
+    viz/Spy.cpp
+    viz/SvgCanvas.cpp)
 if(WIN32)
     target_sources(uniforge_core PRIVATE perf/SystemInfo_win.cpp)
 else()

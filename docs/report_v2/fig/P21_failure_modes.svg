@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>P21 failure modes</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Failure modes: what each solver reports instead of a wrong answer</text>
+<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Left: E8, HS-7 with every face insulated (K singular). Right: all 241 official runs by outcome.</text>
+<text x="30.00" y="100.00" font-size="12.50" text-anchor="start" fill="#59616E" font-weight="600">solver</text>
+<text x="190.00" y="100.00" font-size="12.50" text-anchor="start" fill="#59616E" font-weight="600">setup</text>
+<text x="320.00" y="100.00" font-size="12.50" text-anchor="start" fill="#59616E" font-weight="600">solve</text>
+<text x="450.00" y="100.00" font-size="12.50" text-anchor="start" fill="#59616E" font-weight="600">what it saw</text>
+<rect x="24.00" y="112.00" width="1.00" height="24.00" fill="#0072B2" stroke="none" stroke-width="1.00"/>
+<text x="30.00" y="130.00" font-size="13.00" text-anchor="start" fill="#0072B2" font-weight="600">DIRECT-ND</text>
+<text x="190.00" y="130.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="320.00" y="130.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="450.00" y="130.00" font-size="11.50" text-anchor="start" fill="#59616E">The direct solution leaves a relative residual of 2.081: K …</text>
+<rect x="24.00" y="142.00" width="1.00" height="24.00" fill="#0072B2" stroke="none" stroke-width="1.00"/>
+<text x="30.00" y="160.00" font-size="13.00" text-anchor="start" fill="#0072B2" font-weight="600">DIRECT-RCM</text>
+<text x="190.00" y="160.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="320.00" y="160.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="450.00" y="160.00" font-size="11.50" text-anchor="start" fill="#59616E">The direct solution leaves a relative residual of 2.624: K …</text>
+<rect x="24.00" y="172.00" width="1.00" height="24.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
+<text x="30.00" y="190.00" font-size="13.00" text-anchor="start" fill="#E69F00" font-weight="600">PCG-J</text>
+<text x="190.00" y="190.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="320.00" y="190.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="450.00" y="190.00" font-size="11.50" text-anchor="start" fill="#59616E">pᵀKp = -5.18e+22 at iteration 503: K is not symmetric pos…</text>
+<rect x="24.00" y="202.00" width="1.00" height="24.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
+<text x="30.00" y="220.00" font-size="13.00" text-anchor="start" fill="#E69F00" font-weight="600">PCG-IC0</text>
+<text x="190.00" y="220.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="320.00" y="220.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="450.00" y="220.00" font-size="11.50" text-anchor="start" fill="#59616E">pᵀKp = -3.95e+15 at iteration 76: K is not symmetric posi…</text>
+<rect x="24.00" y="232.00" width="1.00" height="24.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="30.00" y="250.00" font-size="13.00" text-anchor="start" fill="#009E73" font-weight="600">AMG</text>
+<text x="190.00" y="250.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="320.00" y="250.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">not run</text>
+<text x="450.00" y="250.00" font-size="11.50" text-anchor="start" fill="#59616E">Coarsest-level factorisation failed: Cholesky pivot -2.224e…</text>
+<rect x="24.00" y="262.00" width="1.00" height="24.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="30.00" y="280.00" font-size="13.00" text-anchor="start" fill="#009E73" font-weight="600">AMG-PCG</text>
+<text x="190.00" y="280.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="320.00" y="280.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">not run</text>
+<text x="450.00" y="280.00" font-size="11.50" text-anchor="start" fill="#59616E">Coarsest-level factorisation failed: Cholesky pivot -2.224e…</text>
+<text x="30.00" y="316.00" font-size="12.50" text-anchor="start" fill="#1A1E24">IC(0) without the shift ladder on HS-7 at 0.5 mm: Converged in 347 iterations (no breakdown seen)</text>
+<text x="1000.00" y="100.00" font-size="12.50" text-anchor="start" fill="#59616E" font-weight="600">outcome</text>
+<text x="1340.00" y="100.00" font-size="12.50" text-anchor="end" fill="#59616E" font-weight="600">runs</text>
+<text x="1000.00" y="126.00" font-size="13.00" text-anchor="start" fill="#1A1E24">Breakdown</text>
+<text x="1340.00" y="126.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">4</text>
+<text x="1000.00" y="152.00" font-size="13.00" text-anchor="start" fill="#1A1E24">Converged</text>
+<text x="1340.00" y="152.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">205</text>
+<text x="1000.00" y="178.00" font-size="13.00" text-anchor="start" fill="#1A1E24">Stagnated</text>
+<text x="1340.00" y="178.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">23</text>
+<text x="1000.00" y="204.00" font-size="13.00" text-anchor="start" fill="#1A1E24">setup Breakdown</text>
+<text x="1340.00" y="204.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">2</text>
+<text x="1000.00" y="230.00" font-size="13.00" text-anchor="start" fill="#1A1E24">setup OverBudget</text>
+<text x="1340.00" y="230.00" font-size="13.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">7</text>
+<text x="1000.00" y="264.00" font-size="12.00" text-anchor="start" fill="#59616E">No run crashed, hit a time cap</text>
+<text x="1000.00" y="280.80" font-size="12.00" text-anchor="start" fill="#59616E">or was killed by the memory cap.</text>
+<text x="1000.00" y="297.60" font-size="12.00" text-anchor="start" fill="#59616E">Stagnated: stand-alone AMG.</text>
+<text x="1000.00" y="314.40" font-size="12.00" text-anchor="start" fill="#59616E">Over budget: direct beyond 568 k</text>
+<text x="1000.00" y="331.20" font-size="12.00" text-anchor="start" fill="#59616E">(RCM) / 1.02 M (ND) DOF.</text>
+</svg>

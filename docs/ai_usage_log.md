@@ -1186,6 +1186,49 @@ a persistent kernel pool instead.
   atomic rename on Windows; the dry run did not show it because nobody read the log. Fixed and
   pinned by the smoke test.
 
+## 2026-11-23: Figures (Phase V2-9)
+
+### Prompts (representative)
+1. Same session as the official batch: "... once the run is done, make necessary changes and
+   start the next phase and push that also" (the user was asleep; no review between phases).
+
+### Outputs (files, functions)
+- `src/core/viz/`: `Image`, `Colormap` (inferno fit as in v1, categorical), `Raster3D`
+  (`Camera::fit`, `render`), `Spy` (`renderSpy`), `SvgCanvas` (`base64`, `colorbar`, `arrow`),
+  `PngWriter` (moved from `app/render`; `zlibCompress` with fixed-Huffman deflate).
+- `src/core/common/SvgPlot.*`: hollow/cross markers, annotations, note, `powerOfTenLabel`,
+  `renderSvgBars`.
+- `src/core/study/Figures.*` and `uniforge_cli study figures`; `docs/report_v2/fig/` (28 files
+  and `figures.md`).
+- Tests: `tests/unit/viz/VizTest.cpp` (13), `tests/unit/viz/PngWriterTest.cpp` (moved, now
+  with an independent inflater), `tests/integration/study_figures.cmake`.
+- Candidate AMG check (θ₀ = 0.02) on 72 runs in `build/amg_cand`, summarised in
+  `docs/v2_experiments.md`; not committed as results.
+
+### My edits
+- None yet; the phase was built while the user slept and is for their review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **421/421 tests pass in both**.
+- Every figure rasterised with headless Edge and inspected by eye; layout fixes made for P1, P2,
+  P3, P5, P11, P12, P14, P16, P17 and P21 after the first look.
+- PNG output checked by an inflater written in the test (stored and fixed-Huffman blocks) and by
+  undoing the row filters back to the exact pixels.
+- Linux CI not run yet (runs on push of the tag).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **A placeholder line that allocated memory** (`*new Vec3[1]{}`) was written into the
+  rasteriser's segment pass while drafting; replaced by the real depth-tested brush before the
+  first build.
+- **Changed aggregate initialisation order:** adding `hollow` before `strokeWidth` in
+  `PlotSeries` broke v1's brace-initialised series (MSVC narrowing errors in
+  `BenchmarkReportIO.cpp`); the field was moved to the end.
+- **Figure details read from ASCII result rows:** the CSV sanitiser had turned `pᵀKp` into
+  `p?Kp`; P21 restores it for display.
+- **AMG explanation refined by P9:** the first wording said every coupling is weak; P9 showed
+  only 0.6 % isolated nodes on HS-7 at 1 mm (stretched cells keep some strong couplings). The
+  note now says this holds for cubic cells, and the candidate table states what was measured.
+
 ## Entry template
 
 ```markdown

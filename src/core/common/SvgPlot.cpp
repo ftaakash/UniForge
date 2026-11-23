@@ -53,6 +53,16 @@ std::string escapeXml(const std::string& text) {
     return out;
 }
 
+std::string superscript(int e) {
+    static const char* digits[] = {"⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"};
+    std::string out = e < 0 ? "⁻" : "";
+    const std::string d = std::to_string(e < 0 ? -e : e);
+    for (const char c : d) {
+        out += digits[c - '0'];
+    }
+    return out;
+}
+
 // One axis: data range → pixel range, with its tick values.
 struct Axis {
     bool log = false;
@@ -174,11 +184,18 @@ Result<void> validateSpec(const PlotSpec& spec) {
     return {};
 }
 
-std::string markerSvg(PlotMarker marker, double x, double y, const std::string& color) {
-    const std::string fill = "fill=\"" + color + "\"";
+std::string markerSvg(PlotMarker marker, double x, double y, const std::string& color,
+                      bool hollow = false) {
+    const std::string fill = hollow
+                                 ? "fill=\"#FFFFFF\" stroke=\"" + color + "\" stroke-width=\"1.5\""
+                                 : "fill=\"" + color + "\"";
     switch (marker) {
     case PlotMarker::None:
         return {};
+    case PlotMarker::Cross:
+        return "<path d=\"M" + num(x - 4.5) + " " + num(y - 4.5) + " L" + num(x + 4.5) + " " +
+               num(y + 4.5) + " M" + num(x - 4.5) + " " + num(y + 4.5) + " L" + num(x + 4.5) + " " +
+               num(y - 4.5) + "\" stroke=\"" + color + "\" stroke-width=\"1.8\"/>";
     case PlotMarker::Circle:
         return "<circle cx=\"" + num(x) + "\" cy=\"" + num(y) + "\" r=\"3.5\" " + fill + "/>";
     case PlotMarker::Square:
@@ -247,8 +264,7 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
     svg += "<rect width=\"100%\" height=\"100%\" fill=\"" + std::string(plotcolor::kBackground) +
            "\"/>\n";
     svg += "<defs><clipPath id=\"plot-area\"><rect x=\"" + num(left) + "\" y=\"" + num(top) +
-           "\" width=\"" + num(plotW) + "\" height=\"" + num(plotH) +
-           "\"/></clipPath></defs>\n";
+           "\" width=\"" + num(plotW) + "\" height=\"" + num(plotH) + "\"/></clipPath></defs>\n";
 
     // Grid and tick labels.
     svg += "<g stroke=\"" + std::string(plotcolor::kGrid) + "\" stroke-width=\"1\">\n";
@@ -262,13 +278,19 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
     }
     svg += "</g>\n";
     svg += "<g font-size=\"12\" fill=\"" + std::string(plotcolor::kTextSecondary) + "\">\n";
+    const auto xLabel = [&](double t) {
+        return spec.powerTicks && spec.logX ? powerOfTenLabel(t) : tickLabel(t);
+    };
+    const auto yLabel = [&](double t) {
+        return spec.powerTicks && spec.logY ? powerOfTenLabel(t) : tickLabel(t);
+    };
     for (const double t : ax.ticks) {
         svg += "<text x=\"" + num(px(t)) + "\" y=\"" + num(bottom + 18.0) +
-               "\" text-anchor=\"middle\">" + tickLabel(t) + "</text>\n";
+               "\" text-anchor=\"middle\">" + xLabel(t) + "</text>\n";
     }
     for (const double t : ay.ticks) {
         svg += "<text x=\"" + num(left - 8.0) + "\" y=\"" + num(py(t) + 4.0) +
-               "\" text-anchor=\"end\">" + tickLabel(t) + "</text>\n";
+               "\" text-anchor=\"end\">" + yLabel(t) + "</text>\n";
     }
     svg += "</g>\n";
     svg += "<rect x=\"" + num(left) + "\" y=\"" + num(top) + "\" width=\"" + num(plotW) +
@@ -296,10 +318,24 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
             svg += "\"/>\n";
         }
         for (std::size_t i = 0; i < s.x.size() && s.marker != PlotMarker::None; ++i) {
-            svg += markerSvg(s.marker, px(s.x[i]), py(s.y[i]), s.color) + "\n";
+            svg += markerSvg(s.marker, px(s.x[i]), py(s.y[i]), s.color, s.hollow) + "\n";
         }
     }
     svg += "</g>\n";
+    for (const PlotAnnotation& a : spec.annotations) {
+        if ((spec.logX && a.x <= 0.0) || (spec.logY && a.y <= 0.0) || !std::isfinite(a.x) ||
+            !std::isfinite(a.y)) {
+            continue;
+        }
+        svg += "<text x=\"" + num(px(a.x) + a.dx) + "\" y=\"" + num(py(a.y) + a.dy) +
+               "\" font-size=\"11.5\" text-anchor=\"" + a.anchor + "\" fill=\"" + a.color + "\">" +
+               escapeXml(a.text) + "</text>\n";
+    }
+    if (!spec.note.empty()) {
+        svg += "<text x=\"" + num(w - 8.0) + "\" y=\"" + num(h - 4.0) +
+               "\" font-size=\"10\" text-anchor=\"end\" fill=\"" + plotcolor::kTextSecondary +
+               "\">" + escapeXml(spec.note) + "</text>\n";
+    }
 
     // Legend, right of the plot area.
     const double lx = right + 18.0;
@@ -312,7 +348,7 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
                    "\" y2=\"" + num(ly) + "\" " + strokeAttrs(s) + "/>\n";
         }
         if (s.marker != PlotMarker::None) {
-            svg += markerSvg(s.marker, lx + 14.0, ly, s.color) + "\n";
+            svg += markerSvg(s.marker, lx + 14.0, ly, s.color, s.hollow) + "\n";
         }
         svg += "<text x=\"" + num(lx + 36.0) + "\" y=\"" + num(ly + 4.0) + "\">" +
                escapeXml(s.label) + "</text>\n";
@@ -324,6 +360,142 @@ Result<std::string> renderSvgPlot(const PlotSpec& spec) {
 
 Result<void> saveSvgPlot(const PlotSpec& spec, const std::filesystem::path& path) {
     auto svg = renderSvgPlot(spec);
+    if (!svg) {
+        return std::move(svg).error();
+    }
+    return writeFileAtomic(path, svg.value());
+}
+
+Result<std::string> renderSvgBars(const BarChartSpec& spec) {
+    const auto invalid = [&](const std::string& m) {
+        return makeError(ErrorCode::InvalidInput, "Bar chart '" + spec.title + "': " + m,
+                         "Fix the data passed to the plot writer.");
+    };
+    if (spec.categories.empty() || spec.stacks.empty()) {
+        return invalid("no categories or stacks");
+    }
+    double top = 0.0;
+    for (std::size_t c = 0; c < spec.categories.size(); ++c) {
+        double sum = 0.0;
+        for (const BarStack& s : spec.stacks) {
+            if (s.values.size() != spec.categories.size()) {
+                return invalid("stack '" + s.label + "' has the wrong number of values");
+            }
+            if (!std::isfinite(s.values[c]) || s.values[c] < 0.0) {
+                return invalid("stack '" + s.label + "' has a negative or non-finite value");
+            }
+            sum += s.values[c];
+        }
+        top = std::max(top, sum);
+    }
+    const Axis ay = linearAxis(0.0, top > 0.0 ? top * 1.08 : 1.0);
+    const double w = spec.width;
+    const double h = spec.height;
+    const double left = kMarginLeft;
+    const double plotTop = kMarginTop;
+    const double plotW = w - kMarginLeft - kMarginRight;
+    const double bottomMargin = kMarginBottom + 22.0; // two-line category labels
+    const double plotH = h - kMarginTop - bottomMargin;
+    const double bottom = plotTop + plotH;
+    const auto py = [&](double v) { return bottom - ay.frac(v) * plotH; };
+
+    std::string svg = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    svg += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + std::to_string(spec.width) +
+           "\" height=\"" + std::to_string(spec.height) + "\" viewBox=\"0 0 " +
+           std::to_string(spec.width) + " " + std::to_string(spec.height) + "\" font-family=\"" +
+           kFont + "\">\n";
+    svg += "<title>" + escapeXml(spec.title) + "</title>\n";
+    svg += "<rect width=\"100%\" height=\"100%\" fill=\"" + std::string(plotcolor::kBackground) +
+           "\"/>\n";
+    svg += "<g stroke=\"" + std::string(plotcolor::kGrid) + "\" stroke-width=\"1\">\n";
+    for (const double t : ay.ticks) {
+        svg += "<line x1=\"" + num(left) + "\" y1=\"" + num(py(t)) + "\" x2=\"" +
+               num(left + plotW) + "\" y2=\"" + num(py(t)) + "\"/>\n";
+    }
+    svg += "</g>\n<g font-size=\"12\" fill=\"" + std::string(plotcolor::kTextSecondary) + "\">\n";
+    for (const double t : ay.ticks) {
+        svg += "<text x=\"" + num(left - 8.0) + "\" y=\"" + num(py(t) + 4.0) +
+               "\" text-anchor=\"end\">" + tickLabel(t) + "</text>\n";
+    }
+    svg += "</g>\n";
+    const double slot = plotW / static_cast<double>(spec.categories.size());
+    const double barW = std::min(56.0, slot * 0.62);
+    for (std::size_t c = 0; c < spec.categories.size(); ++c) {
+        const double cx = left + slot * (static_cast<double>(c) + 0.5);
+        double base = 0.0;
+        const bool own = c < spec.barColors.size() && !spec.barColors[c].empty();
+        for (const BarStack& s : spec.stacks) {
+            const double v = s.values[c];
+            if (v > 0.0) {
+                svg += "<rect x=\"" + num(cx - barW / 2.0) + "\" y=\"" + num(py(base + v)) +
+                       "\" width=\"" + num(barW) + "\" height=\"" + num(py(base) - py(base + v)) +
+                       "\" fill=\"" + (own ? spec.barColors[c] : s.color) + "\"" +
+                       (s.light ? " fill-opacity=\"0.4\"" : "") + "/>\n";
+            }
+            base += v;
+        }
+        char total[32];
+        std::snprintf(total, sizeof total, "%.3g", base);
+        svg += "<text x=\"" + num(cx) + "\" y=\"" + num(py(base) - 5.0) +
+               "\" font-size=\"11\" text-anchor=\"middle\" fill=\"" + plotcolor::kReference +
+               "\">" + total + "</text>\n";
+        const std::string& label = spec.categories[c];
+        const std::size_t nl = label.find('\n');
+        svg += "<text x=\"" + num(cx) + "\" y=\"" + num(bottom + 17.0) +
+               "\" font-size=\"11.5\" text-anchor=\"middle\" fill=\"" + plotcolor::kReference +
+               "\">" + escapeXml(label.substr(0, nl)) + "</text>\n";
+        if (nl != std::string::npos) {
+            svg += "<text x=\"" + num(cx) + "\" y=\"" + num(bottom + 32.0) +
+                   "\" font-size=\"11.5\" text-anchor=\"middle\" fill=\"" +
+                   plotcolor::kTextSecondary + "\">" + escapeXml(label.substr(nl + 1)) +
+                   "</text>\n";
+        }
+    }
+    svg += "<line x1=\"" + num(left) + "\" y1=\"" + num(bottom) + "\" x2=\"" + num(left + plotW) +
+           "\" y2=\"" + num(bottom) + "\" stroke=\"" + plotcolor::kReference + "\"/>\n";
+    svg += "<text x=\"" + num(left) + "\" y=\"28\" font-size=\"16\" font-weight=\"600\" fill=\"" +
+           plotcolor::kReference + "\">" + escapeXml(spec.title) + "</text>\n";
+    svg += "<text transform=\"translate(20 " + num(plotTop + plotH / 2.0) +
+           ") rotate(-90)\" font-size=\"13\" text-anchor=\"middle\" fill=\"" +
+           plotcolor::kReference + "\">" + escapeXml(spec.yLabel) + "</text>\n";
+    const double lx = left + plotW + 18.0;
+    for (std::size_t i = 0; i < spec.stacks.size(); ++i) {
+        const BarStack& s = spec.stacks[i];
+        const double ly = plotTop + 14.0 + 22.0 * static_cast<double>(i);
+        svg += "<rect x=\"" + num(lx) + "\" y=\"" + num(ly - 7.0) +
+               "\" width=\"22\" height=\"14\" fill=\"" + s.color + "\"" +
+               (s.light ? " fill-opacity=\"0.45\"" : "") + "/>\n";
+        svg += "<text x=\"" + num(lx + 30.0) + "\" y=\"" + num(ly + 4.0) +
+               "\" font-size=\"12\" fill=\"" + plotcolor::kReference + "\">" + escapeXml(s.label) +
+               "</text>\n";
+    }
+    if (!spec.note.empty()) {
+        svg += "<text x=\"" + num(w - 8.0) + "\" y=\"" + num(h - 4.0) +
+               "\" font-size=\"10\" text-anchor=\"end\" fill=\"" + plotcolor::kTextSecondary +
+               "\">" + escapeXml(spec.note) + "</text>\n";
+    }
+    svg += "</svg>\n";
+    return svg;
+}
+
+std::string powerOfTenLabel(double v) {
+    if (!(v > 0.0) || (v >= 0.01 && v < 1000.0)) {
+        return tickLabel(v);
+    }
+    const int e = static_cast<int>(std::floor(std::log10(v) + 1e-9));
+    const double m = v / std::pow(10.0, e);
+    const long mi = std::lround(m);
+    if (std::fabs(m - static_cast<double>(mi)) < 1e-6 && mi == 1) {
+        return "10" + superscript(e);
+    }
+    if (std::fabs(m - static_cast<double>(mi)) < 1e-6) {
+        return std::to_string(mi) + "×10" + superscript(e);
+    }
+    return tickLabel(v);
+}
+
+Result<void> saveSvgBars(const BarChartSpec& spec, const std::filesystem::path& path) {
+    auto svg = renderSvgBars(spec);
     if (!svg) {
         return std::move(svg).error();
     }

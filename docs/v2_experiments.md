@@ -114,8 +114,45 @@ Other findings: RCM factorises faster than ND up to 171 k DOF and ND is faster f
 stagnates even on the plain cube (1992 cycles at 110 k DOF), and AMG-PCG iterations grow with
 refinement. A likely cause is the strength threshold θ₀ = 0.08: for trilinear hexahedra of
 aspect ratio 1 the largest off-diagonal coupling is 1/16 of the diagonal (edge neighbours;
-axis neighbours couple with zero), so every coupling counts as weak, the node is "isolated" and
-gets no coarse-grid correction. HS-7 cells become more uniform as the mesh is refined (maximum
+axis neighbours couple with zero), so every coupling of a cubic cell counts as weak and its
+nodes get no coarse-grid correction. HS-7 cells become more uniform as the mesh is refined (maximum
 aspect ratio 10 → 3.9), which matches AMG getting worse with refinement. The V2-7 tuning used a
 7-point finite-difference Laplacian, where the ratio is 1/6. This is checked separately as a
 candidate change; the official results above stay as measured.
+
+## Figures (V2-9)
+
+`uniforge_cli study figures` writes P1–P22 (build spec §12.1) from `results/v2/csv` and
+`results/v2/history` into `docs/report_v2/fig`, with `figures.md` listing the data behind each
+file. Renders (P1–P6, P8, P9, P15) come from small in-process solves of the same designs; the
+plots read the CSVs only, so the figures follow the results when they are re-run. All figures
+take about 16 s.
+
+## Candidate check: AMG strength threshold (2026-11-23, not official)
+
+To test the suspected cause in the AMG note above, all 72 AMG and AMG-PCG runs of the plan were
+re-run with θ₀ = 0.02 instead of 0.08 (one temporary source change, `study run --allow-dirty`
+into `build/amg_cand`, then reverted; results are **not** in `results/v2` and the timings are
+indicative, one process per run as in the batch).
+
+| Run | Official (θ₀ = 0.08) | Candidate (θ₀ = 0.02) |
+|---|---|---|
+| E4 cube 1 mm, AMG cycles | 1992 | 15 |
+| E4 cube 1 mm, AMG-PCG iterations | 56 | 9 |
+| E2 HS-7 1.0 mm, AMG-PCG iterations | 52 | 50 |
+| E2 HS-7 0.5 mm, AMG-PCG iterations / total s | 292 / 6.8 | 31 / 0.86 |
+| E2 HS-7 0.198 mm, AMG-PCG iterations / total s | 872 / 237 | 23 / 9.4 |
+| E2 HS-7 0.198 mm, stand-alone AMG | stagnated (2000) | converged (75) |
+| E2 HS-7 0.198 mm, PCG-IC0 total s (unchanged) | 107 | – |
+
+All 70 solvable candidate runs converged (the 2 singular E8 runs fail in setup, as before), with
+errors against the references of 1e-11 to 2e-5 K. AMG-PCG iterations now fall slightly with
+refinement instead of growing 17×. P9 adds a detail: at s = 1 mm only 0.6 % of HS-7 nodes are
+isolated with θ₀ = 0.08, because stretched cells keep strong couplings along their short edges;
+the threshold mostly makes aggregates follow the stretched direction, and as the cells become
+cubic with refinement more couplings drop below it.
+
+**Decision needed (user):** adopt θ₀ = 0.02 as a bug fix of the V2-7 tuning (made on a 7-point
+finite-difference Laplacian, not on trilinear hexahedra) and re-run the AMG rows of the
+official batch (about 15 minutes of machine time), or keep θ₀ = 0.08 and report the candidate
+as a separate finding. The official results above are unchanged until then.

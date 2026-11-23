@@ -13,6 +13,7 @@ namespace uniforge::cli {
 //   study batch   [--only …] [--dry-run] [--allow-dirty] [--out DIR]
 //                 every run without a result, each in its own process (resumable)
 //   study collect [--out DIR]                              experiment CSVs and numbers.json
+//   study figures [--out DIR] [--fig FIG] [--only P4,P11]  report figures P1-P22 (V2-9)
 //
 // DIR defaults to results/v2. `args` are the words after "study".
 int runStudy(const std::vector<std::string>& args, const std::string& gitCommit, std::ostream& out,

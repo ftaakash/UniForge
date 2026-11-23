@@ -9,7 +9,23 @@ V2 answers the Assignment Extension Notice: three solver types on a 3D thermal a
 more complex object, reported in one PDF. Specification:
 `docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
 
-### Phase V2-8: Experiment harness and official batch (`v2-phase-8`)
+### Phase V2-9: Figures (`v2-phase-9`)
+- `src/core/viz/` (depends on `common` only): `Image`, inferno and categorical colormaps, a
+  CPU rasteriser (`Raster3D`: orthographic camera fitted to a box, z-buffered triangles,
+  two-sided Lambert shading, depth-tested edge segments, supersampling), `Spy` (sparsity
+  density rasters) and `SvgCanvas` (embedded PNG renders with vector labels, arrows, colour
+  bars).
+- `PngWriter` moved from `app/render` to `core/viz` (build spec D-15) and now compresses:
+  adaptive PNG row filters and a fixed-Huffman deflate block with LZ77 matches (stored blocks
+  remain as an option). All 28 figure files together are 2.7 MB.
+- `SvgPlot`: hollow and cross markers, annotations, a corner note, 10ⁿ tick labels, stacked
+  bar charts.
+- `uniforge_cli study figures` (`study/Figures`): P1–P22 from `results/v2` into
+  `docs/report_v2/fig` with an index (`figures.md`) mapping every figure to its data.
+- Candidate check (not official, not in `results/v2`): AMG with θ₀ = 0.02 instead of 0.08 on
+  all 72 AMG runs; see `docs/v2_experiments.md`.
+- 16 new tests (viz units with an independent inflater, bar charts, figures smoke test).
+
 - Official batch on commit `5e9bea7` (2 h 46 min): 241/241 runs left a result (205 converged,
   23 stand-alone AMG stagnations, 7 direct runs over the memory budget, 6 singular runs
   detected). Results in `results/v2/` (references not committed); first reading of the

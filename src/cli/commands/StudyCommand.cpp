@@ -14,6 +14,7 @@
 #include "core/common/CsvWriter.hpp"
 #include "core/common/MetaJson.hpp"
 #include "core/study/Collect.hpp"
+#include "core/study/Figures.hpp"
 #include "core/study/Plan.hpp"
 #include "core/study/Runner.hpp"
 
@@ -30,6 +31,7 @@ struct StudyArgs {
     bool dry = false;
     bool allowDirty = false;
     std::filesystem::path out = "results/v2";
+    std::filesystem::path fig = "docs/report_v2/fig";
 };
 
 std::vector<std::string> splitList(const std::string& s) {
@@ -52,12 +54,14 @@ std::vector<std::string> splitList(const std::string& s) {
 }
 
 void usage(std::ostream& os) {
-    os << "Usage: uniforge_cli study <plan|run|batch|collect> [options]\n"
+    os << "Usage: uniforge_cli study <plan|run|batch|collect|figures> [options]\n"
           "  plan     list the runs and write DIR/manifest.json\n"
           "  run      --id ID: execute one run in this process (used by batch)\n"
           "  batch    run every planned run that has no result yet, one process each\n"
           "  collect  write DIR/csv/*.csv and DIR/numbers.json from DIR/runs\n"
-          "Options: --only E0,E2  --dry-run  --allow-dirty  --out DIR (default results/v2)\n";
+          "  figures  write the report figures P1-P22 from DIR to FIG (--only P4,P11)\n"
+          "Options: --only E0,E2  --dry-run  --allow-dirty  --out DIR (default results/v2)\n"
+          "         --fig FIG (default docs/report_v2/fig)\n";
 }
 
 std::string statusOf(const study::RunRecord& r) {
@@ -227,6 +231,23 @@ int doBatch(const StudyArgs& a, const std::string& commit, std::ostream& out, st
     return doCollect(a, out, err);
 }
 
+int doFigures(const StudyArgs& a, std::ostream& out, std::ostream& err) {
+    study::FigureOptions o;
+    o.results = a.out;
+    o.out = a.fig;
+    o.only = a.only;
+    auto r = study::makeFigures(o);
+    if (!r) {
+        err << "error: " << r.error().message << "\n";
+        return kExitError;
+    }
+    for (const auto& e : r.value()) {
+        out << e.id << "  " << (a.fig / e.file).u8string() << "\n";
+    }
+    out << r.value().size() << " figure files written to " << a.fig.u8string() << "\n";
+    return kExitOk;
+}
+
 } // namespace
 
 int runStudy(const std::vector<std::string>& args, const std::string& gitCommit, std::ostream& out,
@@ -243,6 +264,8 @@ int runStudy(const std::vector<std::string>& args, const std::string& gitCommit,
             a.only = splitList(args[++i]);
         } else if (args[i] == "--id" && hasValue) {
             a.id = args[++i];
+        } else if (args[i] == "--fig" && hasValue) {
+            a.fig = std::filesystem::u8path(args[++i]);
         } else if (args[i] == "--out" && hasValue) {
             a.out = std::filesystem::u8path(args[++i]);
         } else if (args[i] == "--dry-run") {
@@ -270,6 +293,9 @@ int runStudy(const std::vector<std::string>& args, const std::string& gitCommit,
     }
     if (a.sub == "collect") {
         return doCollect(a, out, err);
+    }
+    if (a.sub == "figures") {
+        return doFigures(a, out, err);
     }
     usage(err);
     return kExitUsage;

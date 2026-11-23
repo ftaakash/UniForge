@@ -40,7 +40,6 @@ uniforge_compile_shader(SCENE_POINTS_PS_HEADER
 add_library(uniforge_viewcore STATIC
     render/Camera.cpp
     render/Picking.cpp
-    render/PngWriter.cpp
     ui/Format.cpp)
 target_include_directories(uniforge_viewcore PUBLIC "${PROJECT_SOURCE_DIR}/src")
 target_link_libraries(uniforge_viewcore PUBLIC uniforge_core)

@@ -652,6 +652,9 @@ study figures ─► fig/*.svg|png (renders: PNG; labels: SVG overlays)         
   (`#include`, `std::`, `for (` …), PDF > 15 MB, page count outside 18–25.
 - v1's `PngWriter` writes uncompressed PNG (~6.4 MB per 1600 × 1000 render); whether Edge
   recompresses in the PDF is [VERIFY]; fix if needed: smaller renders or a real deflate encoder.
+  **Done in V2-9:** `viz::PngWriter` now writes adaptive row filters and a fixed-Huffman
+  deflate block (D-15 amended: moved *and* compressed; stored blocks kept as an option). The
+  28 figure files are 2.7 MB in total, so the PDF size no longer depends on Edge.
 
 ---
 

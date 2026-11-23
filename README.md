@@ -42,9 +42,10 @@ works best in which scenario. The deliverable is a single PDF report. V2 is buil
 | V2-6 | IC(0) preconditioner with shift-and-retry (PCG-IC0) | `v2-phase-6` | Done |
 | V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG); all six solver variants built | `v2-phase-7` | Done |
 | V2-8 | Experiment harness (`uniforge_cli study`: plan, one process per run, memory cap, P-core pinning, resume, collect) and the official batch (241 runs, results in `results/v2/`) | `v2-phase-8` | Done |
-| V2-9 … V2-10 | Figures, PDF report | – | Planned |
+| V2-9 | Figures: CPU rasteriser, spy plots, PNG writer with deflate (`core/viz`), `uniforge_cli study figures` → P1–P22 in [docs/report_v2/fig](docs/report_v2/fig/figures.md) | `v2-phase-9` | Done |
+| V2-10 | PDF report | – | Planned |
 
-So far 406 tests pass on Windows (Release and Debug); 117 of them are new in V2. How the
+So far 421 tests pass on Windows (Release and Debug); 133 of them are new in V2. How the
 experiments are run is described in [docs/v2_experiments.md](docs/v2_experiments.md). The 3D model
 reproduces v1's bar result (188.2 °C at x = 0.42 m, 0.42 / 0.58 W through the ends) and
 converges at second order on a manufactured solution. Every phase tag
@@ -53,7 +54,7 @@ and `src/core/solvers/`; build and test it exactly like v1 (see [Build from sour
 To run only the V2 tests:
 
 ```bash
-ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ic0|Amg\.|Ordering\.|DirectCholesky|SolverFactory|StudyPlan|StudyRecord|StudyRun|study_batch|v2_module_rules"
+ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ic0|Amg\.|Ordering\.|DirectCholesky|SolverFactory|StudyPlan|StudyRecord|StudyRun|study_batch|study_figures|Viz\.|SvgPlotExtras|PngWriter\.(Compressed|Flat)|v2_module_rules"
 ```
 
 No V2 numbers are final yet: values in the V2 documents marked [EST] are estimates and will be

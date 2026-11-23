@@ -134,7 +134,6 @@ if(UNIFORGE_BUILD_APP)
         SOURCES
             unit/render/CameraTest.cpp
             unit/render/PickingTest.cpp
-            unit/render/PngWriterTest.cpp
             unit/ui/FormatTest.cpp
         LIBS uniforge_viewcore)
 endif()
@@ -144,6 +143,14 @@ uniforge_add_test(unit_perf
     SOURCES
         unit/perf/BatchGeneratorTest.cpp
         unit/perf/WorkerPoolTest.cpp
+    LIBS uniforge_core)
+
+# V2 figures (build spec §4.1, §12): PNG writer with deflate, CPU rasteriser, spy, SVG canvas.
+uniforge_add_test(unit_viz
+    LABEL unit
+    SOURCES
+        unit/viz/PngWriterTest.cpp
+        unit/viz/VizTest.cpp
     LIBS uniforge_core)
 
 # V2 sparse kernels (build spec §5.5): CSR storage, persistent kernel pool, SpGEMM.
@@ -204,6 +211,15 @@ add_test(NAME integration.study_batch_smoke
         "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/study_smoke_$<CONFIG>"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/study_smoke.cmake")
 set_tests_properties(integration.study_batch_smoke PROPERTIES LABELS integration)
+
+# V2-9: report figures from the committed official results (no large solves).
+add_test(NAME integration.study_figures
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DRESULTS=${PROJECT_SOURCE_DIR}/results/v2"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/study_figures_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/study_figures.cmake")
+set_tests_properties(integration.study_figures PROPERTIES LABELS integration)
 
 uniforge_add_test(numerical_perf
     LABEL numerical
