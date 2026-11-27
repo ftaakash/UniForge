@@ -275,6 +275,19 @@ void planV3A(Planner& p, bool dry) {
         r.spacing = ladderSpacing(k);
         p.system("V3A", r, {SolverKind::AmgPcg, SolverKind::AmgPcgSp});
     }
+    // The same pair with 8 and 20 threads on the largest meshes (timing only, as E6): the
+    // parallel kernels are where halving the bytes could show, the sweeps stay serial.
+    const std::vector<int> ks = dry ? std::vector<int>{1} : std::vector<int>{5, 6, 7};
+    for (const int k : ks) {
+        for (const int t : {8, 20}) {
+            RunSpec r;
+            r.design = DesignKey::HS7;
+            r.spacing = ladderSpacing(k);
+            r.threads = t;
+            r.observer = false;
+            p.system("V3A", r, {SolverKind::AmgPcg, SolverKind::AmgPcgSp});
+        }
+    }
 }
 
 void planT0(Planner& p) {
