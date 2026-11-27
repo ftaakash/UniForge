@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>AMG-PCG-CH-SP against V2's AMG-PCG on one core (HS-7, pinned, V3H)</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
+<line x1="147.13" y1="48.00" x2="147.13" y2="368.00"/>
+<line x1="214.26" y1="48.00" x2="214.26" y2="368.00"/>
+<line x1="303.00" y1="48.00" x2="303.00" y2="368.00"/>
+<line x1="370.13" y1="48.00" x2="370.13" y2="368.00"/>
+<line x1="437.26" y1="48.00" x2="437.26" y2="368.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="368.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="304.00" x2="526.00" y2="304.00"/>
+<line x1="80.00" y1="240.00" x2="526.00" y2="240.00"/>
+<line x1="80.00" y1="176.00" x2="526.00" y2="176.00"/>
+<line x1="80.00" y1="112.00" x2="526.00" y2="112.00"/>
+<line x1="80.00" y1="48.00" x2="526.00" y2="48.00"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="80.00" y="386.00" text-anchor="middle">5×10⁴</text>
+<text x="147.13" y="386.00" text-anchor="middle">10⁵</text>
+<text x="214.26" y="386.00" text-anchor="middle">2×10⁵</text>
+<text x="303.00" y="386.00" text-anchor="middle">5×10⁵</text>
+<text x="370.13" y="386.00" text-anchor="middle">10⁶</text>
+<text x="437.26" y="386.00" text-anchor="middle">2×10⁶</text>
+<text x="526.00" y="386.00" text-anchor="middle">5×10⁶</text>
+<text x="72.00" y="372.00" text-anchor="end">1</text>
+<text x="72.00" y="308.00" text-anchor="end">1.5</text>
+<text x="72.00" y="244.00" text-anchor="end">2</text>
+<text x="72.00" y="180.00" text-anchor="end">2.5</text>
+<text x="72.00" y="116.00" text-anchor="end">3</text>
+<text x="72.00" y="52.00" text-anchor="end">3.5</text>
+</g>
+<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">AMG-PCG-CH-SP against V2's AMG-PCG on one core (HS-7, pinned, V3H)</text>
+<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">DOF</text>
+<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">speed-up over AMG-PCG on 1 core (×)</text>
+<g clip-path="url(#plot-area)">
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" points="91.00,245.71 141.06,202.47 198.88,188.77 248.74,199.15 315.38,253.51 372.33,271.79 430.63,244.10 498.39,261.25"/>
+<polygon points="91.00,241.51 95.00,248.71 87.00,248.71" fill="#009E73"/>
+<polygon points="141.06,198.27 145.06,205.47 137.06,205.47" fill="#009E73"/>
+<polygon points="198.88,184.57 202.88,191.77 194.88,191.77" fill="#009E73"/>
+<polygon points="248.74,194.95 252.74,202.15 244.74,202.15" fill="#009E73"/>
+<polygon points="315.38,249.31 319.38,256.51 311.38,256.51" fill="#009E73"/>
+<polygon points="372.33,267.59 376.33,274.79 368.33,274.79" fill="#009E73"/>
+<polygon points="430.63,239.90 434.63,247.10 426.63,247.10" fill="#009E73"/>
+<polygon points="498.39,257.05 502.39,264.25 494.39,264.25" fill="#009E73"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,239.59 141.06,203.56 198.88,198.91 248.74,222.23 315.38,250.01 372.33,318.60 430.63,261.59 498.39,276.74"/>
+<polygon points="91.00,235.39 95.00,242.59 87.00,242.59" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="141.06,199.36 145.06,206.56 137.06,206.56" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="198.88,194.71 202.88,201.91 194.88,201.91" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="248.74,218.03 252.74,225.23 244.74,225.23" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="315.38,245.81 319.38,253.01 311.38,253.01" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="372.33,314.40 376.33,321.60 368.33,321.60" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="430.63,257.39 434.63,264.59 426.63,264.59" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="498.39,272.54 502.39,279.74 494.39,279.74" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polyline fill="none" stroke="#CC79A7" stroke-width="1.50" stroke-linejoin="round" points="91.00,212.71 141.06,132.16 198.88,102.69 248.74,138.69 315.38,219.77 372.33,238.36 430.63,215.81 498.39,239.88"/>
+<polygon points="91.00,208.51 95.00,215.71 87.00,215.71" fill="#CC79A7"/>
+<polygon points="141.06,127.96 145.06,135.16 137.06,135.16" fill="#CC79A7"/>
+<polygon points="198.88,98.49 202.88,105.69 194.88,105.69" fill="#CC79A7"/>
+<polygon points="248.74,134.49 252.74,141.69 244.74,141.69" fill="#CC79A7"/>
+<polygon points="315.38,215.57 319.38,222.77 311.38,222.77" fill="#CC79A7"/>
+<polygon points="372.33,234.16 376.33,241.36 368.33,241.36" fill="#CC79A7"/>
+<polygon points="430.63,211.61 434.63,218.81 426.63,218.81" fill="#CC79A7"/>
+<polygon points="498.39,235.68 502.39,242.88 494.39,242.88" fill="#CC79A7"/>
+<polyline fill="none" stroke="#CC79A7" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,195.77 141.06,134.77 198.88,115.21 248.74,172.67 315.38,210.85 372.33,317.13 430.63,230.80 498.39,251.95"/>
+<polygon points="91.00,191.57 95.00,198.77 87.00,198.77" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="141.06,130.57 145.06,137.77 137.06,137.77" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="198.88,111.01 202.88,118.21 194.88,118.21" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="248.74,168.47 252.74,175.67 244.74,175.67" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="315.38,206.65 319.38,213.85 311.38,213.85" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="372.33,312.93 376.33,320.13 368.33,320.13" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="430.63,226.60 434.63,233.80 426.63,233.80" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<polygon points="498.39,247.75 502.39,254.95 494.39,254.95" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<path d="M367.83 234.36 L376.83 243.36 M367.83 243.36 L376.83 234.36" stroke="#1A1E24" stroke-width="1.8"/>
+</g>
+<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v3/csv/V3H.csv (medians of 5 solves, observer-on rows)</text>
+<g font-size="12" fill="#1A1E24">
+<line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round"/>
+<polygon points="622.00,57.80 626.00,65.00 618.00,65.00" fill="#009E73"/>
+<text x="644.00" y="66.00">setup + solve, 20 threads</text>
+<line x1="608.00" y1="84.00" x2="636.00" y2="84.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,79.80 626.00,87.00 618.00,87.00" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<text x="644.00" y="88.00">setup + solve, 8 threads</text>
+<line x1="608.00" y1="106.00" x2="636.00" y2="106.00" fill="none" stroke="#CC79A7" stroke-width="1.50" stroke-linejoin="round"/>
+<polygon points="622.00,101.80 626.00,109.00 618.00,109.00" fill="#CC79A7"/>
+<text x="644.00" y="110.00">solve only, 20 threads</text>
+<line x1="608.00" y1="128.00" x2="636.00" y2="128.00" fill="none" stroke="#CC79A7" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,123.80 626.00,131.00 618.00,131.00" fill="#FFFFFF" stroke="#CC79A7" stroke-width="1.5"/>
+<text x="644.00" y="132.00">solve only, 8 threads</text>
+<path d="M617.50 145.50 L626.50 154.50 M617.50 154.50 L626.50 145.50" stroke="#1A1E24" stroke-width="1.8"/>
+<text x="644.00" y="154.00">1.02 M, observer-off twin (20 thr)</text>
+</g>
+</svg>

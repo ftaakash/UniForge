@@ -1959,6 +1959,312 @@ Result<void> figP24(Ctx& ctx) {
                     "results/v2_superseded/amg_theta008/compare_theta008_vs_002.csv");
 }
 
+// ---- V3 report figures (docs/report_v3), drawn from results/v3 -------------------------------
+// They run only when named (--only V1,...,V5), so the V2 default set is unchanged.
+
+// The V3H ladder: one-core AMG-PCG rows sorted by DOF (their `system` key names the partners).
+std::vector<const Row*> v3hBaseline(const Ctx& ctx) {
+    auto rows = ctx.res.where([](const Row& r) {
+        return str(r, "experiment") == "V3H" && str(r, "solver") == "AMG-PCG" && converged(r);
+    });
+    std::sort(rows.begin(), rows.end(),
+              [](const Row* a, const Row* b) { return num(*a, "dof") < num(*b, "dof"); });
+    return rows;
+}
+
+std::vector<const Row*> byDof(std::vector<const Row*> rows) {
+    std::sort(rows.begin(), rows.end(),
+              [](const Row* a, const Row* b) { return num(*a, "dof") < num(*b, "dof"); });
+    return rows;
+}
+
+// V1: speed-up of AMG-PCG-CH-SP (pinned, 8 and 20 threads) over V2's AMG-PCG on one core.
+Result<void> figV1(Ctx& ctx) {
+    PlotSpec spec;
+    spec.title = "AMG-PCG-CH-SP against V2's AMG-PCG on one core (HS-7, pinned, V3H)";
+    spec.xLabel = "DOF";
+    spec.yLabel = "speed-up over AMG-PCG on 1 core (×)";
+    spec.logX = true;
+    spec.powerTicks = true;
+    struct Pick {
+        std::string suffix, label;
+        bool solveOnly, eight;
+    };
+    const std::vector<Pick> picks = {
+        {"-AMG-PCG-CH-SP-p20", "setup + solve, 20 threads", false, false},
+        {"-AMG-PCG-CH-SP-p8", "setup + solve, 8 threads", false, true},
+        {"-AMG-PCG-CH-SP-p20", "solve only, 20 threads", true, false},
+        {"-AMG-PCG-CH-SP-p8", "solve only, 8 threads", true, true}};
+    const auto base = v3hBaseline(ctx);
+    if (base.empty()) {
+        return makeError(ErrorCode::InvalidInput, "V1 needs the V3H rows of all_runs.csv");
+    }
+    for (const Pick& pk : picks) {
+        PlotSeries s;
+        s.label = pk.label;
+        s.color = pk.solveOnly ? "#CC79A7" : kAmg;
+        s.marker = PlotMarker::Triangle;
+        s.hollow = pk.eight;
+        s.dashed = pk.eight;
+        for (const Row* b : base) {
+            const Row* v = ctx.res.find("V3H-" + str(*b, "system") + pk.suffix);
+            if (v == nullptr || !converged(*v)) {
+                continue;
+            }
+            s.x.push_back(num(*b, "dof"));
+            s.y.push_back(pk.solveOnly ? num(*b, "solve_s_median") / num(*v, "solve_s_median")
+                                       : totalSeconds(*b) / totalSeconds(*v));
+        }
+        if (!s.x.empty()) {
+            spec.series.push_back(s);
+        }
+    }
+    // The noisy 1.02 M rows: the observer-off twin (the same computation) as a cross.
+    const Row* b = ctx.res.find("V3H-HS7-s0.315-AMG-PCG");
+    const Row* twin = ctx.res.find("V3H-HS7-s0.315-AMG-PCG-CH-SP-noobs-p20");
+    if (b != nullptr && twin != nullptr) {
+        PlotSeries t;
+        t.label = "1.02 M, observer-off twin (20 thr)";
+        t.color = kInk;
+        t.line = false;
+        t.marker = PlotMarker::Cross;
+        t.x = {num(*b, "dof")};
+        t.y = {totalSeconds(*b) / totalSeconds(*twin)};
+        spec.series.push_back(t);
+    }
+    spec.note = "data: results/v3/csv/V3H.csv (medians of 5 solves, observer-on rows)";
+    return ctx.plot("V1", "V1_speedup_vs_dof.svg", spec, "results/v3/csv/V3H.csv");
+}
+
+// V2: the V3G timing repeat, solve time per run in batch order, by condition.
+Result<void> figV2(Ctx& ctx) {
+    auto rows = readCsv(ctx.opt.results / "csv" / "V3G_timing.csv");
+    if (!rows) {
+        return std::move(rows).error();
+    }
+    struct Cond {
+        std::string key, label, color;
+        PlotMarker marker;
+    };
+    const std::vector<Cond> conds = {
+        {"v3b", "V3B code, unpinned", kPcg, PlotMarker::Circle},
+        {"v3c", "V3C code, unpinned", "#D55E00", PlotMarker::Square},
+        {"nopin", "today's code, unpinned", "#CC79A7", PlotMarker::Diamond},
+        {"pin", "today's code, pinned", kAmg, PlotMarker::Triangle}};
+    PlotSpec spec;
+    spec.title = "One solve, 21 runs: AMG-PCG-CH-SP, HS-7 3.76 M DOF, 8 threads (V3G)";
+    spec.xLabel = "run in batch order (1-12 Balanced plan, 13-21 High performance)";
+    spec.yLabel = "solve time, median of 5 (s)";
+    double lo = 1e30;
+    double hi = 0.0;
+    for (const Cond& c : conds) {
+        PlotSeries s;
+        s.label = c.label;
+        s.color = c.color;
+        s.marker = c.marker;
+        s.line = false;
+        int k = 0;
+        for (const Row& r : rows.value()) {
+            ++k;
+            if (str(r, "cond") == c.key) {
+                const double y = num(r, "solve_median_s");
+                s.x.push_back(k);
+                s.y.push_back(y);
+                lo = std::min(lo, y);
+                hi = std::max(hi, y);
+            }
+        }
+        if (!s.x.empty()) {
+            spec.series.push_back(s);
+        }
+    }
+    if (spec.series.empty()) {
+        return makeError(ErrorCode::InvalidInput, "V2: V3G_timing.csv has no rows");
+    }
+    spec.series.push_back(reference("power plan switch", {12.5, 12.5}, {lo * 0.97, hi * 1.02}));
+    spec.note = "data: results/v3/csv/V3G_timing.csv";
+    return ctx.plot("V2", "V2_timing_scatter.svg", spec, "results/v3/csv/V3G_timing.csv");
+}
+
+// V3: ours against hypre BoomerAMG and PETSc GAMG on one core (total time vs DOF).
+Result<void> figV3(Ctx& ctx) {
+    auto petsc = readCsv(ctx.opt.results / "csv" / "V3F_petsc.csv");
+    if (!petsc) {
+        return std::move(petsc).error();
+    }
+    PlotSpec spec;
+    spec.title = "One core: our AMG-PCG against hypre and PETSc on HS-7 (V3F, untuned)";
+    spec.xLabel = "DOF";
+    spec.yLabel = "setup + solve (s)";
+    spec.logX = spec.logY = true;
+    spec.powerTicks = true;
+    struct Pick {
+        std::string solver, label, color;
+        PlotMarker marker;
+        bool alt;
+    };
+    const std::vector<Pick> picks = {
+        {"AMG-PCG", "AMG-PCG (ours, V2)", kAmg, PlotMarker::Triangle, false},
+        {"HYPRE-PCG", "hypre BoomerAMG, θ 0.25", kDirect, PlotMarker::Circle, false},
+        {"HYPRE-PCG-T05", "hypre BoomerAMG, θ 0.5", kDirect, PlotMarker::Circle, true}};
+    for (const Pick& pk : picks) {
+        const auto rows = byDof(ctx.res.where([&](const Row& r) {
+            return str(r, "experiment") == "V3F" && str(r, "solver") == pk.solver &&
+                   num(r, "threads") == 1.0 && converged(r);
+        }));
+        PlotSeries s;
+        s.label = pk.label;
+        s.color = pk.color;
+        s.marker = pk.marker;
+        s.dashed = pk.alt;
+        s.hollow = pk.alt;
+        for (const Row* r : rows) {
+            s.x.push_back(num(*r, "dof"));
+            s.y.push_back(totalSeconds(*r));
+        }
+        if (!s.x.empty()) {
+            spec.series.push_back(s);
+        }
+    }
+    const std::vector<std::pair<std::string, std::string>> configs = {
+        {"GAMG-default", "PETSc GAMG, default (VM)"},
+        {"GAMG-thr0.02", "PETSc GAMG, thr. 0.02 (VM)"}};
+    for (const auto& [config, label] : configs) {
+        std::vector<std::pair<double, double>> pts;
+        for (const Row& r : petsc.value()) {
+            if (str(r, "config") == config) {
+                pts.emplace_back(num(r, "rows"), num(r, "total_s"));
+            }
+        }
+        std::sort(pts.begin(), pts.end());
+        PlotSeries s;
+        s.label = label;
+        s.color = kPcg;
+        s.marker = PlotMarker::Square;
+        s.dashed = config != "GAMG-default";
+        s.hollow = s.dashed;
+        for (const auto& [x, y] : pts) {
+            s.x.push_back(x);
+            s.y.push_back(y);
+        }
+        if (!s.x.empty()) {
+            spec.series.push_back(s);
+        }
+    }
+    if (spec.series.size() < 2) {
+        return makeError(ErrorCode::InvalidInput, "V3 needs the V3F rows and V3F_petsc.csv");
+    }
+    spec.note = "data: results/v3/csv/V3F.csv, V3F_petsc.csv (PETSc in a Linux VM: indicative)";
+    return ctx.plot("V3", "V3_external_references.svg", spec,
+                    "results/v3/csv/V3F.csv, results/v3/csv/V3F_petsc.csv");
+}
+
+// V4: several load cases after one setup (V3E): total time vs L at 0.29 M and 3.76 M DOF.
+Result<void> figV4(Ctx& ctx) {
+    PlotSpec spec;
+    spec.title = "Several load cases after one setup (HS-7, V3E)";
+    spec.xLabel = "load cases L";
+    spec.yLabel = "setup + all L solves (s)";
+    spec.logX = spec.logY = true;
+    struct Pick {
+        std::string system, solver, label, color;
+        PlotMarker marker;
+        bool small;
+    };
+    const std::vector<Pick> picks = {
+        {"HS7-s0.198", "AMG-PCG", "AMG-PCG, 1 core, 3.76 M", kAmg, PlotMarker::Triangle, false},
+        {"HS7-s0.198", "AMG-PCG-CH-SP", "CH-SP one by one, 3.76 M", "#CC79A7", PlotMarker::Diamond,
+         false},
+        {"HS7-s0.198", "AMG-PCG-CH-SP-B", "CH-SP-B lockstep, 3.76 M", kDirect, PlotMarker::Circle,
+         false},
+        {"HS7-s0.500", "AMG-PCG", "AMG-PCG, 1 core, 0.29 M", kAmg, PlotMarker::Triangle, true},
+        {"HS7-s0.500", "AMG-PCG-CH-SP", "CH-SP one by one, 0.29 M", "#CC79A7",
+         PlotMarker::Diamond, true},
+        {"HS7-s0.500", "AMG-PCG-CH-SP-B", "CH-SP-B lockstep, 0.29 M", kDirect, PlotMarker::Circle,
+         true},
+        {"HS7-s0.500", "DIRECT-ND", "DIRECT-ND, 1 core, 0.29 M", kGrey, PlotMarker::Square, true}};
+    for (const Pick& pk : picks) {
+        auto rows = ctx.res.where([&](const Row& r) {
+            const double t = num(r, "threads");
+            return str(r, "experiment") == "V3E" && str(r, "system") == pk.system &&
+                   str(r, "solver") == pk.solver && (t == 1.0 || t == 12.0) && converged(r);
+        });
+        std::sort(rows.begin(), rows.end(), [](const Row* a, const Row* b) {
+            return num(*a, "load_cases") < num(*b, "load_cases");
+        });
+        PlotSeries s;
+        s.label = pk.label;
+        s.color = pk.color;
+        s.marker = pk.marker;
+        s.dashed = pk.small;
+        s.hollow = pk.small;
+        for (const Row* r : rows) {
+            s.x.push_back(num(*r, "load_cases"));
+            s.y.push_back(totalSeconds(*r));
+        }
+        if (!s.x.empty()) {
+            spec.series.push_back(s);
+        }
+    }
+    if (spec.series.empty()) {
+        return makeError(ErrorCode::InvalidInput, "V4 needs the V3E rows of all_runs.csv");
+    }
+    spec.note = "data: results/v3/csv/V3E.csv (CH-SP on 12 pinned threads; DIRECT-ND only to 0.29 M)";
+    return ctx.plot("V4", "V4_load_cases.svg", spec, "results/v3/csv/V3E.csv");
+}
+
+// V5: geometric against algebraic multigrid, total-time ratio vs DOF (1 core V3D, 20 thr V3H).
+Result<void> figV5(Ctx& ctx) {
+    PlotSpec spec;
+    spec.title = "Geometric vs algebraic multigrid on HS-7 (above 1: GMG faster)";
+    spec.xLabel = "DOF";
+    spec.yLabel = "AMG time / GMG time (setup + solve)";
+    spec.logX = true;
+    spec.powerTicks = true;
+    struct Pick {
+        std::string exp, amg, gmg, label;
+        bool threads;
+    };
+    const std::vector<Pick> picks = {
+        {"V3D", "-AMG-PCG", "-GMG-PCG", "1 core, Gauss-Seidel (V3D)", false},
+        {"V3H", "-AMG-PCG-CH-SP-p20", "-GMG-PCG-CH-SP-p20", "20 threads, CH-SP (V3H, pinned)",
+         true}};
+    double x0 = 0.0;
+    double x1 = 0.0;
+    for (const Pick& pk : picks) {
+        const auto rows = byDof(ctx.res.where([&](const Row& r) {
+            return str(r, "experiment") == pk.exp &&
+                   str(r, "id") == pk.exp + "-" + str(r, "system") + pk.amg && converged(r);
+        }));
+        PlotSeries s;
+        s.label = pk.label;
+        s.color = pk.threads ? kAmg : kGrey;
+        s.marker = PlotMarker::Triangle;
+        s.hollow = !pk.threads;
+        s.dashed = !pk.threads;
+        for (const Row* a : rows) {
+            const Row* g = ctx.res.find(pk.exp + "-" + str(*a, "system") + pk.gmg);
+            if (g == nullptr || !converged(*g)) {
+                continue;
+            }
+            s.x.push_back(num(*a, "dof"));
+            s.y.push_back(totalSeconds(*a) / totalSeconds(*g));
+        }
+        if (!s.x.empty()) {
+            x0 = s.x.front();
+            x1 = s.x.back();
+            spec.series.push_back(s);
+        }
+    }
+    if (spec.series.empty()) {
+        return makeError(ErrorCode::InvalidInput, "V5 needs the V3D and V3H rows");
+    }
+    spec.series.push_back(reference("equal time", {x0, x1}, {1.0, 1.0}));
+    spec.note = "data: results/v3/csv/V3D.csv, V3H.csv";
+    return ctx.plot("V5", "V5_gmg_vs_amg.svg", spec,
+                    "results/v3/csv/V3D.csv, results/v3/csv/V3H.csv");
+}
+
 bool wanted(const FigureOptions& o, const std::string& id) {
     return o.only.empty() || std::find(o.only.begin(), o.only.end(), id) != o.only.end();
 }
@@ -2013,8 +2319,24 @@ Result<std::vector<FigureEntry>> makeFigures(const FigureOptions& options) {
             return std::move(r).error();
         }
     }
+    // V3 report figures: only when named, since they read results/v3.
+    const std::vector<std::pair<std::string, Fn>> v3 = {
+        {"V1", [&] { return figV1(ctx); }}, {"V2", [&] { return figV2(ctx); }},
+        {"V3", [&] { return figV3(ctx); }}, {"V4", [&] { return figV4(ctx); }},
+        {"V5", [&] { return figV5(ctx); }}};
+    for (const auto& [id, f] : v3) {
+        if (options.only.empty()) {
+            break;
+        }
+        if (auto r = run(id, f); !r) {
+            return std::move(r).error();
+        }
+    }
+    const bool v3Only = !options.only.empty() &&
+                        std::all_of(options.only.begin(), options.only.end(),
+                                    [](const std::string& id) { return id.rfind('V', 0) == 0; });
     // P4 and P5 share one HS-7 solve at 0.5 mm.
-    if (wanted(options, "P4") || wanted(options, "P5")) {
+    if (!v3Only && (wanted(options, "P4") || wanted(options, "P5"))) {
         auto hs = meshAndSolve(fem3d::makeHS7(), 5e-4, true);
         if (!hs) {
             return makeError(hs.error().code, "P4/P5: " + hs.error().message);
@@ -2030,7 +2352,13 @@ Result<std::vector<FigureEntry>> makeFigures(const FigureOptions& options) {
         const auto key = [](const std::string& id) { return std::stoi(id.substr(1)); };
         return key(a.id) != key(b.id) ? key(a.id) < key(b.id) : a.file < b.file;
     });
-    std::string md = "# V2 report figures\n\nWritten by `uniforge_cli study figures` from `" +
+    std::string md =
+        v3Only ? "# V3 report figures\n\nWritten by `uniforge_cli study figures --only V1,...` "
+                 "from `" +
+                     options.results.generic_u8string() +
+                     "`. Every figure maps to the data it is drawn from.\n\n"
+                     "| Figure | File | What it shows | Drawn from |\n|---|---|---|---|\n"
+               : "# V2 report figures\n\nWritten by `uniforge_cli study figures` from `" +
                      options.results.generic_u8string() +
                      "` (build spec §12.1). Every figure maps to the data it is drawn from. 3D "
                      "renders and spy rasters are PNG files next to their SVG "
@@ -2040,7 +2368,7 @@ Result<std::vector<FigureEntry>> makeFigures(const FigureOptions& options) {
         md += "| " + e.id + " | [" + e.file + "](" + e.file + ") | " + e.title + " | " + e.sources +
               " |\n";
     }
-    if (options.only.empty()) {
+    if (options.only.empty() || v3Only) {
         if (auto w = writeFileAtomic(options.out / "figures.md", md); !w) {
             return std::move(w).error();
         }
