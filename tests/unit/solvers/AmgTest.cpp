@@ -17,6 +17,7 @@
 
 #include "ModelProblems.hpp"
 #include "core/common/Rng.hpp"
+#include "core/solvers/external/HypreSolver.hpp"
 #include "core/solvers/krylov/Ic0.hpp"
 #include "core/solvers/krylov/Pcg.hpp"
 #include "core/sparse/SparseOps.hpp"
@@ -581,6 +582,44 @@ TEST(BatchPcg, LoadCasesInLockstepMatchSeparateSolves) {
     EXPECT_LT(diff, 1e-6);
     std::vector<Vector> wrong(2, Vector(n, 0.0));
     EXPECT_EQ(one.solveMany(F, wrong, ctl).error().code, ErrorCode::InvalidInput);
+}
+
+// V3f: the hypre reference. With hypre built in it solves the Q1 model problem to the same
+// answer as our AMG-PCG; without it, setup returns InvalidInput (no crash, no silent result).
+TEST(Hypre, ReferenceSolverAgreesOrReportsItsAbsence) {
+    const CsrMatrix A = q1Laplacian3d(20);
+    const Vector f = randomVec(toSize(A.rows), 77);
+    KernelPool pool(2);
+    auto made = makeSolver(SolverKind::HyprePcg);
+    ASSERT_TRUE(made.ok());
+    auto& hypre = *made.value();
+    auto su = hypre.setup(A, {}, pool, {});
+    if (!HyprePcg::available()) {
+        ASSERT_FALSE(su.ok());
+        EXPECT_EQ(su.error().code, ErrorCode::InvalidInput);
+        GTEST_SKIP() << "built without hypre";
+    }
+    ASSERT_TRUE(su.ok());
+    ASSERT_EQ(su.value().status, SolveStatus::Converged) << su.value().detail;
+    SolveControl c;
+    c.relTol = 1e-10;
+    Vector x(f.size(), 0.0);
+    auto r = hypre.solve(f, x, c);
+    ASSERT_TRUE(r.ok());
+    EXPECT_EQ(r.value().status, SolveStatus::Converged) << r.value().detail;
+    EXPECT_LT(r.value().finalTrueRelResidual, 1e-9);
+    Pcg ours(SolverKind::AmgPcg, std::make_unique<AmgPreconditioner>(smallCoarse()));
+    ASSERT_EQ(ours.setup(A, {}, pool, {}).value().status, SolveStatus::Converged);
+    Vector y(f.size(), 0.0);
+    ASSERT_TRUE(ours.solve(f, y, c).ok());
+    double diff = 0.0;
+    double scale = 0.0;
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        diff = std::max(diff, std::fabs(x[i] - y[i]));
+        scale = std::max(scale, std::fabs(y[i]));
+    }
+    std::printf("[20³ Q1] hypre BoomerAMG-PCG %d its\n", r.value().iterations);
+    EXPECT_LT(diff, 1e-7 * scale);
 }
 
 // Stand-alone AMG ignores the flag: its iterate must stay in double precision.

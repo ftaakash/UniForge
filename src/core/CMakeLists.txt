@@ -38,6 +38,7 @@ add_library(uniforge_core STATIC
     solvers/amg/Amg.cpp
     solvers/direct/Cholesky.cpp
     solvers/direct/Ordering.cpp
+    solvers/external/HypreSolver.cpp
     solvers/SolverFactory.cpp
     solvers/krylov/Ic0.cpp
     solvers/krylov/Lanczos.cpp
@@ -76,6 +77,18 @@ uniforge_target_defaults(uniforge_core)
 # The worker pool uses std::thread (pthreads on Linux).
 find_package(Threads REQUIRED)
 target_link_libraries(uniforge_core PUBLIC Threads::Threads)
+
+# Optional reference solver (V3f): hypre, built separately and found through HYPRE_ROOT. Off by
+# default, so the normal build stays offline and dependency-free (DEPENDENCIES.md).
+option(UNIFORGE_WITH_HYPRE "Link hypre (BoomerAMG) as the external reference solver" OFF)
+if(UNIFORGE_WITH_HYPRE)
+    set(HYPRE_ROOT "" CACHE PATH "hypre install prefix (contains lib/cmake/HYPRE)")
+    enable_language(C) # hypre is a C library; its package config looks for OpenMP::OpenMP_C
+    find_package(HYPRE CONFIG REQUIRED PATHS "${HYPRE_ROOT}" NO_DEFAULT_PATH)
+    find_package(OpenMP REQUIRED COMPONENTS C CXX)
+    target_link_libraries(uniforge_core PRIVATE HYPRE::HYPRE OpenMP::OpenMP_CXX)
+    target_compile_definitions(uniforge_core PRIVATE UNIFORGE_HAVE_HYPRE=1)
+endif()
 
 # Compiler flags of this build for the benchmark report (perf/SystemInfo.cpp), per configuration.
 set(uniforge_config_flags

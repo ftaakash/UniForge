@@ -5,6 +5,7 @@
 #include "core/solvers/LinearSolver.hpp"
 #include "core/solvers/amg/Amg.hpp"
 #include "core/solvers/direct/Cholesky.hpp"
+#include "core/solvers/external/HypreSolver.hpp"
 #include "core/solvers/krylov/Ic0.hpp"
 #include "core/solvers/krylov/Pcg.hpp"
 
@@ -86,6 +87,10 @@ Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind) {
     }
     case SolverKind::AmgPcgChebSpBatch:
         return std::unique_ptr<LinearOperatorSolver>(std::make_unique<AmgBatchPcg>());
+    case SolverKind::HyprePcg:
+    case SolverKind::HyprePcgT05:
+        return std::unique_ptr<LinearOperatorSolver>(
+            std::make_unique<HyprePcg>(kind, kind == SolverKind::HyprePcg ? 0.25 : 0.5));
     }
     return makeError(ErrorCode::InvalidInput,
                      "Unknown solver kind " + std::to_string(static_cast<int>(kind)) + ".",

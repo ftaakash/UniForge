@@ -37,7 +37,9 @@ enum class SolverKind {
     AmgPcgChebSp,
     GmgPcg,
     GmgPcgChebSp,
-    AmgPcgChebSpBatch
+    AmgPcgChebSpBatch,
+    HyprePcg,   // V3f reference: hypre PCG + BoomerAMG, strength threshold 0.25
+    HyprePcgT05 // the same with threshold 0.5
 };
 
 enum class AmgSmoother { GaussSeidel, Chebyshev };
@@ -73,6 +75,10 @@ enum class Coarsening { Aggregation, Geometric };
         return "GMG-PCG-CH-SP";
     case SolverKind::AmgPcgChebSpBatch:
         return "AMG-PCG-CH-SP-B";
+    case SolverKind::HyprePcg:
+        return "HYPRE-PCG";
+    case SolverKind::HyprePcgT05:
+        return "HYPRE-PCG-T05";
     }
     return "?";
 }

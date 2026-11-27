@@ -384,6 +384,22 @@ void planV3E(Planner& p, bool dry) {
     }
 }
 
+// V3f: the external reference, hypre's PCG + BoomerAMG (strength threshold 0.25 and 0.5), on the
+// HS-7 ladder. One pinned core against V2's AMG-PCG; 6 threads (one per performance core)
+// against AMG-PCG-CH-SP. Needs a build with UNIFORGE_WITH_HYPRE.
+void planV3F(Planner& p, bool dry) {
+    const int kMax = dry ? 1 : 7;
+    for (int k = 0; k <= kMax; ++k) {
+        RunSpec r;
+        r.design = DesignKey::HS7;
+        r.spacing = ladderSpacing(k);
+        p.system("V3F", r, {SolverKind::AmgPcg, SolverKind::HyprePcg, SolverKind::HyprePcgT05});
+        r.threads = dry ? 2 : 6;
+        p.system("V3F", r,
+                 {SolverKind::AmgPcgChebSp, SolverKind::HyprePcg, SolverKind::HyprePcgT05});
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -443,8 +459,8 @@ double ladderSpacing(int k) {
 }
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
-    const std::vector<std::string> order{"T0", "E1", "E0",  "E7",  "E8",  "E3",  "E4",
-                                         "E6", "E2", "V3A", "V3B", "V3C", "V3D", "V3E"};
+    const std::vector<std::string> order{"T0", "E1",  "E0",  "E7",  "E8",  "E3",  "E4", "E6",
+                                         "E2", "V3A", "V3B", "V3C", "V3D", "V3E", "V3F"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
@@ -480,6 +496,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planV3C(p, dryRun);
         } else if (e == "V3E") {
             planV3E(p, dryRun);
+        } else if (e == "V3F") {
+            planV3F(p, dryRun);
         } else if (e == "V3D") {
             planV3D(p, dryRun);
         }
@@ -489,7 +507,7 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
     for (const RunSpec& r : planExperiments({"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8",
-                                             "V3A", "V3B", "V3C", "V3D", "V3E"},
+                                             "V3A", "V3B", "V3C", "V3D", "V3E", "V3F"},
                                             dryRun)) {
         if (r.id == id) {
             return r;
