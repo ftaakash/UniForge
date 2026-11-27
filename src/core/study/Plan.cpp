@@ -72,6 +72,9 @@ std::string solverPart(const RunSpec& s) {
     if (s.threads != 1) {
         part += "-p" + std::to_string(s.threads);
     }
+    if (s.loadCases != 1) {
+        part += "-L" + std::to_string(s.loadCases);
+    }
     return part;
 }
 
@@ -345,6 +348,42 @@ void planV3D(Planner& p, bool dry) {
     }
 }
 
+// V3e: several load cases after one setup, with threads pinned to performance cores first.
+// (1) Pinning check: AMG-PCG-CH-SP, one load, 6/8/12/20 threads at 0.57 M and 3.76 M.
+// (2) Load cases L = 1, 5, 20 at 94 k, 286 k, 1.02 M and 3.76 M: V2's AMG-PCG on one core,
+//     AMG-PCG-CH-SP one case after another and AMG-PCG-CH-SP-B in lockstep on 12 threads, and
+//     DIRECT-ND (one factorisation, L triangular solves) where it fits the budget.
+void planV3E(Planner& p, bool dry) {
+    const std::vector<int> pinKs = dry ? std::vector<int>{1} : std::vector<int>{4, 7};
+    const std::vector<int> pinThreads = dry ? std::vector<int>{2} : std::vector<int>{6, 8, 12, 20};
+    for (const int k : pinKs) {
+        for (const int t : pinThreads) {
+            RunSpec r;
+            r.design = DesignKey::HS7;
+            r.spacing = ladderSpacing(k);
+            r.threads = t;
+            p.system("V3E", r, {SolverKind::AmgPcgChebSp});
+        }
+    }
+    const std::vector<int> ks = dry ? std::vector<int>{0} : std::vector<int>{1, 3, 5, 7};
+    const std::vector<int> loads = dry ? std::vector<int>{1, 3} : std::vector<int>{1, 5, 20};
+    const int threads = dry ? 2 : 12;
+    for (const int k : ks) {
+        for (const int L : loads) {
+            RunSpec r;
+            r.design = DesignKey::HS7;
+            r.spacing = ladderSpacing(k);
+            r.loadCases = L;
+            p.system("V3E", r, {SolverKind::AmgPcg});
+            if (k <= 3) {
+                p.system("V3E", r, {SolverKind::DirectND});
+            }
+            r.threads = threads;
+            p.system("V3E", r, {SolverKind::AmgPcgChebSp, SolverKind::AmgPcgChebSpBatch});
+        }
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -404,8 +443,8 @@ double ladderSpacing(int k) {
 }
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
-    const std::vector<std::string> order{"T0", "E1", "E0",  "E7",  "E8",  "E3", "E4",
-                                         "E6", "E2", "V3A", "V3B", "V3C", "V3D"};
+    const std::vector<std::string> order{"T0", "E1", "E0",  "E7",  "E8",  "E3",  "E4",
+                                         "E6", "E2", "V3A", "V3B", "V3C", "V3D", "V3E"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
@@ -439,6 +478,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planV3B(p, dryRun);
         } else if (e == "V3C") {
             planV3C(p, dryRun);
+        } else if (e == "V3E") {
+            planV3E(p, dryRun);
         } else if (e == "V3D") {
             planV3D(p, dryRun);
         }
@@ -447,9 +488,9 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
 }
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
-    for (const RunSpec& r : planExperiments(
-             {"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A", "V3B", "V3C", "V3D"},
-             dryRun)) {
+    for (const RunSpec& r : planExperiments({"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8",
+                                             "V3A", "V3B", "V3C", "V3D", "V3E"},
+                                            dryRun)) {
         if (r.id == id) {
             return r;
         }

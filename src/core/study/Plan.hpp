@@ -42,6 +42,7 @@ struct RunSpec {
     bool ic0NoShift = false;      // E8: IC(0) without the shift ladder
     bool observer = true;         // track the error against T_ref on the first repetition
     int threads = 1;              // 1 = pinned to one performance core (amendment A8)
+    int loadCases = 1;            // V3e: load cases solved after one setup (solveMany)
 
     // Caps (build spec §7, D-17)
     double relTol = 1e-10;

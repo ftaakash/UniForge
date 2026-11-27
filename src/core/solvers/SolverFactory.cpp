@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <string>
+#include <vector>
 
 #include "core/solvers/LinearSolver.hpp"
 #include "core/solvers/amg/Amg.hpp"
@@ -7,6 +9,40 @@
 #include "core/solvers/krylov/Pcg.hpp"
 
 namespace uniforge::solvers {
+
+Result<SolveReport> LinearOperatorSolver::solveMany(const std::vector<Vector>& F,
+                                                    std::vector<Vector>& X,
+                                                    const SolveControl& control) {
+    if (F.size() != X.size()) {
+        return makeError(ErrorCode::InvalidInput,
+                         "solveMany needs one solution vector per load case.",
+                         "This is a programming error in the caller.");
+    }
+    SolveReport total;
+    for (std::size_t j = 0; j < F.size(); ++j) {
+        auto r = solve(F[j], X[j], control);
+        if (!r) {
+            return std::move(r).error();
+        }
+        const SolveReport& s = r.value();
+        total.seconds += s.seconds;
+        total.observerSeconds += s.observerSeconds;
+        total.spmvCount += s.spmvCount;
+        total.bytesMoved += s.bytesMoved;
+        total.workSpmvEq += s.workSpmvEq;
+        total.iterations = std::max(total.iterations, s.iterations);
+        total.finalTrueRelResidual = std::max(total.finalTrueRelResidual, s.finalTrueRelResidual);
+        if (j == 0) {
+            total.residualSum = s.residualSum;
+            total.kappaEstimate = s.kappaEstimate;
+        }
+        if (s.status != SolveStatus::Converged && total.status == SolveStatus::Converged) {
+            total.status = s.status;
+            total.detail = "load case " + std::to_string(j) + ": " + s.detail;
+        }
+    }
+    return total;
+}
 
 Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind) {
     switch (kind) {
@@ -48,6 +84,8 @@ Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind) {
         return std::unique_ptr<LinearOperatorSolver>(
             std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>(o)));
     }
+    case SolverKind::AmgPcgChebSpBatch:
+        return std::unique_ptr<LinearOperatorSolver>(std::make_unique<AmgBatchPcg>());
     }
     return makeError(ErrorCode::InvalidInput,
                      "Unknown solver kind " + std::to_string(static_cast<int>(kind)) + ".",

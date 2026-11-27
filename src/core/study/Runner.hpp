@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "core/common/Result.hpp"
+#include "core/sparse/KernelPool.hpp"
 #include "core/study/Plan.hpp"
 
 namespace uniforge::study {
@@ -54,9 +55,11 @@ struct RunPaths {
 // first one carries the error observer), engineering outputs and the energy audit. Writes the
 // iteration history (first repetition) and, for a Reference run, the reference solution.
 // Platform columns (peak memory, core, CPU load, host) are left empty for the caller.
-// Errors only for I/O and misuse; a solver failure is a status in the record.
-[[nodiscard]] Result<RunRecord> executeRun(const RunSpec& spec, const RunPaths& paths,
-                                           const std::string& gitCommit);
+// Errors only for I/O and misuse; a solver failure is a status in the record. `onThreadStart`
+// runs on each helper thread of the kernel pool (the caller pins it to a CPU, V3e).
+[[nodiscard]] Result<RunRecord>
+executeRun(const RunSpec& spec, const RunPaths& paths, const std::string& gitCommit,
+           const sparse::KernelPool::ThreadStartFn& onThreadStart = {});
 
 // Reference solutions: raw doubles with a small header (n). Saved atomically.
 Result<void> saveReference(const std::filesystem::path& file, const std::vector<double>& T);

@@ -165,6 +165,109 @@ double chebyshevBytes(const CsrMatrix& A, int degree, double valueBytes) {
     return degree * (residualPass + updatePass);
 }
 
+// ---- Block kernels (V3e): k cases per row, interleaved (row i, case c at i·k + c) ----------
+
+// Y ← A·X, or Y ← B − A·X when B is given. Matrix values of type T, vectors of type V; sums in
+// double. Each matrix entry is read once for all k cases.
+template <class T, class V>
+void blockSpmv(sparse::KernelPool& pool, Index n, const Offset* rowPtr, const Index* col,
+               const T* val, const V* X, V* Y, int k, const V* B = nullptr) {
+    pool.parallelFor(n, [&](Index begin, Index end) {
+        std::array<double, AmgHierarchy::kMaxBlock> acc{};
+        for (Index i = begin; i < end; ++i) {
+            std::fill(acc.begin(), acc.begin() + k, 0.0);
+            for (Offset q = rowPtr[i]; q < rowPtr[i + 1]; ++q) {
+                const double a = static_cast<double>(val[q]);
+                const V* x = X + static_cast<std::size_t>(col[q]) * toSize(k);
+                for (int c = 0; c < k; ++c) {
+                    acc[toSize(c)] += a * static_cast<double>(x[c]);
+                }
+            }
+            V* y = Y + toSize(i) * toSize(k);
+            const V* b = B != nullptr ? B + toSize(i) * toSize(k) : nullptr;
+            for (int c = 0; c < k; ++c) {
+                y[c] = static_cast<V>(b != nullptr ? static_cast<double>(b[c]) - acc[toSize(c)]
+                                                   : acc[toSize(c)]);
+            }
+        }
+    });
+}
+
+// chebyshev<T> for k interleaved cases (same polynomial, same 1/a_ii for every case).
+template <class T>
+void chebyshevBlock(sparse::KernelPool& pool, Index n, const Offset* rowPtr, const Index* col,
+                    const T* val, const T* invD, const T* b, T* x, T* r, T* d, int k,
+                    double lambdaMax, double ratio, int degree) {
+    const double beta = lambdaMax;
+    const double alpha = lambdaMax / ratio;
+    const double theta = 0.5 * (beta + alpha);
+    const double delta = 0.5 * (beta - alpha);
+    const double sigma = theta / delta;
+    double rho = 1.0 / sigma;
+    const std::size_t kk = toSize(k);
+    // r ← b − A·x for the rows [begin, end), then d from r with coefficients (c1, c2).
+    const auto residualAndDirection = [&](double c1, double c2, bool first) {
+        pool.parallelFor(n, [&](Index begin, Index end) {
+            std::array<double, AmgHierarchy::kMaxBlock> acc{};
+            for (Index i = begin; i < end; ++i) {
+                const std::size_t row = toSize(i) * kk;
+                for (std::size_t c = 0; c < kk; ++c) {
+                    acc[c] = static_cast<double>(b[row + c]);
+                }
+                for (Offset q = rowPtr[i]; q < rowPtr[i + 1]; ++q) {
+                    const double a = static_cast<double>(val[q]);
+                    const T* xj = x + toSize(col[q]) * kk;
+                    for (std::size_t c = 0; c < kk; ++c) {
+                        acc[c] -= a * static_cast<double>(xj[c]);
+                    }
+                }
+                const double inv = static_cast<double>(invD[i]);
+                for (std::size_t c = 0; c < kk; ++c) {
+                    r[row + c] = static_cast<T>(acc[c]);
+                    d[row + c] = static_cast<T>(
+                        (first ? 0.0 : c1 * static_cast<double>(d[row + c])) + c2 * inv * acc[c]);
+                }
+            }
+        });
+    };
+    residualAndDirection(0.0, 1.0 / theta, true);
+    const Index total = static_cast<Index>(toSize(n) * kk);
+    for (int s = 1; s <= degree; ++s) {
+        pool.parallelFor(total, [&](Index begin, Index end) {
+            for (Index i = begin; i < end; ++i) {
+                x[i] = static_cast<T>(static_cast<double>(x[i]) + static_cast<double>(d[i]));
+            }
+        });
+        if (s == degree) {
+            break;
+        }
+        const double rhoNew = 1.0 / (2.0 * sigma - rho);
+        residualAndDirection(rhoNew * rho, 2.0 * rhoNew / delta, false);
+        rho = rhoNew;
+    }
+}
+
+// Per-case sums Σ_i f(i, c) over n rows, chunk by chunk in a fixed order: bit-identical for any
+// thread count. `partial(i, sums)` adds row i's k contributions to sums.
+template <class F>
+std::vector<double> blockSums(sparse::KernelPool& pool, Index n, int k, const F& partial) {
+    const Index chunks = (n + sparse::KernelPool::kChunkRows - 1) / sparse::KernelPool::kChunkRows;
+    std::vector<double> part(toSize(chunks) * toSize(k), 0.0);
+    pool.parallelFor(n, [&](Index begin, Index end) {
+        double* s = part.data() + toSize(begin / sparse::KernelPool::kChunkRows) * toSize(k);
+        for (Index i = begin; i < end; ++i) {
+            partial(i, s);
+        }
+    });
+    std::vector<double> sums(toSize(k), 0.0);
+    for (Index c = 0; c < chunks; ++c) {
+        for (int j = 0; j < k; ++j) {
+            sums[toSize(j)] += part[toSize(c) * toSize(k) + toSize(j)];
+        }
+    }
+    return sums;
+}
+
 void gaussSeidel(const CsrMatrix& A, const Vector& b, Vector& x, bool forward) {
     const Index n = A.rows;
     for (Index step = 0; step < n; ++step) {
@@ -850,6 +953,100 @@ void AmgHierarchy::cycleSingle(std::size_t level) {
     smooth(false);
 }
 
+void AmgHierarchy::vcycleBlock(const Vector& B, Vector& X, int k) {
+    const std::size_t n = toSize(ops_[0]->rows);
+    const std::size_t kk = toSize(k);
+    if (!single_ || smoother_ != AmgSmoother::Chebyshev) { // no block kernels: k cycles
+        Vector b(n), x(n);
+        for (std::size_t c = 0; c < kk; ++c) {
+            for (std::size_t i = 0; i < n; ++i) {
+                b[i] = B[i * kk + c];
+                x[i] = 0.0;
+            }
+            vcycle(b, x);
+            for (std::size_t i = 0; i < n; ++i) {
+                X[i * kk + c] = x[i];
+            }
+        }
+        return;
+    }
+    for (FloatLevel& f : fl_) {
+        const std::size_t m = f.b.size() * kk;
+        if (f.bB.size() != m) {
+            f.bB.assign(m, 0.0f);
+            f.xB.assign(m, 0.0f);
+            if (!f.r.empty()) {
+                f.rB.assign(m, 0.0f);
+                f.tmpB.assign(m, 0.0f);
+                f.dB.assign(m, 0.0f);
+            }
+        }
+    }
+    FloatLevel& f0 = fl_[0];
+    pool_->parallelFor(static_cast<Index>(n * kk), [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            f0.bB[toSize(i)] = static_cast<float>(B[toSize(i)]);
+            f0.xB[toSize(i)] = 0.0f;
+        }
+    });
+    cycleSingleBlock(0, k);
+    pool_->parallelFor(static_cast<Index>(n * kk), [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            X[toSize(i)] = static_cast<double>(f0.xB[toSize(i)]);
+        }
+    });
+}
+
+void AmgHierarchy::cycleSingleBlock(std::size_t level, int k) {
+    FloatLevel& f = fl_[level];
+    const std::size_t kk = toSize(k);
+    if (level + 1 == fl_.size()) {
+        const std::size_t n = f.b.size();
+        for (std::size_t c = 0; c < kk; ++c) {
+            for (std::size_t i = 0; i < n; ++i) {
+                coarseRhs_[i] = static_cast<double>(f.bB[i * kk + c]);
+            }
+            auto r = coarse_->solve(coarseRhs_, coarseSolution_, {});
+            (void)r; // sizes match by construction; the factor exists
+            for (std::size_t i = 0; i < n; ++i) {
+                f.xB[i * kk + c] = static_cast<float>(coarseSolution_[i]);
+            }
+        }
+        return;
+    }
+    FloatLevel& c = fl_[level + 1];
+    const auto smooth = [&] {
+        chebyshevBlock<float>(*pool_, f.A.rows, f.A.rowPtr->data(), f.A.col->data(), f.A.val.data(),
+                              f.invDiag.data(), f.bB.data(), f.xB.data(), f.rB.data(), f.dB.data(),
+                              k, levels_[level].lambdaMax, chebRatio_, chebDegree_);
+    };
+    smooth();
+    blockSpmv(*pool_, f.A.rows, f.A.rowPtr->data(), f.A.col->data(), f.A.val.data(), f.xB.data(),
+              f.rB.data(), k, f.bB.data());
+    blockSpmv(*pool_, f.R.rows, f.R.rowPtr->data(), f.R.col->data(), f.R.val.data(), f.rB.data(),
+              c.bB.data(), k);
+    std::fill(c.xB.begin(), c.xB.end(), 0.0f);
+    cycleSingleBlock(level + 1, k);
+    blockSpmv(*pool_, f.P.rows, f.P.rowPtr->data(), f.P.col->data(), f.P.val.data(), c.xB.data(),
+              f.tmpB.data(), k);
+    pool_->parallelFor(static_cast<Index>(f.xB.size()), [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            f.xB[toSize(i)] += f.tmpB[toSize(i)];
+        }
+    });
+    smooth();
+}
+
+std::size_t AmgHierarchy::blockBytes() const noexcept {
+    std::size_t bytes = 0;
+    for (const FloatLevel& f : fl_) {
+        bytes += (f.bB.capacity() + f.xB.capacity() + f.rB.capacity() + f.tmpB.capacity() +
+                  f.dB.capacity()) *
+                 sizeof(float);
+    }
+    return bytes;
+}
+
 void AmgHierarchy::cycle(std::size_t level, const Vector& b, Vector& x) {
     if (level + 1 == ops_.size()) {
         auto r = coarse_->solve(b, coarseSolution_, {});
@@ -1168,6 +1365,230 @@ Result<SolveReport> AmgSolver::solve(const Vector& f, Vector& x, const SolveCont
         rep.residualSum = sparse::sum(pool, r_);
     }
     return rep;
+}
+
+// ---- AMG-PCG-CH-SP for several load cases (V3e) ----------------------------------------------
+
+Result<SetupReport> AmgBatchPcg::setup(const CsrMatrix& K, const CoordinateHint& /*hint*/,
+                                       sparse::KernelPool& pool, const SolverOptions& options) {
+    ready_ = false;
+    SolverOptions o = options;
+    o.amgSinglePrecision = true;
+    o.amgSmoother = AmgSmoother::Chebyshev;
+    o.coarsening = Coarsening::Aggregation;
+    auto r = h_.build(K, pool, o);
+    if (!r) {
+        return std::move(r).error();
+    }
+    SetupReport report = std::move(r).value();
+    if (report.status != SolveStatus::Converged) {
+        return report;
+    }
+    k_ = &K;
+    pool_ = &pool;
+    budget_ = options.memoryBudgetBytes;
+    ready_ = true;
+    report.footprint = footprint();
+    return report;
+}
+
+Result<SolveReport> AmgBatchPcg::solve(const Vector& f, Vector& x, const SolveControl& control) {
+    const std::vector<Vector> F{f};
+    std::vector<Vector> X{x};
+    auto r = solveMany(F, X, control);
+    if (r) {
+        x = std::move(X[0]);
+    }
+    return r;
+}
+
+Result<SolveReport> AmgBatchPcg::solveMany(const std::vector<Vector>& F, std::vector<Vector>& X,
+                                           const SolveControl& control) {
+    if (!ready_) {
+        return makeError(ErrorCode::InvalidInput, "Batch PCG was not set up successfully.",
+                         "Call setup() and check its status first.");
+    }
+    const std::size_t n = toSize(k_->rows);
+    const int k = static_cast<int>(F.size());
+    if (k < 1 || k > AmgHierarchy::kMaxBlock || X.size() != F.size()) {
+        return makeError(ErrorCode::InvalidInput,
+                         "Batch PCG takes 1 to " + std::to_string(AmgHierarchy::kMaxBlock) +
+                             " load cases with one solution vector each.",
+                         "This is a programming error in the caller.");
+    }
+    for (int c = 0; c < k; ++c) {
+        if (F[toSize(c)].size() != n || X[toSize(c)].size() != n) {
+            return makeError(ErrorCode::InvalidInput, "A load case does not match the rows of K.",
+                             "This is a programming error in the caller.");
+        }
+    }
+    SolveReport rep;
+    // Block memory: 6 double vectors here plus about 5 float vectors per level (with the
+    // coarse levels, about 1.2 times level 0) in the hierarchy.
+    const double blockBytes =
+        static_cast<double>(n) * static_cast<double>(k) * (6.0 * 8.0 + 5.0 * 4.0 * 1.2);
+    if (blockBytes + static_cast<double>(h_.footprint().total()) > static_cast<double>(budget_)) {
+        rep.status = SolveStatus::OverBudget;
+        rep.detail =
+            "The block vectors for " + std::to_string(k) + " load cases exceed the budget.";
+        return rep;
+    }
+    const auto t0 = Clock::now();
+    sparse::KernelPool& pool = *pool_;
+    const CsrMatrix& K = *k_;
+    const std::size_t kk = toSize(k);
+    const std::size_t m = n * kk;
+    const Index total = static_cast<Index>(m);
+    for (Vector* v : {&R_, &Z_, &P_, &Q_, &Xb_, &Fb_}) {
+        v->assign(m, 0.0);
+    }
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t c = 0; c < kk; ++c) {
+            Fb_[i * kk + c] = F[c][i];
+            Xb_[i * kk + c] = X[c][i];
+        }
+    }
+    const auto norms = [&](const Vector& V) {
+        std::vector<double> s = blockSums(pool, K.rows, k, [&](Index i, double* acc) {
+            for (std::size_t c = 0; c < kk; ++c) {
+                const double v = V[toSize(i) * kk + c];
+                acc[c] += v * v;
+            }
+        });
+        for (double& v : s) {
+            v = std::sqrt(v);
+        }
+        return s;
+    };
+    const auto dots = [&](const Vector& A, const Vector& B) {
+        return blockSums(pool, K.rows, k, [&](Index i, double* acc) {
+            for (std::size_t c = 0; c < kk; ++c) {
+                acc[c] += A[toSize(i) * kk + c] * B[toSize(i) * kk + c];
+            }
+        });
+    };
+    const std::vector<double> normF = norms(Fb_);
+    blockSpmv(pool, K.rows, K.rowPtr.data(), K.col.data(), K.val.data(), Xb_.data(), R_.data(), k,
+              Fb_.data());
+    std::vector<double> rel = norms(R_);
+    std::vector<char> active(kk, 1);
+    double worst = 0.0;
+    for (std::size_t c = 0; c < kk; ++c) {
+        rel[c] = normF[c] > 0.0 ? rel[c] / normF[c] : 0.0;
+        if (rel[c] <= control.relTol) {
+            active[c] = 0;
+        }
+        worst = std::max(worst, rel[c]);
+    }
+    rep.residualHistory.push_back(worst);
+    const auto anyActive = [&] {
+        return std::any_of(active.begin(), active.end(), [](char a) { return a != 0; });
+    };
+    std::vector<double> rz(kk, 0.0);
+    if (anyActive()) {
+        h_.vcycleBlock(R_, Z_, k);
+        rz = dots(R_, Z_);
+        P_ = Z_;
+    }
+    std::vector<double> alpha(kk, 0.0);
+    std::vector<double> beta(kk, 0.0);
+    int it = 0;
+    while (anyActive()) {
+        if (it >= control.maxIterations) {
+            rep.status = SolveStatus::MaxIterations;
+            rep.detail =
+                "Reached the cap of " + std::to_string(control.maxIterations) + " iterations.";
+            break;
+        }
+        if (secondsSince(t0) > control.wallTimeCap) {
+            rep.status = SolveStatus::TimeCap;
+            break;
+        }
+        ++it;
+        blockSpmv(pool, K.rows, K.rowPtr.data(), K.col.data(), K.val.data(), P_.data(), Q_.data(),
+                  k);
+        const std::vector<double> pq = dots(P_, Q_);
+        for (std::size_t c = 0; c < kk; ++c) {
+            if (active[c] != 0 && !(pq[c] > 0.0)) {
+                rep.status = SolveStatus::Breakdown;
+                rep.detail = "pTKp <= 0 for load case " + std::to_string(c) + ".";
+            }
+            alpha[c] = active[c] != 0 && pq[c] > 0.0 ? rz[c] / pq[c] : 0.0;
+        }
+        if (rep.status == SolveStatus::Breakdown) {
+            break;
+        }
+        pool.parallelFor(total, [&](Index begin, Index end) {
+            for (Index i = begin; i < end; ++i) {
+                const double a = alpha[toSize(i) % kk];
+                Xb_[toSize(i)] += a * P_[toSize(i)];
+                R_[toSize(i)] -= a * Q_[toSize(i)];
+            }
+        });
+        rel = norms(R_);
+        worst = 0.0;
+        for (std::size_t c = 0; c < kk; ++c) {
+            rel[c] = normF[c] > 0.0 ? rel[c] / normF[c] : 0.0;
+            if (active[c] != 0) {
+                worst = std::max(worst, rel[c]);
+                if (rel[c] <= control.relTol) {
+                    active[c] = 0;
+                }
+            }
+        }
+        rep.residualHistory.push_back(worst);
+        rep.iterTimestamps.push_back(secondsSince(t0));
+        if (!anyActive()) {
+            break;
+        }
+        h_.vcycleBlock(R_, Z_, k);
+        const std::vector<double> rzNew = dots(R_, Z_);
+        for (std::size_t c = 0; c < kk; ++c) {
+            beta[c] = active[c] != 0 && rz[c] != 0.0 ? rzNew[c] / rz[c] : 0.0;
+            rz[c] = rzNew[c];
+        }
+        pool.parallelFor(total, [&](Index begin, Index end) {
+            for (Index i = begin; i < end; ++i) {
+                const std::size_t c = toSize(i) % kk;
+                if (active[c] != 0) {
+                    P_[toSize(i)] = Z_[toSize(i)] + beta[c] * P_[toSize(i)];
+                }
+            }
+        });
+    }
+    rep.iterations = it;
+    rep.seconds = secondsSince(t0);
+    // True residuals after the solve (not timed).
+    blockSpmv(pool, K.rows, K.rowPtr.data(), K.col.data(), K.val.data(), Xb_.data(), Q_.data(), k,
+              Fb_.data());
+    const std::vector<double> trueNorm = norms(Q_);
+    for (std::size_t c = 0; c < kk; ++c) {
+        rep.finalTrueRelResidual = std::max(rep.finalTrueRelResidual,
+                                            normF[c] > 0.0 ? trueNorm[c] / normF[c] : trueNorm[c]);
+    }
+    if (control.residualSumMask != nullptr) { // load case 0
+        for (std::size_t i = 0; i < n; ++i) {
+            if ((*control.residualSumMask)[i] != 0) {
+                rep.residualSum += Q_[i * kk];
+            }
+        }
+    }
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t c = 0; c < kk; ++c) {
+            X[c][i] = Xb_[i * kk + c];
+        }
+    }
+    return rep;
+}
+
+MemoryFootprint AmgBatchPcg::footprint() const {
+    MemoryFootprint f = h_.footprint();
+    f.add("AMG block work vectors (float)", h_.blockBytes());
+    f.add("Batch PCG block vectors (R, Z, P, Q, X, F)",
+          (R_.capacity() + Z_.capacity() + P_.capacity() + Q_.capacity() + Xb_.capacity() +
+           Fb_.capacity()) *
+              sizeof(double));
+    return f;
 }
 
 } // namespace uniforge::solvers

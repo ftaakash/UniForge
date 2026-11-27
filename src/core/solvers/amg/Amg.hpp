@@ -74,6 +74,14 @@ public:
     // One V-cycle for A_0·x = b, improving x in place (x is the initial guess).
     void vcycle(const Vector& b, Vector& x);
 
+    // One V-cycle for k right-hand sides at once (V3e), zero initial guess. B and X hold k
+    // values per row, interleaved (row i, case c at i·k + c), so every matrix entry is read once
+    // for all k cases. Block kernels exist for the single-precision Chebyshev hierarchy; other
+    // hierarchies run k ordinary V-cycles. 1 ≤ k ≤ kMaxBlock.
+    static constexpr int kMaxBlock = 32;
+    void vcycleBlock(const Vector& B, Vector& X, int k);
+    [[nodiscard]] std::size_t blockBytes() const noexcept;
+
     [[nodiscard]] std::size_t levelCount() const noexcept { return ops_.size(); }
     [[nodiscard]] const CsrMatrix& op(std::size_t level) const noexcept { return *ops_[level]; }
     [[nodiscard]] const std::vector<Index>& aggregates(std::size_t level) const noexcept {
@@ -118,7 +126,11 @@ private:
         std::vector<float> b, x; // right-hand side and iterate of this level
         std::vector<float> r, tmp;
         std::vector<float> invDiag, d; // Chebyshev smoother
+        // Block work vectors (V3e, k values per row): right-hand side, iterate, residual,
+        // prolonged correction, Chebyshev direction.
+        std::vector<float> bB, xB, rB, tmpB, dB;
     };
+    void cycleSingleBlock(std::size_t level, int k);
     void buildSinglePrecision();
     void cycleSingle(std::size_t level);
     void buildChebyshev();
@@ -165,6 +177,35 @@ private:
 // AMG as a stand-alone solver: x ← x + V-cycle correction until the relative residual reaches
 // the tolerance. Failure statuses as for PCG, plus Diverging when the residual grows for three
 // cycles in a row and is more than 10× above its best value.
+// AMG-PCG-CH-SP for several load cases at once (V3e): k preconditioned CG recurrences run in
+// lockstep with block matrix products and block V-cycles, so K and the hierarchy are read once
+// per iteration for all k cases. Each case keeps its own α, β and stopping test; a converged
+// case stops changing. solve() is the k = 1 case. Memory: 4 double block vectors (R, Z, P, Q)
+// plus the hierarchy's float block vectors; setup budget checks cover one case, solveMany
+// refuses (OverBudget) when the block vectors would exceed the budget.
+class AmgBatchPcg final : public LinearOperatorSolver {
+public:
+    AmgBatchPcg() = default;
+
+    [[nodiscard]] SolverKind kind() const noexcept override {
+        return SolverKind::AmgPcgChebSpBatch;
+    }
+    Result<SetupReport> setup(const CsrMatrix& K, const CoordinateHint& hint,
+                              sparse::KernelPool& pool, const SolverOptions& options) override;
+    Result<SolveReport> solve(const Vector& f, Vector& x, const SolveControl& control) override;
+    Result<SolveReport> solveMany(const std::vector<Vector>& F, std::vector<Vector>& X,
+                                  const SolveControl& control) override;
+    [[nodiscard]] MemoryFootprint footprint() const override;
+
+private:
+    AmgHierarchy h_;
+    const CsrMatrix* k_ = nullptr;
+    sparse::KernelPool* pool_ = nullptr;
+    std::size_t budget_ = 0;
+    bool ready_ = false;
+    Vector R_, Z_, P_, Q_, Xb_, Fb_; // interleaved block vectors (n·k)
+};
+
 class AmgSolver final : public LinearOperatorSolver {
 public:
     AmgSolver() = default;

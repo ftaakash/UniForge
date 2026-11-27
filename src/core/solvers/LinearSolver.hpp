@@ -33,6 +33,12 @@ public:
     // Errors: InvalidInput (no successful setup, wrong sizes), NonFinite (NaN/Inf in f or x).
     virtual Result<SolveReport> solve(const Vector& f, Vector& x, const SolveControl& control) = 0;
 
+    // Several load cases with the same K (V3e). Default: one solve() per load, in order, reusing
+    // the setup. The report aggregates them: seconds summed, iterations the largest, status the
+    // first non-converged one, finalTrueRelResidual the largest. X.size() must equal F.size().
+    virtual Result<SolveReport> solveMany(const std::vector<Vector>& F, std::vector<Vector>& X,
+                                          const SolveControl& control);
+
     // Bytes held by the solver after setup (work vectors included).
     [[nodiscard]] virtual MemoryFootprint footprint() const = 0;
 };

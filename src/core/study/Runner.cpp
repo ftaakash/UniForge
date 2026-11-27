@@ -64,6 +64,38 @@ std::string roleName(RunRole r) {
     return "?";
 }
 
+// V3e load cases: case 0 is the design's own right-hand side; case j ≥ 1 scales each free row by
+// a smooth positive field 1 + 0.5·sin(2πj·x/Lx + 0.7j)·cos(πj·y/Ly), i.e. a different spatial
+// distribution of the same heat sources and convection loads. Rows of prescribed temperatures
+// keep their values, so every case has the same boundary temperatures.
+std::vector<solvers::Vector> loadCases(const fem3d::LinearSystem& sys, const fem3d::HexMesh& m,
+                                       int count) {
+    std::array<double, 2> lo{1e300, 1e300};
+    std::array<double, 2> hi{-1e300, -1e300};
+    for (const auto& p : m.nodeXyz) {
+        for (int a = 0; a < 2; ++a) {
+            lo[a] = std::min(lo[a], p[a]);
+            hi[a] = std::max(hi[a], p[a]);
+        }
+    }
+    const double lx = std::max(hi[0] - lo[0], 1e-12);
+    const double ly = std::max(hi[1] - lo[1], 1e-12);
+    constexpr double kPi = 3.14159265358979323846;
+    std::vector<solvers::Vector> F(static_cast<std::size_t>(count), sys.f);
+    for (int j = 1; j < count; ++j) {
+        solvers::Vector& f = F[static_cast<std::size_t>(j)];
+        for (std::size_t i = 0; i < f.size(); ++i) {
+            if (sys.freeMask[i] == 0) {
+                continue;
+            }
+            const double x = (m.nodeXyz[i][0] - lo[0]) / lx;
+            const double y = (m.nodeXyz[i][1] - lo[1]) / ly;
+            f[i] *= 1.0 + 0.5 * std::sin(2.0 * kPi * j * x + 0.7 * j) * std::cos(kPi * j * y);
+        }
+    }
+    return F;
+}
+
 std::unique_ptr<solvers::LinearOperatorSolver> makeRunSolver(const RunSpec& spec) {
     if (spec.naturalOrdering) {
         return std::make_unique<solvers::DirectCholesky>(spec.solver, solvers::Ordering::Natural);
@@ -253,6 +285,7 @@ const std::vector<std::string>& resultColumns() {
                                                   "spacing_mm",
                                                   "solver",
                                                   "threads",
+                                                  "load_cases",
                                                   "observer",
                                                   "dof",
                                                   "nnz",
@@ -414,7 +447,8 @@ Result<std::vector<double>> loadReference(const std::filesystem::path& file) {
 // ---- One run ------------------------------------------------------------------------------------
 
 Result<RunRecord> executeRun(const RunSpec& spec, const RunPaths& paths,
-                             const std::string& gitCommit) {
+                             const std::string& gitCommit,
+                             const sparse::KernelPool::ThreadStartFn& onThreadStart) {
     RunRecord rec;
     rec.set("id", spec.id);
     rec.set("experiment", spec.experiment);
@@ -423,6 +457,7 @@ Result<RunRecord> executeRun(const RunSpec& spec, const RunPaths& paths,
     rec.set("git_commit", gitCommit);
     rec.set("started_utc", formatUtcIso8601(std::chrono::system_clock::now()));
     rec.set("threads", static_cast<long long>(spec.threads));
+    rec.set("load_cases", static_cast<long long>(spec.loadCases));
     rec.set("observer", std::string(spec.observer ? "1" : "0"));
 
     if (spec.role == RunRole::Verification) {
@@ -472,7 +507,7 @@ Result<RunRecord> executeRun(const RunSpec& spec, const RunPaths& paths,
     rec.set("assembly_s", sys.assemblySeconds);
     rec.set("matrix_bytes", static_cast<long long>(sys.matrixBytes));
 
-    sparse::KernelPool pool(spec.threads);
+    sparse::KernelPool pool(spec.threads, onThreadStart);
     const auto refFile = paths.referenceFile(systemKey(spec));
 
     if (spec.role == RunRole::Reference) {
@@ -571,18 +606,30 @@ Result<RunRecord> executeRun(const RunSpec& spec, const RunPaths& paths,
             setupTimes.push_back(su.value().seconds);
             break; // a failed setup is the result; no repetitions
         }
-        footprint = solver->footprint().total();
         std::fill(T.begin(), T.end(), 0.0);
         std::unique_ptr<solvers::ErrorVsReference> observer;
         solvers::SolveControl c = control;
-        if (rep == 0 && !reference.empty()) {
-            observer = std::make_unique<solvers::ErrorVsReference>(reference, pool);
-            c.observer = observer.get();
+        Result<solvers::SolveReport> so = solvers::SolveReport{};
+        if (spec.loadCases > 1) {
+            // V3e: all load cases after the one setup; load 0 is the design's own load, so the
+            // error against the reference is measured on it after the solve (no observer).
+            const std::vector<solvers::Vector> F = loadCases(sys, m, spec.loadCases);
+            std::vector<solvers::Vector> X(F.size(), solvers::Vector(sys.f.size(), 0.0));
+            so = solver->solveMany(F, X, c);
+            if (so) {
+                T = std::move(X[0]);
+            }
+        } else {
+            if (rep == 0 && !reference.empty()) {
+                observer = std::make_unique<solvers::ErrorVsReference>(reference, pool);
+                c.observer = observer.get();
+            }
+            so = solver->solve(sys.f, T, c);
         }
-        auto so = solver->solve(sys.f, T, c);
         if (!so) {
             return std::move(so).error();
         }
+        footprint = solver->footprint().total(); // after the solve: block vectors included
         setupTimes.push_back(su.value().seconds);
         solveTimes.push_back(so.value().seconds);
         totalTimes.push_back(su.value().seconds + so.value().seconds);

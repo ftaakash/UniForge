@@ -513,6 +513,76 @@ TEST(Gmg, GeometricMultigridPcgConvergesAndNeedsTheHint) {
     EXPECT_EQ(su.value().status, SolveStatus::Breakdown);
 }
 
+// V3e: k load cases in lockstep. Every case reaches the tolerance and matches the one-case
+// AMG-PCG-CH-SP answer; the block result is identical for 1 and 4 threads; the default
+// solveMany (one solve per case) aggregates its reports.
+TEST(BatchPcg, LoadCasesInLockstepMatchSeparateSolves) {
+    const CsrMatrix A = q1Laplacian3d(18);
+    const std::size_t n = toSize(A.rows);
+    std::vector<Vector> F;
+    for (int c = 0; c < 5; ++c) {
+        F.push_back(randomVec(n, 40 + static_cast<std::uint64_t>(c)));
+    }
+    F.push_back(Vector(n, 0.0)); // a zero load converges at once
+    SolveControl ctl;
+    ctl.relTol = 1e-10;
+    const auto batch = [&](int threads) {
+        KernelPool pool(threads);
+        AmgBatchPcg s;
+        SolverOptions o = smallCoarse();
+        EXPECT_EQ(s.setup(A, {}, pool, o).value().status, SolveStatus::Converged);
+        std::vector<Vector> X(F.size(), Vector(n, 0.0));
+        auto r = s.solveMany(F, X, ctl);
+        EXPECT_TRUE(r.ok());
+        EXPECT_EQ(r.value().status, SolveStatus::Converged);
+        EXPECT_LT(r.value().finalTrueRelResidual, 1e-9);
+        EXPECT_GT(s.footprint().total(), 0u);
+        return std::make_pair(r.value().iterations, X);
+    };
+    const auto [it1, X1] = batch(1);
+    const auto [it4, X4] = batch(4);
+    EXPECT_EQ(it1, it4);
+    EXPECT_EQ(X1, X4);
+    for (const double v : X1.back()) {
+        EXPECT_EQ(v, 0.0);
+    }
+    // Against separate AMG-PCG-CH-SP solves (sequential solveMany of the PCG class).
+    KernelPool pool(2);
+    SolverOptions o = smallCoarse();
+    o.amgSinglePrecision = true;
+    o.amgSmoother = AmgSmoother::Chebyshev;
+    Pcg seq(SolverKind::AmgPcgChebSp, std::make_unique<AmgPreconditioner>(o));
+    ASSERT_EQ(seq.setup(A, {}, pool, {}).value().status, SolveStatus::Converged);
+    std::vector<Vector> Xs(F.size(), Vector(n, 0.0));
+    auto rs = seq.solveMany(F, Xs, ctl);
+    ASSERT_TRUE(rs.ok());
+    EXPECT_EQ(rs.value().status, SolveStatus::Converged);
+    std::printf("[6 load cases, 18³] batch %d its (max), separate %d its (max)\n", it1,
+                rs.value().iterations);
+    EXPECT_LE(it1, rs.value().iterations + 2);
+    for (std::size_t c = 0; c + 1 < F.size(); ++c) {
+        double diff = 0.0;
+        double scale = 0.0;
+        for (std::size_t i = 0; i < n; ++i) {
+            diff = std::max(diff, std::fabs(X1[c][i] - Xs[c][i]));
+            scale = std::max(scale, std::fabs(Xs[c][i]));
+        }
+        EXPECT_LT(diff, 1e-7 * scale) << "case " << c;
+    }
+    // One case through solve() equals the first case of a batch of one.
+    AmgBatchPcg one;
+    ASSERT_EQ(one.setup(A, {}, pool, smallCoarse()).value().status, SolveStatus::Converged);
+    Vector x(n, 0.0);
+    ASSERT_TRUE(one.solve(F[0], x, ctl).ok());
+    double diff = 0.0;
+    for (std::size_t i = 0; i < n; ++i) {
+        diff = std::max(diff, std::fabs(x[i] - Xs[0][i]));
+    }
+    EXPECT_LT(diff, 1e-6);
+    std::vector<Vector> wrong(2, Vector(n, 0.0));
+    EXPECT_EQ(one.solveMany(F, wrong, ctl).error().code, ErrorCode::InvalidInput);
+}
+
 // Stand-alone AMG ignores the flag: its iterate must stay in double precision.
 TEST(Amg, StandAloneAmgStaysInDoublePrecision) {
     KernelPool pool(1);

@@ -23,7 +23,8 @@ using sparse::Vector;
 // The six solver variants compared in V2 (build spec §5, labels used in every table and plot),
 // plus the V3 candidates: AmgPcgSp (single-precision hierarchy, V3a), AmgPcgCheb and
 // AmgPcgChebSp (Chebyshev–Jacobi smoother instead of Gauss–Seidel, double / single, V3b),
-// GmgPcg and GmgPcgChebSp (geometric coarsening on the mesh grid instead of aggregation, V3d).
+// GmgPcg and GmgPcgChebSp (geometric coarsening on the mesh grid instead of aggregation, V3d),
+// AmgPcgChebSpBatch (AMG-PCG-CH-SP solving several load cases in lockstep, V3e).
 enum class SolverKind {
     DirectND,
     DirectRCM,
@@ -35,7 +36,8 @@ enum class SolverKind {
     AmgPcgCheb,
     AmgPcgChebSp,
     GmgPcg,
-    GmgPcgChebSp
+    GmgPcgChebSp,
+    AmgPcgChebSpBatch
 };
 
 enum class AmgSmoother { GaussSeidel, Chebyshev };
@@ -69,6 +71,8 @@ enum class Coarsening { Aggregation, Geometric };
         return "GMG-PCG";
     case SolverKind::GmgPcgChebSp:
         return "GMG-PCG-CH-SP";
+    case SolverKind::AmgPcgChebSpBatch:
+        return "AMG-PCG-CH-SP-B";
     }
     return "?";
 }

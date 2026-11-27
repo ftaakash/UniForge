@@ -93,10 +93,25 @@ int doRun(const StudyArgs& a, const std::string& commit, std::ostream& out, std:
         err << "error: " << spec.error().message << "\n";
         return kExitUsage;
     }
-    const int core = spec.value().threads == 1 ? platform::pinToPerformanceCore() : -1;
+    // One thread: pinned to a performance core (amendment A8). Several threads (V3e): the caller
+    // and every helper pinned, performance cores first, so serial work never lands on an
+    // efficiency core. `core` records the caller's CPU (−1 = not pinned).
+    int core = -1;
+    sparse::KernelPool::ThreadStartFn onThreadStart;
+    if (spec.value().threads == 1) {
+        core = platform::pinToPerformanceCore();
+    } else {
+        const std::vector<int> cpus = platform::performanceFirstCpus(spec.value().threads);
+        if (!cpus.empty() && platform::pinThreadToCpu(cpus.front())) {
+            core = cpus.front();
+            onThreadStart = [cpus](int index) {
+                (void)platform::pinThreadToCpu(cpus[static_cast<std::size_t>(index)]);
+            };
+        }
+    }
     const double load = platform::cpuLoadPercent(0.5);
     const study::RunPaths paths{a.out};
-    auto rec = study::executeRun(spec.value(), paths, commit);
+    auto rec = study::executeRun(spec.value(), paths, commit, onThreadStart);
     if (!rec) {
         err << "error: " << a.id << ": " << rec.error().message << "\n";
         return kExitError;

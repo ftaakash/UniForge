@@ -290,7 +290,8 @@ TEST(SolverFactory, EveryKindIsBuilt) {
     for (const SolverKind k :
          {SolverKind::DirectND, SolverKind::DirectRCM, SolverKind::PcgJacobi, SolverKind::PcgIc0,
           SolverKind::Amg, SolverKind::AmgPcg, SolverKind::AmgPcgSp, SolverKind::AmgPcgCheb,
-          SolverKind::AmgPcgChebSp, SolverKind::GmgPcg, SolverKind::GmgPcgChebSp}) {
+          SolverKind::AmgPcgChebSp, SolverKind::GmgPcg, SolverKind::GmgPcgChebSp,
+          SolverKind::AmgPcgChebSpBatch}) {
         auto s = makeSolver(k);
         ASSERT_TRUE(s.ok()) << label(k);
         EXPECT_EQ(s.value()->kind(), k) << label(k);

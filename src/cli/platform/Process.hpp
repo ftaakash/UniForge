@@ -45,6 +45,13 @@ struct LimitedRun {
 // efficiency class; the last such CPU, since CPU 0 usually takes most interrupts). Returns
 // that CPU's index, or -1 where pinning is not supported.
 [[nodiscard]] int pinToPerformanceCore();
+// Logical CPUs for a pool of `threads` threads (V3e): thread 0 gets the CPU pinToPerformanceCore
+// would pick, then one logical CPU on each other performance core, then the remaining
+// performance-core siblings (SMT), then efficiency cores. Empty where unsupported or when
+// `threads` exceeds the logical CPUs.
+[[nodiscard]] std::vector<int> performanceFirstCpus(int threads);
+// Pins the calling thread to one logical CPU. False where unsupported or on failure.
+bool pinThreadToCpu(int cpu);
 // Keeps the machine from sleeping while `on` (Windows: SetThreadExecutionState); no-op elsewhere.
 void keepAwake(bool on);
 // Whole-machine CPU load in percent over `sampleSeconds`, or -1 if unknown.

@@ -97,6 +97,14 @@ int pinToPerformanceCore() {
     return -1;
 }
 
+std::vector<int> performanceFirstCpus(int /*threads*/) {
+    return {};
+}
+
+bool pinThreadToCpu(int /*cpu*/) {
+    return false;
+}
+
 void keepAwake(bool /*on*/) {}
 
 double cpuLoadPercent(double /*sampleSeconds*/) {
