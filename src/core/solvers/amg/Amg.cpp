@@ -35,6 +35,66 @@ double passBytes(const CsrMatrix& A) {
            16.0 * static_cast<double>(std::max(A.rows, A.cols));
 }
 
+// The same pass with float values and float vectors (V3a): 4 + 4 bytes per entry.
+double passBytesSingle(const CsrMatrix& A) {
+    return 8.0 * static_cast<double>(A.nnz()) + 8.0 * static_cast<double>(A.rows + 1) +
+           8.0 * static_cast<double>(std::max(A.rows, A.cols));
+}
+
+std::vector<float> toFloat(const std::vector<double>& v) {
+    std::vector<float> out(v.size());
+    for (std::size_t i = 0; i < v.size(); ++i) {
+        out[i] = static_cast<float>(v[i]);
+    }
+    return out;
+}
+
+void releaseValues(CsrMatrix& A) {
+    A.val.clear();
+    A.val.shrink_to_fit();
+}
+
+// Gauss–Seidel on float data. The row sum is accumulated in double (cheap: the cost of a sweep
+// is the memory traffic) so the only rounding to float is the stored update.
+template <class FloatCsr>
+void gaussSeidelSingle(const FloatCsr& A, const std::vector<float>& b, std::vector<float>& x,
+                       bool forward) {
+    const Index n = A.rows;
+    const auto& rowPtr = *A.rowPtr;
+    const auto& col = *A.col;
+    for (Index step = 0; step < n; ++step) {
+        const Index i = forward ? step : n - 1 - step;
+        double s = b[toSize(i)];
+        double d = 0.0;
+        for (Offset q = rowPtr[toSize(i)]; q < rowPtr[toSize(i) + 1]; ++q) {
+            const Index j = col[toSize(q)];
+            if (j == i) {
+                d = A.val[toSize(q)];
+            } else {
+                s -= static_cast<double>(A.val[toSize(q)]) * x[toSize(j)];
+            }
+        }
+        x[toSize(i)] = static_cast<float>(s / d);
+    }
+}
+
+// y ← A·x (or y ← b − A·x when b is given), split into the pool's chunks like sparse::spmv.
+template <class FloatCsr>
+void spmvSingle(sparse::KernelPool& pool, const FloatCsr& A, const std::vector<float>& x,
+                std::vector<float>& y, const std::vector<float>* b = nullptr) {
+    const auto& rowPtr = *A.rowPtr;
+    const auto& col = *A.col;
+    pool.parallelFor(A.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            double s = 0.0;
+            for (Offset q = rowPtr[toSize(i)]; q < rowPtr[toSize(i) + 1]; ++q) {
+                s += static_cast<double>(A.val[toSize(q)]) * x[toSize(col[toSize(q)])];
+            }
+            y[toSize(i)] = static_cast<float>(b != nullptr ? (*b)[toSize(i)] - s : s);
+        }
+    });
+}
+
 void gaussSeidel(const CsrMatrix& A, const Vector& b, Vector& x, bool forward) {
     const Index n = A.rows;
     for (Index step = 0; step < n; ++step) {
@@ -239,6 +299,8 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     owned_.clear();
     levels_.clear();
     coarse_.reset();
+    single_ = options.amgSinglePrecision;
+    fl_.clear();
     SetupReport report;
 
     const auto tc = Clock::now();
@@ -299,6 +361,11 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
         return report;
     }
     coarseSolution_.assign(toSize(ops_.back()->rows), 0.0);
+    if (single_) {
+        const auto ts = Clock::now();
+        buildSinglePrecision();
+        report.phases.emplace_back("single-precision copy", secondsSince(ts));
+    }
 
     // Statistics and work per cycle.
     const double nnz0 = static_cast<double>(K.nnz());
@@ -309,9 +376,13 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
         report.gridComplexity += static_cast<double>(A->rows) / rows0;
     }
     bytesPerCycle_ = 0.0;
+    const auto pass = single_ ? passBytesSingle : passBytes;
     for (std::size_t l = 0; l < levels_.size(); ++l) {
-        bytesPerCycle_ += 2.0 * sweeps_ * passBytes(*ops_[l]) + passBytes(*ops_[l]) +
-                          passBytes(levels_[l].R) + passBytes(levels_[l].P);
+        bytesPerCycle_ += 2.0 * sweeps_ * pass(*ops_[l]) + pass(*ops_[l]) + pass(levels_[l].R) +
+                          pass(levels_[l].P);
+    }
+    if (single_) { // b and x converted to float and back on level 0
+        bytesPerCycle_ += 24.0 * static_cast<double>(K.rows);
     }
     bytesPerCycle_ += 2.0 * 12.0 * static_cast<double>(coarse_->factor().val.size());
     report.footprint = footprint();
@@ -319,8 +390,91 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     return report;
 }
 
+void AmgHierarchy::buildSinglePrecision() {
+    const std::size_t L = ops_.size();
+    fl_.assign(L, FloatLevel{});
+    const auto view = [](const CsrMatrix& A) {
+        FloatCsr f;
+        f.rows = A.rows;
+        f.cols = A.cols;
+        f.rowPtr = &A.rowPtr;
+        f.col = &A.col;
+        f.val = toFloat(A.val);
+        return f;
+    };
+    for (std::size_t l = 0; l < L; ++l) {
+        FloatLevel& f = fl_[l];
+        f.A = view(*ops_[l]);
+        f.b.assign(toSize(ops_[l]->rows), 0.0f);
+        f.x.assign(toSize(ops_[l]->rows), 0.0f);
+        if (l + 1 < L) {
+            f.P = view(levels_[l].P);
+            f.R = view(levels_[l].R);
+            f.r.assign(toSize(ops_[l]->rows), 0.0f);
+            f.tmp.assign(toSize(ops_[l]->rows), 0.0f);
+            // The double work vectors and transfer values are not used by the float cycle.
+            Level& lv = levels_[l];
+            for (Vector* v : {&lv.r, &lv.tmp, &lv.bc, &lv.xc}) {
+                v->clear();
+                v->shrink_to_fit();
+            }
+            releaseValues(lv.P);
+            releaseValues(lv.R);
+        }
+    }
+    // Coarse operators between level 0 (K, not owned) and the coarsest (kept for its factor).
+    for (std::size_t l = 1; l + 1 < L; ++l) {
+        releaseValues(*owned_[l - 1]);
+    }
+    coarseRhs_.assign(toSize(ops_.back()->rows), 0.0);
+}
+
 void AmgHierarchy::vcycle(const Vector& b, Vector& x) {
-    cycle(0, b, x);
+    if (!single_) {
+        cycle(0, b, x);
+        return;
+    }
+    FloatLevel& f0 = fl_[0];
+    for (std::size_t i = 0; i < b.size(); ++i) {
+        f0.b[i] = static_cast<float>(b[i]);
+        f0.x[i] = static_cast<float>(x[i]);
+    }
+    cycleSingle(0);
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        x[i] = static_cast<double>(f0.x[i]);
+    }
+}
+
+void AmgHierarchy::cycleSingle(std::size_t level) {
+    FloatLevel& f = fl_[level];
+    if (level + 1 == fl_.size()) {
+        for (std::size_t i = 0; i < f.b.size(); ++i) {
+            coarseRhs_[i] = static_cast<double>(f.b[i]);
+        }
+        auto r = coarse_->solve(coarseRhs_, coarseSolution_, {});
+        (void)r; // sizes match by construction; the factor exists
+        for (std::size_t i = 0; i < f.x.size(); ++i) {
+            f.x[i] = static_cast<float>(coarseSolution_[i]);
+        }
+        return;
+    }
+    FloatLevel& c = fl_[level + 1];
+    for (int s = 0; s < sweeps_; ++s) {
+        gaussSeidelSingle(f.A, f.b, f.x, true);
+    }
+    spmvSingle(*pool_, f.A, f.x, f.r, &f.b);
+    spmvSingle(*pool_, f.R, f.r, c.b);
+    std::fill(c.x.begin(), c.x.end(), 0.0f);
+    cycleSingle(level + 1);
+    spmvSingle(*pool_, f.P, c.x, f.tmp);
+    pool_->parallelFor(f.A.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            f.x[toSize(i)] += f.tmp[toSize(i)];
+        }
+    });
+    for (int s = 0; s < sweeps_; ++s) {
+        gaussSeidelSingle(f.A, f.b, f.x, false);
+    }
 }
 
 void AmgHierarchy::cycle(std::size_t level, const Vector& b, Vector& x) {
@@ -363,6 +517,19 @@ MemoryFootprint AmgHierarchy::footprint() const {
     }
     f.add("AMG prolongators and restrictions", transfer);
     f.add("AMG work vectors and aggregates", work);
+    if (single_) {
+        std::size_t values = 0;
+        std::size_t vectors = 0;
+        for (const FloatLevel& lv : fl_) {
+            values +=
+                (lv.A.val.capacity() + lv.P.val.capacity() + lv.R.val.capacity()) * sizeof(float);
+            vectors += (lv.b.capacity() + lv.x.capacity() + lv.r.capacity() + lv.tmp.capacity()) *
+                       sizeof(float);
+        }
+        f.add("AMG single-precision values (level 0 included)", values);
+        f.add("AMG single-precision work vectors",
+              vectors + coarseRhs_.capacity() * sizeof(double));
+    }
     if (coarse_) {
         f.add("AMG coarse factor", coarse_->footprint().total());
     }
@@ -392,7 +559,9 @@ void AmgPreconditioner::apply(const Vector& r, Vector& z) {
 Result<SetupReport> AmgSolver::setup(const CsrMatrix& K, const CoordinateHint& /*hint*/,
                                      sparse::KernelPool& pool, const SolverOptions& options) {
     ready_ = false;
-    auto r = h_.build(K, pool, options);
+    SolverOptions doubleOnly = options; // the stand-alone iterate needs double precision
+    doubleOnly.amgSinglePrecision = false;
+    auto r = h_.build(K, pool, doubleOnly);
     if (!r) {
         return std::move(r).error();
     }

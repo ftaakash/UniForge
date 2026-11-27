@@ -20,8 +20,9 @@ using sparse::CsrMatrix;
 using sparse::Index;
 using sparse::Vector;
 
-// The six solver variants compared in V2 (build spec §5, labels used in every table and plot).
-enum class SolverKind { DirectND, DirectRCM, PcgJacobi, PcgIc0, Amg, AmgPcg };
+// The six solver variants compared in V2 (build spec §5, labels used in every table and plot),
+// plus the V3 candidates (AmgPcgSp: AMG-PCG with a single-precision hierarchy, V3a).
+enum class SolverKind { DirectND, DirectRCM, PcgJacobi, PcgIc0, Amg, AmgPcg, AmgPcgSp };
 
 [[nodiscard]] constexpr std::string_view label(SolverKind kind) noexcept {
     switch (kind) {
@@ -37,6 +38,8 @@ enum class SolverKind { DirectND, DirectRCM, PcgJacobi, PcgIc0, Amg, AmgPcg };
         return "AMG";
     case SolverKind::AmgPcg:
         return "AMG-PCG";
+    case SolverKind::AmgPcgSp:
+        return "AMG-PCG-SP";
     }
     return "?";
 }
@@ -113,6 +116,10 @@ struct SolverOptions {
     int amgCoarseSize = 500;       // stop coarsening at this many rows (then direct solve)
     int amgMaxLevels = 20;
     int amgSweeps = 1; // Gauss–Seidel sweeps before and after the coarse correction
+    // V3a: store and apply the hierarchy (operators, transfers, work vectors) in single
+    // precision; the coarsest factorisation and the outer CG stay in double. Only for AMG as a
+    // preconditioner: stand-alone AMG ignores it (its iterate must stay in double precision).
+    bool amgSinglePrecision = false;
 };
 
 class IterationObserver;

@@ -61,6 +61,9 @@ public:
     }
     [[nodiscard]] MemoryFootprint footprint() const;
     [[nodiscard]] double bytesPerCycle() const noexcept { return bytesPerCycle_; }
+    // True when the V-cycle runs in single precision (amgSinglePrecision). The double values of
+    // op(l) for 0 < l < coarsest are then released; patterns and the coarsest op stay intact.
+    [[nodiscard]] bool singlePrecision() const noexcept { return single_; }
 
 private:
     struct Level {
@@ -72,8 +75,29 @@ private:
     };
     void cycle(std::size_t level, const Vector& b, Vector& x);
 
+    // Single-precision copy of the hierarchy (V3a, amgSinglePrecision). The patterns (rowPtr,
+    // col) are shared with the double matrices; only the values are stored as float, and the
+    // double values of the transfers and of all coarse operators but the coarsest are released.
+    struct FloatCsr {
+        Index rows = 0;
+        Index cols = 0;
+        const std::vector<sparse::Offset>* rowPtr = nullptr;
+        const std::vector<Index>* col = nullptr;
+        std::vector<float> val;
+    };
+    struct FloatLevel {
+        FloatCsr A, P, R;        // P, R empty on the coarsest level
+        std::vector<float> b, x; // right-hand side and iterate of this level
+        std::vector<float> r, tmp;
+    };
+    void buildSinglePrecision();
+    void cycleSingle(std::size_t level);
+
     sparse::KernelPool* pool_ = nullptr;
     int sweeps_ = 1;
+    bool single_ = false;
+    std::vector<FloatLevel> fl_;
+    Vector coarseRhs_;
     std::vector<const CsrMatrix*> ops_; // ops_[0] = K (not owned), then owned coarse ops
     std::vector<std::unique_ptr<CsrMatrix>> owned_;
     std::vector<Level> levels_; // levels_[l] maps level l+1 → l

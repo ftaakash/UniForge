@@ -250,6 +250,69 @@ TEST(Amg, AmgPcgBeatsIc0AndJacobiOnALarger3dGrid) {
     EXPECT_LT(ic0, jac);
 }
 
+// V3a: a single-precision hierarchy under double CG reaches the same 1e-10 tolerance with
+// nearly the same iterations, the same answer, and fewer bytes per V-cycle.
+TEST(Amg, SinglePrecisionHierarchyKeepsCgAccuracy) {
+    KernelPool pool(2);
+    const CsrMatrix A = q1Laplacian3d(20);
+    const Vector f = randomVec(toSize(A.rows), 21);
+    SolveControl c;
+    c.relTol = 1e-10;
+    struct Out {
+        int iterations;
+        double trueResidual;
+        double bytesPerCycle;
+        Vector x;
+    };
+    const auto run = [&](bool single) {
+        SolverOptions o = smallCoarse();
+        o.amgSinglePrecision = single;
+        auto m = std::make_unique<AmgPreconditioner>(o);
+        const AmgPreconditioner* raw = m.get();
+        Pcg pcg(single ? SolverKind::AmgPcgSp : SolverKind::AmgPcg, std::move(m));
+        EXPECT_EQ(pcg.setup(A, {}, pool, {}).value().status, SolveStatus::Converged);
+        EXPECT_EQ(raw->hierarchy().singlePrecision(), single);
+        EXPECT_GE(raw->hierarchy().levelCount(), 3u);
+        Vector x(f.size(), 0.0);
+        auto r = pcg.solve(f, x, c);
+        EXPECT_TRUE(r.ok());
+        EXPECT_EQ(r.value().status, SolveStatus::Converged);
+        return Out{r.value().iterations, r.value().finalTrueRelResidual,
+                   raw->hierarchy().bytesPerCycle(), x};
+    };
+    const Out d = run(false);
+    const Out s = run(true);
+    std::printf("[20³ Q1 AMG-PCG] double %d its, single %d its; bytes/cycle %.3g vs %.3g\n",
+                d.iterations, s.iterations, d.bytesPerCycle, s.bytesPerCycle);
+    EXPECT_LE(s.iterations, d.iterations + 2);
+    EXPECT_LT(s.trueResidual, 1e-9);
+    EXPECT_LT(s.bytesPerCycle, 0.8 * d.bytesPerCycle);
+    double diff = 0.0;
+    double scale = 0.0;
+    for (std::size_t i = 0; i < d.x.size(); ++i) {
+        diff = std::max(diff, std::fabs(d.x[i] - s.x[i]));
+        scale = std::max(scale, std::fabs(d.x[i]));
+    }
+    EXPECT_LT(diff, 1e-7 * scale);
+}
+
+// Stand-alone AMG ignores the flag: its iterate must stay in double precision.
+TEST(Amg, StandAloneAmgStaysInDoublePrecision) {
+    KernelPool pool(1);
+    const CsrMatrix A = q1Laplacian3d(12);
+    SolverOptions o = smallCoarse();
+    o.amgSinglePrecision = true;
+    AmgSolver amg;
+    ASSERT_TRUE(amg.setup(A, {}, pool, o).ok());
+    EXPECT_FALSE(amg.hierarchy().singlePrecision());
+    Vector x(toSize(A.rows), 0.0);
+    SolveControl c;
+    c.relTol = 1e-10;
+    auto r = amg.solve(randomVec(x.size(), 5), x, c);
+    ASSERT_TRUE(r.ok());
+    EXPECT_EQ(r.value().status, SolveStatus::Converged);
+}
+
 TEST(Amg, StatusesAndMisuse) {
     KernelPool pool(1);
     const CsrMatrix A = laplacian3d(10);

@@ -265,6 +265,18 @@ void planE8(Planner& p, bool dry) {
     }
 }
 
+// V3a: AMG-PCG with a double against a single-precision hierarchy on the E2 HS-7 ladder.
+// Same caps, tolerance and observer as E2, so the rows compare one to one.
+void planV3A(Planner& p, bool dry) {
+    const int kMax = dry ? 1 : 7;
+    for (int k = 0; k <= kMax; ++k) {
+        RunSpec r;
+        r.design = DesignKey::HS7;
+        r.spacing = ladderSpacing(k);
+        p.system("V3A", r, {SolverKind::AmgPcg, SolverKind::AmgPcgSp});
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -324,11 +336,13 @@ double ladderSpacing(int k) {
 }
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
-    const std::vector<std::string> order{"T0", "E1", "E0", "E7", "E8", "E3", "E4", "E6", "E2"};
+    const std::vector<std::string> order{"T0", "E1", "E0", "E7", "E8",
+                                         "E3", "E4", "E6", "E2", "V3A"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
-        const bool selected = wanted.empty() ? e != "T0" : wanted.count(e) > 0;
+        // The default plan is the V2 study (E0–E8); V3 experiments run only when named.
+        const bool selected = wanted.empty() ? (e != "T0" && e != "V3A") : wanted.count(e) > 0;
         if (!selected) {
             continue;
         }
@@ -350,6 +364,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planE7(p, dryRun);
         } else if (e == "E8") {
             planE8(p, dryRun);
+        } else if (e == "V3A") {
+            planV3A(p, dryRun);
         }
     }
     return p.runs;
@@ -357,7 +373,7 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
     for (const RunSpec& r :
-         planExperiments({"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8"}, dryRun)) {
+         planExperiments({"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A"}, dryRun)) {
         if (r.id == id) {
             return r;
         }
