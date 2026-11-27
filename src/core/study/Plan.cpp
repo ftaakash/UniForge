@@ -400,6 +400,38 @@ void planV3F(Planner& p, bool dry) {
     }
 }
 
+
+// V3h: V3B–V3D's multi-threaded rows re-timed with pinned threads (V3G showed unpinned 8-thread
+// solves scatter 3.3–5.6 s), plus V2's AMG-PCG on one core so every ratio comes from one batch.
+// Observer as in the original rows: off for V3B's 4 largest meshes, on for the V3C/V3D ladder.
+void planV3H(Planner& p, bool dry) {
+    const int kMax = dry ? 1 : 7;
+    const std::vector<int> threads = dry ? std::vector<int>{2} : std::vector<int>{8, 20};
+    for (int k = 0; k <= kMax; ++k) {
+        RunSpec r;
+        r.design = DesignKey::HS7;
+        r.spacing = ladderSpacing(k);
+        p.system("V3H", r, {SolverKind::AmgPcg});
+        for (const int t : threads) {
+            r.threads = t;
+            p.system("V3H", r, {SolverKind::AmgPcgChebSp});
+        }
+        r.threads = dry ? 2 : 20;
+        p.system("V3H", r, {SolverKind::GmgPcgChebSp});
+    }
+    const std::vector<int> ks = dry ? std::vector<int>{1} : std::vector<int>{4, 5, 6, 7};
+    for (const int k : ks) {
+        for (const int t : threads) {
+            RunSpec r;
+            r.design = DesignKey::HS7;
+            r.spacing = ladderSpacing(k);
+            r.threads = t;
+            r.observer = false;
+            p.system("V3H", r, {SolverKind::AmgPcgCheb, SolverKind::AmgPcgChebSp});
+        }
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -460,7 +492,7 @@ double ladderSpacing(int k) {
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
     const std::vector<std::string> order{"T0", "E1",  "E0",  "E7",  "E8",  "E3",  "E4", "E6",
-                                         "E2", "V3A", "V3B", "V3C", "V3D", "V3E", "V3F"};
+                                         "E2", "V3A", "V3B", "V3C", "V3D", "V3E", "V3F", "V3H"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
@@ -498,6 +530,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planV3E(p, dryRun);
         } else if (e == "V3F") {
             planV3F(p, dryRun);
+        } else if (e == "V3H") {
+            planV3H(p, dryRun);
         } else if (e == "V3D") {
             planV3D(p, dryRun);
         }
@@ -507,7 +541,7 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
     for (const RunSpec& r : planExperiments({"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8",
-                                             "V3A", "V3B", "V3C", "V3D", "V3E", "V3F"},
+                                             "V3A", "V3B", "V3C", "V3D", "V3E", "V3F", "V3H"},
                                             dryRun)) {
         if (r.id == id) {
             return r;
