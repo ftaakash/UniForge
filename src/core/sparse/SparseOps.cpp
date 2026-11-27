@@ -1,8 +1,12 @@
 #include "core/sparse/SparseOps.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <cstdint>
 #include <string>
 #include <vector>
+
+#include "core/sparse/KernelPool.hpp"
 
 namespace uniforge::sparse {
 
@@ -90,6 +94,96 @@ Result<CsrMatrix> multiply(const CsrMatrix& A, const CsrMatrix& B) {
             C.val[toSize(k)] = acc[toSize(C.col[toSize(k)])];
         }
     }
+    return C;
+}
+
+namespace {
+
+// Per-thread work arrays of the parallel product. A stamp (call number in the high 32 bits,
+// row in the low 32) marks the columns already seen in the current row, so the arrays never
+// need clearing between rows or calls.
+struct ProductScratch {
+    std::vector<std::int64_t> marker;
+    std::vector<double> acc;
+};
+
+ProductScratch& scratchFor(Index cols) {
+    thread_local ProductScratch s;
+    if (s.marker.size() < toSize(cols)) {
+        s.marker.resize(toSize(cols), -1);
+        s.acc.resize(toSize(cols), 0.0);
+    }
+    return s;
+}
+
+std::atomic<std::int64_t> productCall{0};
+
+} // namespace
+
+Result<CsrMatrix> multiply(KernelPool& pool, const CsrMatrix& A, const CsrMatrix& B) {
+    if (A.cols != B.rows) {
+        return multiply(A, B); // same error message
+    }
+    CsrMatrix C;
+    C.rows = A.rows;
+    C.cols = B.cols;
+    C.rowPtr.assign(toSize(A.rows) + 1, 0);
+
+    const std::int64_t symbolicCall = (productCall.fetch_add(1) + 1) << 32;
+    pool.parallelFor(A.rows, [&](Index begin, Index end) {
+        ProductScratch& s = scratchFor(B.cols);
+        for (Index i = begin; i < end; ++i) {
+            const std::int64_t stamp = symbolicCall | static_cast<std::int64_t>(i);
+            Offset count = 0;
+            for (Offset ka = A.rowPtr[toSize(i)]; ka < A.rowPtr[toSize(i) + 1]; ++ka) {
+                const Index j = A.col[toSize(ka)];
+                for (Offset kb = B.rowPtr[toSize(j)]; kb < B.rowPtr[toSize(j) + 1]; ++kb) {
+                    const Index c = B.col[toSize(kb)];
+                    if (s.marker[toSize(c)] != stamp) {
+                        s.marker[toSize(c)] = stamp;
+                        ++count;
+                    }
+                }
+            }
+            C.rowPtr[toSize(i) + 1] = count;
+        }
+    });
+    for (std::size_t i = 0; i < toSize(A.rows); ++i) {
+        C.rowPtr[i + 1] += C.rowPtr[i];
+    }
+    C.col.resize(toSize(C.nnz()));
+    C.val.resize(toSize(C.nnz()));
+
+    const std::int64_t numericCall = (productCall.fetch_add(1) + 1) << 32;
+    pool.parallelFor(A.rows, [&](Index begin, Index end) {
+        ProductScratch& s = scratchFor(B.cols);
+        for (Index i = begin; i < end; ++i) {
+            const std::int64_t stamp = numericCall | static_cast<std::int64_t>(i);
+            const Offset start = C.rowPtr[toSize(i)];
+            Offset len = 0;
+            for (Offset ka = A.rowPtr[toSize(i)]; ka < A.rowPtr[toSize(i) + 1]; ++ka) {
+                const Index j = A.col[toSize(ka)];
+                const double a = A.val[toSize(ka)];
+                for (Offset kb = B.rowPtr[toSize(j)]; kb < B.rowPtr[toSize(j) + 1]; ++kb) {
+                    const Index c = B.col[toSize(kb)];
+                    const double product = a * B.val[toSize(kb)];
+                    if (s.marker[toSize(c)] != stamp) {
+                        s.marker[toSize(c)] = stamp;
+                        C.col[toSize(start + len)] = c;
+                        ++len;
+                        s.acc[toSize(c)] = product;
+                    } else {
+                        s.acc[toSize(c)] += product;
+                    }
+                }
+            }
+            const auto first = C.col.begin() + start;
+            std::sort(first, first + len);
+            for (Offset k = start; k < start + len; ++k) {
+                C.val[toSize(k)] = s.acc[toSize(C.col[toSize(k)])];
+            }
+        }
+    });
     return C;
 }
 

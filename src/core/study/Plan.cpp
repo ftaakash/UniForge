@@ -314,6 +314,23 @@ void planV3B(Planner& p, bool dry) {
     }
 }
 
+// V3c: the parallel AMG setup. The V2 best (AMG-PCG, one pinned core) against AMG-PCG-CH-SP on
+// 8 and 20 threads over the whole HS-7 ladder, all with the error observer (accuracy checked at
+// every size; observer time is excluded from the solver time).
+void planV3C(Planner& p, bool dry) {
+    const int kMax = dry ? 1 : 7;
+    for (int k = 0; k <= kMax; ++k) {
+        RunSpec r;
+        r.design = DesignKey::HS7;
+        r.spacing = ladderSpacing(k);
+        p.system("V3C", r, {SolverKind::AmgPcg});
+        for (const int t : {8, 20}) {
+            r.threads = t;
+            p.system("V3C", r, {SolverKind::AmgPcgChebSp});
+        }
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -373,8 +390,8 @@ double ladderSpacing(int k) {
 }
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
-    const std::vector<std::string> order{"T0", "E1", "E0", "E7",  "E8", "E3",
-                                         "E4", "E6", "E2", "V3A", "V3B"};
+    const std::vector<std::string> order{"T0", "E1", "E0", "E7",  "E8",  "E3",
+                                         "E4", "E6", "E2", "V3A", "V3B", "V3C"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
@@ -406,6 +423,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planV3A(p, dryRun);
         } else if (e == "V3B") {
             planV3B(p, dryRun);
+        } else if (e == "V3C") {
+            planV3C(p, dryRun);
         }
     }
     return p.runs;
@@ -413,7 +432,7 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
     for (const RunSpec& r : planExperiments(
-             {"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A", "V3B"}, dryRun)) {
+             {"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A", "V3B", "V3C"}, dryRun)) {
         if (r.id == id) {
             return r;
         }

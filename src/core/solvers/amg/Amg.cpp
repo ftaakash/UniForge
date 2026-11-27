@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -41,11 +43,13 @@ double passBytesSingle(const CsrMatrix& A) {
            8.0 * static_cast<double>(std::max(A.rows, A.cols));
 }
 
-std::vector<float> toFloat(const std::vector<double>& v) {
+std::vector<float> toFloat(const std::vector<double>& v, sparse::KernelPool& pool) {
     std::vector<float> out(v.size());
-    for (std::size_t i = 0; i < v.size(); ++i) {
-        out[i] = static_cast<float>(v[i]);
-    }
+    pool.parallelFor(static_cast<Index>(v.size()), [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            out[toSize(i)] = static_cast<float>(v[toSize(i)]);
+        }
+    });
     return out;
 }
 
@@ -182,20 +186,41 @@ void gaussSeidel(const CsrMatrix& A, const Vector& b, Vector& x, bool forward) {
 
 // ---- Building blocks --------------------------------------------------------------------------
 
-std::vector<char> strongConnections(const CsrMatrix& A, double theta) {
-    const sparse::Vector d = sparse::diagonal(A);
-    std::vector<char> strong(toSize(A.nnz()), 0);
-    for (Index i = 0; i < A.rows; ++i) {
-        for (Offset q = A.rowPtr[toSize(i)]; q < A.rowPtr[toSize(i) + 1]; ++q) {
-            const Index j = A.col[toSize(q)];
-            if (j == i) {
-                continue;
-            }
-            const double a = std::fabs(A.val[toSize(q)]);
-            strong[toSize(q)] =
-                a > 0.0 && a >= theta * std::sqrt(std::fabs(d[toSize(i)] * d[toSize(j)])) ? 1 : 0;
-        }
+namespace {
+
+// Row loop body(begin, end) over [0, n): on the pool if given, else in one call.
+void forRows(sparse::KernelPool* pool, Index n, const std::function<void(Index, Index)>& body) {
+    if (pool != nullptr) {
+        pool->parallelFor(n, body);
+    } else {
+        body(0, n);
     }
+}
+
+} // namespace
+
+std::vector<char> strongConnections(const CsrMatrix& A, double theta, sparse::KernelPool* pool) {
+    sparse::Vector d(toSize(A.rows), 0.0);
+    forRows(pool, A.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            d[toSize(i)] = A.at(i, i);
+        }
+    });
+    std::vector<char> strong(toSize(A.nnz()), 0);
+    forRows(pool, A.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            for (Offset q = A.rowPtr[toSize(i)]; q < A.rowPtr[toSize(i) + 1]; ++q) {
+                const Index j = A.col[toSize(q)];
+                if (j == i) {
+                    continue;
+                }
+                const double a = std::fabs(A.val[toSize(q)]);
+                strong[toSize(q)] =
+                    a > 0.0 && a >= theta * std::sqrt(std::fabs(d[toSize(i)] * d[toSize(j)])) ? 1
+                                                                                              : 0;
+            }
+        }
+    });
     return strong;
 }
 
@@ -284,60 +309,98 @@ CsrMatrix tentativeProlongator(const std::vector<Index>& aggregateOf, Index coun
 }
 
 CsrMatrix smoothedProlongator(const CsrMatrix& A, const std::vector<char>& strong,
-                              const CsrMatrix& P0) {
+                              const CsrMatrix& P0, sparse::KernelPool* pool) {
     // Filtered matrix A_F: strong couplings and the diagonal; weak couplings lumped onto it.
+    // Two passes over the rows (count, then fill) so each row is written independently; A's
+    // columns are sorted, so the diagonal goes in before the first column > i.
     CsrMatrix F;
     F.rows = A.rows;
     F.cols = A.cols;
     F.rowPtr.assign(toSize(A.rows) + 1, 0);
     std::vector<double> dF(toSize(A.rows), 0.0);
-    for (Index i = 0; i < A.rows; ++i) {
-        double diag = 0.0;
-        double lumped = 0.0;
-        for (Offset q = A.rowPtr[toSize(i)]; q < A.rowPtr[toSize(i) + 1]; ++q) {
-            const Index j = A.col[toSize(q)];
-            if (j == i) {
-                diag = A.val[toSize(q)];
-            } else if (strong[toSize(q)] != 0) {
-                F.col.push_back(j);
-                F.val.push_back(A.val[toSize(q)]);
-            } else {
-                lumped += A.val[toSize(q)];
+    forRows(pool, A.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            Offset count = 1; // the diagonal
+            double diag = 0.0;
+            double lumped = 0.0;
+            for (Offset q = A.rowPtr[toSize(i)]; q < A.rowPtr[toSize(i) + 1]; ++q) {
+                const Index j = A.col[toSize(q)];
+                if (j == i) {
+                    diag = A.val[toSize(q)];
+                } else if (strong[toSize(q)] != 0) {
+                    ++count;
+                } else {
+                    lumped += A.val[toSize(q)];
+                }
+            }
+            // Keep a usable diagonal.
+            dF[toSize(i)] = diag + lumped > 0.0 ? diag + lumped : diag;
+            F.rowPtr[toSize(i) + 1] = count;
+        }
+    });
+    for (std::size_t i = 0; i < toSize(A.rows); ++i) {
+        F.rowPtr[i + 1] += F.rowPtr[i];
+    }
+    F.col.resize(toSize(F.nnz()));
+    F.val.resize(toSize(F.nnz()));
+    forRows(pool, A.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            std::size_t at = toSize(F.rowPtr[toSize(i)]);
+            bool diagonalWritten = false;
+            const auto writeDiagonal = [&] {
+                F.col[at] = i;
+                F.val[at] = dF[toSize(i)];
+                ++at;
+                diagonalWritten = true;
+            };
+            for (Offset q = A.rowPtr[toSize(i)]; q < A.rowPtr[toSize(i) + 1]; ++q) {
+                const Index j = A.col[toSize(q)];
+                if (j == i || strong[toSize(q)] == 0) {
+                    continue;
+                }
+                if (!diagonalWritten && j > i) {
+                    writeDiagonal();
+                }
+                F.col[at] = j;
+                F.val[at] = A.val[toSize(q)];
+                ++at;
+            }
+            if (!diagonalWritten) {
+                writeDiagonal();
             }
         }
-        const double d = diag + lumped > 0.0 ? diag + lumped : diag; // keep a usable diagonal
-        dF[toSize(i)] = d;
-        // Insert the diagonal in sorted position.
-        const auto rowBegin = F.col.begin() + F.rowPtr[toSize(i)];
-        const auto pos = std::lower_bound(rowBegin, F.col.end(), i);
-        const auto offset = pos - F.col.begin();
-        F.col.insert(pos, i);
-        F.val.insert(F.val.begin() + offset, d);
-        F.rowPtr[toSize(i) + 1] = static_cast<Offset>(F.col.size());
-    }
+    });
     // ρ(D_F⁻¹·A_F) ≤ max_i Σ_j |F_ij| / |d_i| (Gershgorin).
-    double rho = 0.0;
-    for (Index i = 0; i < F.rows; ++i) {
-        double row = 0.0;
-        for (Offset q = F.rowPtr[toSize(i)]; q < F.rowPtr[toSize(i) + 1]; ++q) {
-            row += std::fabs(F.val[toSize(q)]);
+    const auto rowBound = [&](Index begin, Index end) {
+        double rho = 0.0;
+        for (Index i = begin; i < end; ++i) {
+            double row = 0.0;
+            for (Offset q = F.rowPtr[toSize(i)]; q < F.rowPtr[toSize(i) + 1]; ++q) {
+                row += std::fabs(F.val[toSize(q)]);
+            }
+            rho = std::max(rho, row / std::fabs(dF[toSize(i)]));
         }
-        rho = std::max(rho, row / std::fabs(dF[toSize(i)]));
-    }
+        return rho;
+    };
+    const double rho =
+        pool != nullptr ? std::max(0.0, pool->reduceMax(F.rows, rowBound)) : rowBound(0, F.rows);
     const double omega = rho > 0.0 ? 4.0 / (3.0 * rho) : 0.0;
 
-    auto FP = sparse::multiply(F, P0); // pattern ⊇ P0 (the diagonal of F is stored)
+    // Pattern ⊇ P0 (the diagonal of F is stored).
+    auto FP = pool != nullptr ? sparse::multiply(*pool, F, P0) : sparse::multiply(F, P0);
     CsrMatrix P = std::move(FP).value();
-    for (Index i = 0; i < P.rows; ++i) {
-        const double scale = omega / dF[toSize(i)];
-        for (Offset q = P.rowPtr[toSize(i)]; q < P.rowPtr[toSize(i) + 1]; ++q) {
-            P.val[toSize(q)] = -scale * P.val[toSize(q)];
+    forRows(pool, P.rows, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            const double scale = omega / dF[toSize(i)];
+            for (Offset q = P.rowPtr[toSize(i)]; q < P.rowPtr[toSize(i) + 1]; ++q) {
+                P.val[toSize(q)] = -scale * P.val[toSize(q)];
+            }
+            for (Offset q = P0.rowPtr[toSize(i)]; q < P0.rowPtr[toSize(i) + 1]; ++q) {
+                const Offset at = P.find(i, P0.col[toSize(q)]);
+                P.val[toSize(at)] += P0.val[toSize(q)];
+            }
         }
-        for (Offset q = P0.rowPtr[toSize(i)]; q < P0.rowPtr[toSize(i) + 1]; ++q) {
-            const Offset at = P.find(i, P0.col[toSize(q)]);
-            P.val[toSize(at)] += P0.val[toSize(q)];
-        }
-    }
+    });
     return P;
 }
 
@@ -368,33 +431,49 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     smoother_ = options.amgSmoother;
     chebDegree_ = std::max(1, options.amgChebyshevDegree);
     chebRatio_ = options.amgChebyshevRatio > 1.0 ? options.amgChebyshevRatio : 30.0;
+    chebPowerIterations_ = std::max(1, options.amgChebyshevPowerIterations);
     fl_.clear();
     SetupReport report;
 
     const auto tc = Clock::now();
+    // Time of each coarsening step summed over the levels (V3c profile).
+    double tStrength = 0.0;
+    double tAggregate = 0.0;
+    double tProlong = 0.0;
+    double tGalerkin = 0.0;
+    double tSymmetrise = 0.0;
     while (ops_.back()->rows > options.amgCoarseSize &&
            static_cast<int>(ops_.size()) < options.amgMaxLevels) {
         const CsrMatrix& A = *ops_.back();
         const double theta =
             options.amgStrengthThreshold *
             std::pow(options.amgStrengthDecay, static_cast<double>(ops_.size() - 1));
-        const std::vector<char> strong = strongConnections(A, theta);
+        auto ts = Clock::now();
+        const std::vector<char> strong = strongConnections(A, theta, pool_);
+        tStrength += secondsSince(ts);
         Index count = 0;
         Level lv;
+        ts = Clock::now();
         lv.aggregateOf = aggregate(A, strong, count);
+        tAggregate += secondsSince(ts);
         if (count == 0 || static_cast<double>(count) > 0.9 * static_cast<double>(A.rows)) {
             break; // coarsening stalled
         }
-        lv.P = smoothedProlongator(A, strong, tentativeProlongator(lv.aggregateOf, count));
+        ts = Clock::now();
+        lv.P = smoothedProlongator(A, strong, tentativeProlongator(lv.aggregateOf, count), pool_);
         lv.R = sparse::transpose(lv.P);
-        auto AP = sparse::multiply(A, lv.P);
+        tProlong += secondsSince(ts);
+        ts = Clock::now();
+        auto AP = sparse::multiply(*pool_, A, lv.P);
         if (!AP) {
             return std::move(AP).error();
         }
-        auto Ac = sparse::multiply(lv.R, AP.value());
+        auto Ac = sparse::multiply(*pool_, lv.R, AP.value());
         if (!Ac) {
             return std::move(Ac).error();
         }
+        tGalerkin += secondsSince(ts);
+        ts = Clock::now();
         lv.r.assign(toSize(A.rows), 0.0);
         lv.tmp.assign(toSize(A.rows), 0.0);
         lv.bc.assign(toSize(count), 0.0);
@@ -412,8 +491,14 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
         owned_.push_back(std::make_unique<CsrMatrix>(std::move(coarse)));
         ops_.push_back(owned_.back().get());
         levels_.push_back(std::move(lv));
+        tSymmetrise += secondsSince(ts);
     }
     report.phases.emplace_back("coarsening", secondsSince(tc));
+    report.phases.emplace_back("  strength", tStrength);
+    report.phases.emplace_back("  aggregation", tAggregate);
+    report.phases.emplace_back("  prolongator", tProlong);
+    report.phases.emplace_back("  Galerkin product", tGalerkin);
+    report.phases.emplace_back("  symmetrise", tSymmetrise);
 
     const auto td = Clock::now();
     coarse_ = std::make_unique<DirectCholesky>(SolverKind::DirectRCM, Ordering::Rcm);
@@ -469,13 +554,13 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
 void AmgHierarchy::buildSinglePrecision() {
     const std::size_t L = ops_.size();
     fl_.assign(L, FloatLevel{});
-    const auto view = [](const CsrMatrix& A) {
+    const auto view = [&](const CsrMatrix& A) {
         FloatCsr f;
         f.rows = A.rows;
         f.cols = A.cols;
         f.rowPtr = &A.rowPtr;
         f.col = &A.col;
-        f.val = toFloat(A.val);
+        f.val = toFloat(A.val, *pool_);
         return f;
     };
     for (std::size_t l = 0; l < L; ++l) {
@@ -491,7 +576,7 @@ void AmgHierarchy::buildSinglePrecision() {
             // The double work vectors and transfer values are not used by the float cycle.
             Level& lv = levels_[l];
             if (smoother_ == AmgSmoother::Chebyshev) {
-                f.invDiag = toFloat(lv.invDiag);
+                f.invDiag = toFloat(lv.invDiag, *pool_);
                 f.d.assign(toSize(ops_[l]->rows), 0.0f);
             }
             for (Vector* v : {&lv.r, &lv.tmp, &lv.bc, &lv.xc, &lv.invDiag, &lv.d}) {
@@ -596,46 +681,67 @@ void AmgHierarchy::cycle(std::size_t level, const Vector& b, Vector& x) {
 
 void AmgHierarchy::buildChebyshev() {
     // λ̂ = 1.1 × the Rayleigh quotient vᵀAv / vᵀDv after 20 power iterations with D⁻¹A, from a
-    // fixed pseudo-random start (deterministic, and not near the smooth near-null space).
+    // fixed pseudo-random start (deterministic, and not near the smooth near-null space). Every
+    // loop runs on the pool; sums use the pool's chunk-ordered reduction (bit-identical for any
+    // thread count). The start entry is a hash of the row index, so it needs no sequential state.
+    sparse::KernelPool& pool = *pool_;
     for (std::size_t l = 0; l < levels_.size(); ++l) {
         const CsrMatrix& A = *ops_[l];
         Level& lv = levels_[l];
         const std::size_t n = toSize(A.rows);
-        const Vector diag = sparse::diagonal(A);
+        Vector diag(n, 0.0);
         lv.invDiag.assign(n, 0.0);
-        for (std::size_t i = 0; i < n; ++i) {
-            lv.invDiag[i] = diag[i] != 0.0 ? 1.0 / diag[i] : 0.0;
-        }
         lv.d.assign(n, 0.0);
         Vector v(n);
         Vector w(n, 0.0);
-        std::uint32_t h = 2463534242u;
-        for (std::size_t i = 0; i < n; ++i) {
-            h ^= h << 13;
-            h ^= h >> 17;
-            h ^= h << 5;
-            v[i] = static_cast<double>(h % 2001u) / 1000.0 - 1.0;
-        }
-        double lambda = 0.0;
-        for (int it = 0; it < 20; ++it) {
-            sparse::spmv(*pool_, A, v, w);
-            double vAv = 0.0;
-            double vDv = 0.0;
-            double norm = 0.0;
-            for (std::size_t i = 0; i < n; ++i) {
-                vAv += v[i] * w[i];
-                vDv += v[i] * v[i] * diag[i];
-                w[i] *= lv.invDiag[i];
-                norm += w[i] * w[i];
+        pool.parallelFor(A.rows, [&](Index begin, Index end) {
+            for (Index i = begin; i < end; ++i) {
+                const std::size_t k = toSize(i);
+                diag[k] = A.at(i, i);
+                lv.invDiag[k] = diag[k] != 0.0 ? 1.0 / diag[k] : 0.0;
+                std::uint64_t h = (static_cast<std::uint64_t>(i) + 1) * 0x9E3779B97F4A7C15ull;
+                h ^= h >> 31;
+                h *= 0xBF58476D1CE4E5B9ull;
+                h ^= h >> 29;
+                v[k] = static_cast<double>(h % 2001u) / 1000.0 - 1.0;
             }
+        });
+        double lambda = 0.0;
+        for (int it = 0; it < chebPowerIterations_; ++it) {
+            sparse::spmv(pool, A, v, w);
+            const double vAv = pool.reduceSum(A.rows, [&](Index begin, Index end) {
+                double s = 0.0;
+                for (Index i = begin; i < end; ++i) {
+                    s += v[toSize(i)] * w[toSize(i)];
+                }
+                return s;
+            });
+            const double vDv = pool.reduceSum(A.rows, [&](Index begin, Index end) {
+                double s = 0.0;
+                for (Index i = begin; i < end; ++i) {
+                    s += v[toSize(i)] * v[toSize(i)] * diag[toSize(i)];
+                }
+                return s;
+            });
+            // w ← D⁻¹w and ‖w‖² in one pass (each row is written once).
+            double norm = pool.reduceSum(A.rows, [&](Index begin, Index end) {
+                double s = 0.0;
+                for (Index i = begin; i < end; ++i) {
+                    w[toSize(i)] *= lv.invDiag[toSize(i)];
+                    s += w[toSize(i)] * w[toSize(i)];
+                }
+                return s;
+            });
             lambda = vDv > 0.0 ? vAv / vDv : 0.0;
             norm = std::sqrt(norm);
             if (!(norm > 0.0)) {
                 break;
             }
-            for (std::size_t i = 0; i < n; ++i) {
-                v[i] = w[i] / norm;
-            }
+            pool.parallelFor(A.rows, [&](Index begin, Index end) {
+                for (Index i = begin; i < end; ++i) {
+                    v[toSize(i)] = w[toSize(i)] / norm;
+                }
+            });
         }
         lv.lambdaMax = 1.1 * (lambda > 0.0 ? lambda : 2.0);
     }

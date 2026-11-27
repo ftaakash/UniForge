@@ -19,4 +19,11 @@ namespace uniforge::sparse {
 // A.cols != B.rows.
 [[nodiscard]] Result<CsrMatrix> multiply(const CsrMatrix& A, const CsrMatrix& B);
 
+class KernelPool;
+
+// The same product with its rows split over the pool's chunks (V3c). Each row is computed
+// exactly as in the serial version (same accumulation order), so the result is bit-identical
+// to multiply(A, B) for any thread count. Work arrays are per thread.
+[[nodiscard]] Result<CsrMatrix> multiply(KernelPool& pool, const CsrMatrix& A, const CsrMatrix& B);
+
 } // namespace uniforge::sparse

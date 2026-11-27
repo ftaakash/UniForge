@@ -36,14 +36,17 @@ namespace uniforge::solvers {
 // with an exact coarse solve, make the cycle a symmetric positive definite operator, so it is
 // a valid CG preconditioner (amendment A15).
 
-// Building blocks, exposed for the tests.
-[[nodiscard]] std::vector<char> strongConnections(const CsrMatrix& A, double theta);
+// Building blocks, exposed for the tests. With a pool, strength and the smoothed prolongator run
+// their row loops in parallel (V3c); the result is bit-identical to the serial call.
+[[nodiscard]] std::vector<char> strongConnections(const CsrMatrix& A, double theta,
+                                                  sparse::KernelPool* pool = nullptr);
 // aggregateOf[i] = aggregate of node i, or −1 (no strong neighbours); `count` = aggregates.
 [[nodiscard]] std::vector<Index> aggregate(const CsrMatrix& A, const std::vector<char>& strong,
                                            Index& count);
 [[nodiscard]] CsrMatrix tentativeProlongator(const std::vector<Index>& aggregateOf, Index count);
 [[nodiscard]] CsrMatrix smoothedProlongator(const CsrMatrix& A, const std::vector<char>& strong,
-                                            const CsrMatrix& P0);
+                                            const CsrMatrix& P0,
+                                            sparse::KernelPool* pool = nullptr);
 
 class AmgHierarchy {
 public:
@@ -108,6 +111,7 @@ private:
     AmgSmoother smoother_ = AmgSmoother::GaussSeidel;
     int chebDegree_ = 2;
     double chebRatio_ = 30.0;
+    int chebPowerIterations_ = 20;
     bool single_ = false;
     std::vector<FloatLevel> fl_;
     Vector coarseRhs_;

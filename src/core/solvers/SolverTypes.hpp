@@ -145,6 +145,7 @@ struct SolverOptions {
     AmgSmoother amgSmoother = AmgSmoother::GaussSeidel;
     int amgChebyshevDegree = 2;
     double amgChebyshevRatio = 30.0;
+    int amgChebyshevPowerIterations = 20; // 10 under-estimates λ_max on HS-7 (V3c: CG breakdown)
 };
 
 class IterationObserver;

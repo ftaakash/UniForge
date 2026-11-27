@@ -354,6 +354,43 @@ TEST(Amg, ChebyshevSmootherConvergesAndIsThreadIndependent) {
     EXPECT_LE(itBig, it1 + 6);
 }
 
+// V3c: the setup runs on the pool. The hierarchy (aggregates, every coarse operator, λ̂) is
+// bit-identical for 1, 4 and 8 threads, so solver results do not depend on the thread count.
+TEST(Amg, ParallelSetupBuildsTheSameHierarchyForAnyThreadCount) {
+    const CsrMatrix A = q1Laplacian3d(26); // 17,576 rows: several 4096-row chunks
+    SolverOptions o = smallCoarse();
+    o.amgSmoother = AmgSmoother::Chebyshev;
+    KernelPool pool1(1);
+    AmgHierarchy ref;
+    ASSERT_TRUE(ref.build(A, pool1, o).ok());
+    ASSERT_GE(ref.levelCount(), 3u);
+    for (const int threads : {4, 8}) {
+        KernelPool pool(threads);
+        AmgHierarchy h;
+        ASSERT_TRUE(h.build(A, pool, o).ok());
+        ASSERT_EQ(h.levelCount(), ref.levelCount()) << threads;
+        for (std::size_t l = 0; l < h.levelCount(); ++l) {
+            EXPECT_EQ(h.op(l).col, ref.op(l).col) << threads << " level " << l;
+            EXPECT_EQ(h.op(l).val, ref.op(l).val) << threads << " level " << l;
+            if (l + 1 < h.levelCount()) {
+                EXPECT_EQ(h.aggregates(l), ref.aggregates(l));
+                EXPECT_EQ(h.chebyshevLambdaMax(l), ref.chebyshevLambdaMax(l));
+            }
+        }
+    }
+    // The parallel building blocks equal their serial calls.
+    KernelPool pool(4);
+    const auto strong = strongConnections(A, 0.02);
+    EXPECT_EQ(strongConnections(A, 0.02, &pool), strong);
+    Index count = 0;
+    const std::vector<Index> agg = aggregate(A, strong, count); // sets count: own statement
+    const CsrMatrix P0 = tentativeProlongator(agg, count);
+    const CsrMatrix P = smoothedProlongator(A, strong, P0);
+    const CsrMatrix Pp = smoothedProlongator(A, strong, P0, &pool);
+    EXPECT_EQ(Pp.col, P.col);
+    EXPECT_EQ(Pp.val, P.val);
+}
+
 // Stand-alone AMG ignores the flag: its iterate must stay in double precision.
 TEST(Amg, StandAloneAmgStaysInDoublePrecision) {
     KernelPool pool(1);
