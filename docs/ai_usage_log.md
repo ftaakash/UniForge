@@ -1392,6 +1392,31 @@ a persistent kernel pool instead.
 - None found in the results. The write-up states that Chebyshev is slower on one core and that
   the total-time gain is smaller than the solve-time gain.
 
+## 2026-11-27: V3c (parallel AMG setup)
+### Prompts (representative)
+- "Yes, parallel setup".
+### Outputs (files, functions)
+- `sparse::multiply(KernelPool&, …)`; pool versions of `strongConnections`,
+  `smoothedProlongator`, `buildChebyshev` and the float copy; per-step setup timers;
+  option `amgChebyshevPowerIterations`; experiment `V3C`; two tests; V3C section of
+  `docs/v3_experiments.md`.
+### My edits
+- Approved the step.
+### Verification (tests run, numbers checked, manual checks)
+- 429 tests pass in Release; the AMG and sparse tests also pass in Debug. The binary embedded
+  `93f65d6` before the batch. 32 V3C runs converged. The speed-ups were computed by script from
+  `results/v3/csv/V3C.csv` and spot-checked by hand.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Fewer power iterations (10)** looked like a free 0.26 s. A trial run converged in an
+  impossible 4 iterations, and the run file showed Breakdown with true residual 3.1, so the
+  change was reverted. The first glance at the trial output missed the status column. Caught
+  because 4 iterations was implausible.
+- **Unspecified argument order in a new test:** `tentativeProlongator(aggregate(A, s, count),
+  count)` let MSVC read `count` before `aggregate` set it (access violation). Found with the Debug
+  build's bounds assertion and fixed by splitting the statement.
+- **Unexplained timing difference** (3.76 M, 8 threads: 3.38 s vs 4.85 s in V3B) is reported as
+  open, not explained away.
+
 ## Entry template
 
 ```markdown

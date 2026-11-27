@@ -8,6 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### Phase V3c: parallel AMG setup
+- `sparse::multiply(pool, A, B)` and parallel strength, filtered matrix, prolongator smoothing,
+  power iteration and float copy. Each row is computed as in the serial code, so the hierarchy
+  is bit-identical for any thread count. Per-step coarsening times are in the setup report.
+- Option `amgChebyshevPowerIterations` (20). 10 was tried, under-estimated λ_max, and CG broke
+  down at 3.76 M.
+- Experiment `V3C`: 32 runs, all converged. AMG-PCG-CH-SP on 8 or 20 threads is 1.79–2.56×
+  faster in setup plus solve than one-core AMG-PCG at every HS-7 size (56 k to 3.76 M), with
+  the same accuracy and +33 % solver memory. Setup itself is 1.3–1.7× faster.
+- Tests: 2 new; 429 pass on Windows Release.
+
 ### Phase V3b: Chebyshev–Jacobi smoother
 - `SolverOptions::amgSmoother` (Gauss–Seidel or Chebyshev), `amgChebyshevDegree` (2),
   `amgChebyshevRatio` (30); kinds `AMG-PCG-CH` and `AMG-PCG-CH-SP`. Fully parallel smoothing,

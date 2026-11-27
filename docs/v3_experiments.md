@@ -151,3 +151,62 @@ a third more solver memory.
 **Next.** Setup is now the larger share at 3.76 M (4.5 s setup vs 3.6 s solve). The next gains
 are a parallel setup (power iteration and aggregation) and fewer power iterations, before
 geometric multigrid (V3 step 2). Multi-load reuse (step 4) amortises setup in any case.
+
+## V3C: parallel AMG setup
+
+**Hypothesis.** After V3B, setup was the larger share at 3.76 M unknowns (4.5 s setup vs 3.6 s
+solve) and did not use the threads at all. A profile of that run (new per-step timers in the
+setup report) found: coarsening 2.95 s, of which prolongator 1.25 s (one sparse product), Galerkin
+product 1.33 s (two sparse products), strength 0.22 s, aggregation 0.08 s, symmetrisation 0.05 s.
+Then the Chebyshev eigenvalue estimate 0.96 s and the single-precision copy 0.23 s. Everything
+except the greedy aggregation works row by row and can run in parallel.
+
+**Implementation** (commit `93f65d6`). `sparse::multiply(pool, A, B)`: Gustavson's product with
+its rows split over the pool's chunks and per-thread work arrays. Each row is computed exactly
+as in the serial product, so the result is bit-identical. Strength, the filtered matrix (now
+built in two passes, count then fill), the prolongator scaling, the Gershgorin bound, the power
+iteration and the float copy also run on the pool. The power-iteration start vector is now a
+hash of the row index, so V3C's λ̂ differs slightly from V3B's. Aggregation and the transposes
+stay serial. Tests: `SparseOps.ParallelMultiplyIsBitIdenticalToSerial` and
+`Amg.ParallelSetupBuildsTheSameHierarchyForAnyThreadCount` (every coarse operator, aggregate
+and λ̂ identical on 1, 4 and 8 threads). 429 tests pass.
+
+**A shortcut that failed.** With 10 instead of 20 power iterations the eigenvalue estimate saved
+another 0.26 s. But λ̂ under-estimated λ_max(D⁻¹A), the preconditioner was no longer positive
+definite, and CG stopped with Breakdown after 4 iterations at 3.76 M (true relative residual
+3.1). The default stays at 20, and the option `amgChebyshevPowerIterations` records why.
+
+**Runs.** HS-7 ladder k = 0…7: AMG-PCG on one pinned core (the V2 best) and AMG-PCG-CH-SP on 8
+and 20 threads, all with the error observer. 32 runs, all Converged, commit `93f65d6`
+(`results/v3/csv/V3C.csv`).
+
+### Against V2's AMG-PCG on one core (same batch)
+
+| DOF | AMG-PCG total (s) | CH-SP 8 thr total (s) | CH-SP 20 thr total (s) | best total speed-up | best solve speed-up | setup speed-up |
+|---|---|---|---|---|---|---|
+| 56,015 | 0.200 | 0.092 | 0.087 | 2.30 | 2.69 | 1.40–1.47 |
+| 93,921 | 0.327 | 0.143 | 0.135 | 2.42 | 3.04 | 1.30–1.38 |
+| 170,634 | 0.540 | 0.227 | 0.211 | 2.56 | 3.32 | 1.36–1.44 |
+| 285,532 | 0.871 | 0.392 | 0.362 | 2.41 | 2.91 | 1.51–1.64 |
+| 568,152 | 1.603 | 0.765 | 0.736 | 2.18 | 2.52 | 1.51–1.59 |
+| 1,022,979 | 2.793 | 1.390 | 1.286 | 2.17 | 2.49 | 1.52–1.64 |
+| 1,867,768 | 5.256 | 2.727 | 2.487 | 2.11 | 2.37 | 1.53–1.68 |
+| 3,759,720 | 9.600 | 5.374 | 5.825 | 1.79 | 1.96 | 1.41–1.49 |
+
+Total = setup + solve (median of 5 solves). The error against the reference is the same order
+as AMG-PCG's at every size (e.g. 1.9e-11 vs 2.0e-11 K at 3.76 M). Iterations: 26–38 for CH-SP
+against 23–50 for AMG-PCG. Solver memory is +33 % (991 vs 747 MB at 3.76 M).
+
+**Run-to-run caution.** At 3.76 M on 8 threads the solve took 3.38 s here and 4.85 s in V3B. The
+solve code is the same; only λ̂ (new start vector) and the setup changed. The difference is
+larger than the min–max spread within either run (3.34–4.09 s here, 4.80–4.93 s in V3B), and
+it is not explained yet. It needs a
+repeat before any claim at that one point.
+
+### Verdict
+
+With a parallel setup, **AMG-PCG-CH-SP is faster than V2's best at every HS-7 size measured:
+1.79–2.56× in setup plus solve on 8 or 20 threads**, with the same accuracy and a third more
+solver memory. The serial parts left (aggregation, transposes, coarse factorisation) cap setup
+at 1.3–1.7×. On one core, V2's Gauss–Seidel AMG-PCG is still the right choice. On this 20-thread
+machine, 20 threads beat 8 except at 3.76 M.
