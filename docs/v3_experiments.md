@@ -199,9 +199,12 @@ against 23–50 for AMG-PCG. Solver memory is +33 % (991 vs 747 MB at 3.76 M).
 
 **Run-to-run caution.** At 3.76 M on 8 threads the solve took 3.38 s here and 4.85 s in V3B. The
 solve code is the same; only λ̂ (new start vector) and the setup changed. The difference is
-larger than the min–max spread within either run (3.34–4.09 s here, 4.80–4.93 s in V3B), and
-it is not explained yet. It needs a
-repeat before any claim at that one point.
+larger than the min–max spread within either run (3.34–4.09 s here, 4.80–4.93 s in V3B).
+**Explained in V3G:** the gap comes from unpinned thread placement, not from the code. Unpinned
+runs of the same binary land in one of two clusters, about 3.35 s or 4.8–5.6 s. V3B's own binary
+gave 3.36 s in one repeat, and today's code gave 5.59 s in another. Pinned runs stay at
+3.54–3.61 s. So no V3B–V3C solve difference at 3.76 M is real; only pinned numbers (V3E on) can be
+compared at that size.
 
 ### Verdict
 
@@ -448,3 +451,72 @@ many loads (V3E). Caveats: neither library was tuned for HS-7 (for example aggre
 or smaller interpolation stencils in hypre, setup reuse options in GAMG); hypre runs on MSVC's
 older OpenMP without pinned threads; PETSc runs in a Linux VM. A tuned hypre or PETSc could
 close part of the setup gap.
+
+## V3G: sanitizer check and timing repeat
+
+### Sanitizers (Linux, GCC 13, WSL Ubuntu)
+
+V3 had only been built with MSVC. The CI's two sanitizer jobs were run by hand in WSL with the
+same cache variables and environment options (`UNIFORGE_SANITIZE=address,undefined` with
+`ASAN_OPTIONS=detect_leaks=1:abort_on_error=1`, `UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1`;
+`UNIFORGE_SANITIZE=thread` with `TSAN_OPTIONS=halt_on_error=1:second_deadlock_stack=1`,
+`vm.mmap_rnd_bits=28`). Differences from CI: Unix Makefiles instead of Ninja, and TSan ran
+the **full** suite rather than the CI subset. Nothing was pushed.
+
+- The first build failed under GCC's `-Werror`. There were `-Wsign-conversion` errors (int
+  indices into `std::array` in the geometric prolongator, the GMG build branch, the load-case
+  generator and a test) and a `-Warray-bounds` false positive on `std::sort` of the 8-corner
+  array. The hypre stub also had an unused helper. MSVC flagged none of these. Fixed in commit
+  `63b62a8` (`v3g(fix)`), with no change in behaviour; the corner sort is now an insertion sort.
+- ASan + UBSan: **409/409 tests pass, no reports.**
+- TSan: **409/409 tests pass, 0 ThreadSanitizer warnings.** This covers the parallel setup
+  (V3C), the lockstep block code (V3E) and the bit-identity tests across thread counts.
+- Windows after the fix: 434/434 pass.
+
+So no race or undefined behaviour was found in the V3 code; the only defects were the compile
+errors on GCC.
+
+### Timing repeat: the 3.38 s vs 4.85 s gap (V3C)
+
+AMG-PCG-CH-SP, HS-7 at 0.198 mm (3.76 M DOF), 8 threads, observer off, 5 solves per run.
+Conditions alternate round by round (`tools/timing_repeat_v3g.sh`). Each cell is the median of
+5 solves; raw rows are in `results/v3/csv/V3G_timing.csv`.
+
+- `v3b`: V3B's code (`ecbf093`), unpinned.
+- `v3c`: V3C's code (`93f65d6`), unpinned.
+- `nopin`: today's code with `UNIFORGE_NO_PIN=1`, unpinned.
+- `pin`: today's code, pinned.
+
+The old binaries were built from `git archive` and record commit "unknown".
+
+| Plan | Condition | Round 1 | Round 2 | Round 3 |
+|---|---|---|---|---|
+| Balanced | v3b | 4.807 | 3.359 | 4.768 |
+| Balanced | v3c | 4.860 | 3.877 | 4.931 |
+| Balanced | nopin | 3.620 | 3.886 | 4.773 |
+| Balanced | pin | 3.544 | 3.612 | 3.535 |
+| High performance | v3b | 3.335 | 4.994 | 3.350 |
+| High performance | nopin | 3.334 | 3.367 | 5.593 |
+| High performance | pin | 3.576 | 3.540 | 3.593 |
+
+Every run took 26 iterations.
+
+- **Not the code.** V3B's binary (old λ̂ start vector, serial setup) reaches 3.34–3.36 s, and
+  today's code reaches 4.77–5.59 s. The λ̂ change and the setup change do not move the solve.
+- **Not the power plan.** Both clusters appear on both plans.
+- **Thread placement.** Unpinned runs fall into a fast cluster (about 3.33–3.40 s) or a slow
+  one (about 4.8–5.6 s), with some in between. Sometimes this happens within one run (v3b,
+  High performance, round 2: 3.40–5.61 s). Pinned runs are 3.54–3.61 s on both plans: never
+  slow, but about 6 % above the fast unpinned cluster.
+- A likely mechanism, not measured here: Windows places some unpinned helpers on E-cores (slow
+  cluster) or spreads them so no two share a P-core (fast cluster). P-core-first pinning gives
+  each of the 6 P-cores one thread, then puts threads 7 and 8 on hyper-thread siblings, so two
+  cores are shared.
+- Setup times are 2.0–2.6 s for the parallel setup and 3.8–6.8 s for V3B's serial setup. They
+  show the same scatter when unpinned.
+
+**Verdict.** The gap is bounded: an unpinned 8-thread solve at 3.76 M can land anywhere in
+3.3–5.6 s, so V3B's 4.85 s and V3C's 3.38 s are two draws from the same distribution. Pinning
+narrows it to ±2 % (3.54–3.61 s), which justifies V3E's switch to pinned threads. Placing
+threads 7–8 on E-cores instead of hyper-thread siblings might recover the fast cluster
+(untested).

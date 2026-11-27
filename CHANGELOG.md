@@ -8,6 +8,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### Phase V3g: sanitizer check and timing repeat
+- V3 did not compile with GCC `-Werror` (sign conversions, a `-Warray-bounds` false positive on
+  `std::sort`, an unused helper); fixed with no change in behaviour (`63b62a8`).
+- ASan + UBSan and TSan (full suite, WSL Ubuntu, CI flags): 409/409 pass, no reports.
+- `UNIFORGE_NO_PIN=1` leaves multi-threaded study runs unpinned; `tools/timing_repeat_v3g.sh`.
+- Timing repeat (`results/v3/csv/V3G_timing.csv`): the V3B/V3C solve gap at 3.76 M on 8 threads
+  is unpinned thread placement (3.3–5.6 s with any code version or power plan); pinned runs are
+  3.54–3.61 s.
+
 ### Phase V3f: external references (hypre, PETSc)
 - Optional `HyprePcg` (`HYPRE-PCG`, `HYPRE-PCG-T05`): hypre 3.2.1 PCG + BoomerAMG, linked only
   with `UNIFORGE_WITH_HYPRE=ON`. Without it the solver returns InvalidInput and its test is

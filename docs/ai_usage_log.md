@@ -1493,6 +1493,28 @@ a persistent kernel pool instead.
 - **Caveats recorded:** the external settings were not tuned, hypre's OpenMP threads were not
   pinned, and PETSc ran in a VM while Windows was on the Balanced plan.
 
+## 2026-11-28: V3g (sanitizer check, timing repeat)
+### Prompts (representative)
+- "Yes, do both": run the CI's ASan+UBSan and TSan builds of v3 locally without pushing, and
+  repeat the 3.76 M / 8-thread timing to explain the V3B vs V3C gap.
+### Outputs (files, functions)
+- GCC compile fixes in `Amg.cpp`, `Runner.cpp`, `HypreSolver.cpp`, `AmgTest.cpp`.
+- `UNIFORGE_NO_PIN` switch in `StudyCommand.cpp`, `tools/timing_repeat_v3g.sh`, the V3G write-up
+  and `results/v3/csv/V3G_timing.csv`.
+### My edits
+- Approved the High performance plan for the timing batch only (restored to Balanced after).
+### Verification (tests run, numbers checked, manual checks)
+- ASan+UBSan and TSan: 409/409 each, no reports; Windows 434/434 after the fix. Every timing
+  row was taken from the run CSVs. The old binaries were rebuilt from the V3B/V3C commits.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Hypothesis disproved:** the earlier note attributed the gap to the λ̂ start vector or the
+  setup change. The repeat showed V3B's own binary in the fast cluster, so the cause is thread
+  placement.
+- **Draft corrected:** the first V3G draft proposed "one thread per P-core first" as a fix, but
+  the pinning code already does that; the draft was corrected after reading the code.
+- **False alarm:** a grep for `error:` in the TSan build log matched `system_error` include
+  lines, not errors.
+
 ## Entry template
 
 ```markdown
