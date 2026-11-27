@@ -139,6 +139,9 @@ CH-SP +33 % against AMG-PCG (809 and 991 vs 747 MB at 3.76 M).
 
 ### Verdict
 
+*Re-timed pinned in V3H: verdict unchanged; CH-SP's best solve speed-up is 1.99–2.29× (8-thread
+rows here were up to 45 % slow draws).*
+
 **AMG-PCG-CH-SP on 20 threads is the first candidate that beats AMG-PCG.** Its solve is 1.8–2.4×
 faster from 0.57 M to 3.76 M unknowns. Setup is still serial and grew by about 1.5 s at 3.76 M
 (coarsening plus the power iteration, 4.46 s vs 2.94 s), so setup plus solve is 1.2–1.5× faster.
@@ -208,6 +211,9 @@ compared at that size.
 
 ### Verdict
 
+*Re-timed pinned in V3H: verdict unchanged, range 1.75–2.40× (1.83–2.40× with the 1.02 M
+observer-off twin); 20 threads now also win at 3.76 M.*
+
 With a parallel setup, **AMG-PCG-CH-SP is faster than V2's best at every HS-7 size measured:
 1.79–2.56× in setup plus solve on 8 or 20 threads**, with the same accuracy and a third more
 solver memory. The serial parts left (aggregation, transposes, coarse factorisation) cap setup
@@ -264,6 +270,9 @@ with a largest value of 2.1e-10 K (AMG: at most 6.7e-11 K there). That is still 
 engineering tolerance.
 
 ### Verdict
+
+*Re-timed pinned in V3H: verdict unchanged; on 20 threads GMG wins at 94 k (13 %) and 0.17 M
+(3 %), AMG is 6–12 % faster from 0.29 M up, and the 1.02 M tie goes to AMG.*
 
 GMG does **not** replace AMG on HS-7. Its setup is consistently 1.7–1.9× cheaper on one core
 and 1.25–1.5× on 20 threads. Its iterations stay at 31–37 on every mesh, while AMG's fall from
@@ -520,3 +529,133 @@ Every run took 26 iterations.
 narrows it to ±2 % (3.54–3.61 s), which justifies V3E's switch to pinned threads. Placing
 threads 7–8 on E-cores instead of hyper-thread siblings might recover the fast cluster
 (untested).
+
+## V3H: V3B–V3D thread runs re-timed with pinned threads
+
+**Why.** V3G showed that an unpinned 8-thread solve at 3.76 M can land anywhere in 3.3–5.6 s.
+V3B, V3C and V3D ran their multi-threaded rows unpinned, so their thread numbers carry that
+noise, the V3C headline included.
+
+**Runs.** Experiment `V3H`: every multi-threaded row of V3B, V3C and V3D, with today's code
+(commit `bec0817`) and P-core-first pinning (V3E), 5 solves per run, medians.
+- V3B: AMG-PCG-CH and AMG-PCG-CH-SP, 8 and 20 threads, 4 largest meshes, observer off.
+- V3C and V3D: AMG-PCG-CH-SP on 8 and 20 threads, GMG-PCG-CH-SP on 20 threads, whole ladder,
+  observer on.
+- V2's AMG-PCG on one pinned core in the same batch, so every ratio comes from one batch.
+
+56 runs, all Converged, Balanced plan as in the original runs, so only the pinning changes
+(`results/v3/csv/V3H.csv`; the V3B–V3D CSVs are unchanged). High performance was not needed:
+V3G found the same scatter on both plans and pinned times within 2 % of each other.
+
+The one-core AMG-PCG baseline reproduces V3C to within 5 % at every size (e.g. 9.41 vs 9.60 s
+total at 3.76 M). Iterations and errors against the reference are the same as in the original
+runs.
+
+**Pinning narrows the spread but does not remove it.** From 0.57 M up, four of the 28 thread
+runs still had one or two slow solves out of five:
+
+| Run | Solve min–max (s) |
+|---|---|
+| CH-SP, 1.02 M, observer on, 8 threads | 0.95–1.59 |
+| CH-SP, 1.02 M, observer on, 20 threads | 0.95–1.54 |
+| GMG-PCG-CH-SP, 1.02 M, 20 threads | 1.15–2.82 |
+| CH-SP, 1.87 M, observer off, 8 threads | 1.78–4.11 |
+
+The observer does not run inside the timed solve, so the observer-on and observer-off runs of
+one solver are the same computation. Where both exist, the twin is a check: at 1.02 M on 8
+threads CH-SP's observer-off run has a median of 0.92 s against 1.43 s with the observer on.
+Every other run from 0.57 M up spreads ≤ 10 %. Below 0.57 M the solves take 0.07–0.25 s, and
+10 of 12 runs had a slow outlier (spread 11–205 % of the median). The median of 5 absorbs one
+or two outliers, but differences of a few per cent at those sizes are not significant. The
+tables use medians and mark the four rows with †.
+
+### V3C re-timed: against V2's AMG-PCG on one core (total = setup + solve, s)
+
+| DOF | AMG-PCG 1 core old / new | CH-SP 8 thr old / new | CH-SP 20 thr old / new | best total speed-up old / new |
+|---|---|---|---|---|
+| 56,015 | 0.200 / 0.191 | 0.092 / 0.095 | 0.087 / 0.098 | 2.30 / **2.00** |
+| 93,921 | 0.327 / 0.341 | 0.143 / 0.149 | 0.135 / 0.149 | 2.42 / **2.29** |
+| 170,634 | 0.540 / 0.533 | 0.227 / 0.230 | 0.211 / 0.222 | 2.56 / **2.40** |
+| 285,532 | 0.871 / 0.857 | 0.392 / 0.400 | 0.362 / 0.369 | 2.41 / **2.32** |
+| 568,152 | 1.603 / 1.564 | 0.765 / 0.814 | 0.736 / 0.826 | 2.18 / **1.92** |
+| 1,022,979 | 2.793 / 2.764 | 1.390 / 1.995 † | 1.286 / 1.578 † | 2.17 / **1.75** † |
+| 1,867,768 | 5.256 / 5.092 | 2.727 / 2.781 | 2.487 / 2.587 | 2.11 / **1.97** |
+| 3,759,720 | 9.600 / 9.407 | 5.374 / 5.491 | 5.825 / 5.129 | 1.79 / **1.83** |
+
+New best solve speed-ups: 2.00–3.07. New setup speed-ups: 1.28–1.60.
+
+† At 1.02 M the observer-off twin (20 threads, 1.376 s, spread 0.87–0.90 s) gives 2.01. With
+it the new range is 1.83–2.40.
+
+Most V3C points were slightly fast draws, not slow ones: pinned is 2–13 % slower below 1.02 M,
+where the unpinned runs had happened to spread their threads well. The one change of order is
+at 3.76 M, which V3G already explained: 20 threads now beat 8 (5.13 vs 5.49 s), where V3C had
+20 slower (5.83 vs 5.37 s).
+
+### V3B re-timed: solve on threads, observer off (s)
+
+The new solve speed-up is against the same batch's AMG-PCG on one core. Total speed-ups are
+not compared with V3B's, because V3B still had the serial setup (V3C parallelised it); the new
+totals use today's parallel setup.
+
+| DOF | variant | threads | solve old / new | new solve speed-up | new total speed-up |
+|---|---|---|---|---|---|
+| 568,152 | CH | 8 | 0.660 / 0.619 | 1.85 | 1.74 |
+| 568,152 | CH | 20 | 0.726 / 0.667 | 1.72 | 1.67 |
+| 568,152 | CH-SP | 8 | 0.495 / 0.500 | **2.29** | **1.96** |
+| 568,152 | CH-SP | 20 | 0.554 / 0.519 | 2.21 | 1.95 |
+| 1,022,979 | CH | 8 | 1.674 / 1.151 | 1.74 | 1.68 |
+| 1,022,979 | CH | 20 | 1.246 / 1.162 | 1.72 | 1.70 |
+| 1,022,979 | CH-SP | 8 | 1.276 / 0.919 | 2.18 | 1.90 |
+| 1,022,979 | CH-SP | 20 | 0.969 / 0.875 | **2.29** | **2.01** |
+| 1,867,768 | CH | 8 | 3.178 / 2.223 | 1.63 | 1.59 |
+| 1,867,768 | CH | 20 | 2.307 / 2.245 | 1.61 | 1.64 |
+| 1,867,768 | CH-SP | 8 | 2.471 / 2.248 † | 1.61 † | 1.53 † |
+| 1,867,768 | CH-SP | 20 | 1.787 / 1.688 | **2.14** | **1.94** |
+| 3,759,720 | CH | 8 | 6.287 / 4.422 | 1.48 | 1.49 |
+| 3,759,720 | CH | 20 | 4.573 / 4.413 | 1.49 | 1.54 |
+| 3,759,720 | CH-SP | 8 | 4.852 / 3.431 | 1.91 | 1.72 |
+| 3,759,720 | CH-SP | 20 | 3.604 / 3.300 | **1.99** | **1.83** |
+
+† Spread 1.78–4.11 s; the observer-on twin (V3C table) solved in 1.745 s, a solve speed-up of
+2.07.
+
+V3B's 8-thread rows were the slow draws: 5 of its 8 rows took 39–45 % longer than now (CH at
+1.02 M, 1.87 M and 3.76 M; CH-SP at 1.02 M and 3.76 M). Its 20-thread rows were 3–11 % slower than now.
+With pinning, 8 and 20 threads are within 8 % of each other for every variant and size apart
+from the † row.
+CH-SP's solve speed-up on the best thread count is 1.99–2.29 (old: 1.84–2.36).
+
+### V3D re-timed: ratio AMG-PCG-CH-SP / GMG-PCG-CH-SP on 20 threads (> 1: GMG faster)
+
+| DOF | total old / new | setup new | solve new |
+|---|---|---|---|
+| 56,015 | 0.85 / 0.95 | 1.06 | 0.91 |
+| 93,921 | 1.07 / **1.13** | 1.43 | 1.01 |
+| 170,634 | 0.98 / **1.03** | 1.50 | 0.86 |
+| 285,532 | 0.89 / 0.89 | 1.31 | 0.74 |
+| 568,152 | 0.83 / 0.88 | 1.31 | 0.74 |
+| 1,022,979 † | 1.01 / 0.94 | 1.44 | 0.78 |
+| 1,867,768 | 0.96 / 0.94 | 1.23 | 0.83 |
+| 3,759,720 | 0.90 / 0.91 | 1.26 | 0.78 |
+
+† Both runs at 1.02 M had slow solves; with the AMG observer-off twin the ratio is 0.82.
+
+GMG-PCG-CH-SP is faster at 94 k (13 %) and 0.17 M (3 %). AMG-PCG-CH-SP is faster at the other
+six sizes, by 5–12 %. V3D's tie at 1.02 M is gone; it now goes to AMG.
+
+### Verdict
+
+**No verdict changes.**
+- **V3B/V3C: AMG-PCG-CH-SP is still the best.** It is the fastest variant at every size and
+  thread count, apart from the one † row, where its twin is fastest too. Its lead over V2's
+  AMG-PCG is a little smaller.
+- **The V3C headline becomes 1.75–2.40× in setup plus solve** (1.83–2.40× with the 1.02 M twin),
+  where V3C reported 1.79–2.56×. Solve alone is 2.00–3.07× (V3C: 1.96–3.32×).
+- **20 against 8 threads:** the "8 is better at 3.76 M" exception was noise. 20 threads are
+  faster from 1.02 M up, and within 3 % of 8 threads below that.
+- **V3D: GMG loses at large sizes** still holds. AMG-PCG-CH-SP is 6–12 % faster from 0.29 M up
+  on 20 threads; GMG keeps its small-mesh wins (94 k, 0.17 M).
+- **Measurement.** Pinning is necessary but not enough for single-run claims below about 10 %:
+  4 of 28 pinned runs from 0.57 M up still had outlier solves, and most small-mesh runs had one.
+  Claims at that level need either the twin check used here or repeated runs.

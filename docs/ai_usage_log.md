@@ -1515,6 +1515,24 @@ a persistent kernel pool instead.
 - **False alarm:** a grep for `error:` in the TSan build log matched `system_error` include
   lines, not errors.
 
+## 2026-11-28: V3h (thread runs re-timed pinned)
+### Prompts (representative)
+- "re-time V3B–V3D thread runs pinned": rerun every multi-threaded V3B–V3D row with pinning,
+  keep the old CSVs, report whether any verdict changes.
+### Outputs (files, functions)
+- `planV3H` in `Plan.cpp` (56 runs), `results/v3/csv/V3H.csv`, the V3H section and the pointers
+  in the V3B–V3D verdicts.
+### My edits
+- None to the code; asked for the re-timing after V3G.
+### Verification (tests run, numbers checked, manual checks)
+- 434 tests pass. All 56 runs converged, at commit `bec0817` (hash checked in the binary). Every
+  ratio was computed by script from `V3H.csv` and the old CSVs, then re-checked by hand.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Draft claims corrected before commit:** the first V3H draft said every other run spread
+  ≤ 10 %, but 10 of 12 small-mesh runs had outliers. It also miscounted the runs (24/16 instead
+  of 28/12) and misstated three ranges (pinned-vs-V3C slowdown, V3B slow rows, 8 vs 20
+  threads). All were caught by recomputing from the CSV.
+
 ## Entry template
 
 ```markdown

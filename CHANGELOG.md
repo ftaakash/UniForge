@@ -8,6 +8,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### Phase V3h: V3B–V3D thread runs re-timed pinned
+- Experiment `V3H` (56 runs, all converged, Balanced plan): every multi-threaded row of V3B, V3C
+  and V3D with P-core-first pinning, plus V2's AMG-PCG on one core in the same batch.
+- No verdict changes. The V3C headline is now 1.75–2.40× setup + solve (was 1.79–2.56×); 20
+  threads win at 3.76 M too; GMG still loses from 0.29 M up on 20 threads (by 6–12 %).
+- 4 of 28 pinned runs from 0.57 M up still had outlier solves; marked in the tables.
+
 ### Phase V3g: sanitizer check and timing repeat
 - V3 did not compile with GCC `-Werror` (sign conversions, a `-Warray-bounds` false positive on
   `std::sort`, an unused helper); fixed with no change in behaviour (`63b62a8`).
