@@ -1,11 +1,13 @@
 // V2 experiment harness (build spec §9): plan, run records, references, one run, collect.
 
 #include <cmath>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -151,5 +153,54 @@ TEST(StudyRun, VerificationChecksReproduceTheTests) {
         const double ref = std::stod(rec.value().get("check_reference"));
         EXPECT_NEAR(fe / ref, 1.0, 2e-3) << id;
     }
+    std::filesystem::remove_all(root);
+}
+
+// V3f: `study export` writes K, f and the reference in PETSc's binary format (big-endian
+// int32 header and indices, big-endian doubles) with the exact sizes PETSc's loaders expect.
+TEST(StudyExport, WritesPetscBinaryMatrixVectorAndReference) {
+    auto spec = findRun("V3F-HS7-s1.000-AMG-PCG", false);
+    ASSERT_TRUE(spec.ok());
+    const auto root = tempRoot("export");
+    const RunPaths paths{root};
+    // A reference of the right size, so the export also writes <id>.ref.petsc.
+    const std::size_t rows = 56015; // HS-7 at 1 mm (E2, V3A–V3F)
+    std::filesystem::create_directories(paths.referenceFile(systemKey(spec.value())).parent_path());
+    ASSERT_TRUE(
+        saveReference(paths.referenceFile(systemKey(spec.value())), std::vector<double>(rows, 25.0))
+            .ok());
+    const auto dir = root / "petsc";
+    auto n = exportPetsc(spec.value(), paths, dir);
+    ASSERT_TRUE(n.ok()) << n.error().message;
+    ASSERT_EQ(n.value(), rows);
+    const std::string id = spec.value().id;
+    const std::string K = readAll(dir / (id + ".K.petsc"));
+    const std::string f = readAll(dir / (id + ".f.petsc"));
+    const std::string ref = readAll(dir / (id + ".ref.petsc"));
+    const auto be32 = [](const std::string& s, std::size_t at) {
+        std::uint32_t v = 0;
+        for (std::size_t i = 0; i < 4; ++i) {
+            v = (v << 8) | static_cast<unsigned char>(s[at + i]);
+        }
+        return v;
+    };
+    ASSERT_GE(K.size(), 16u);
+    EXPECT_EQ(be32(K, 0), 1211216u);
+    EXPECT_EQ(be32(K, 4), rows);
+    EXPECT_EQ(be32(K, 8), rows);
+    const std::size_t nnz = be32(K, 12);
+    EXPECT_EQ(K.size(), 16 + 4 * rows + 12 * nnz);
+    std::size_t sumLengths = 0;
+    for (std::size_t i = 0; i < rows; ++i) {
+        sumLengths += be32(K, 16 + 4 * i);
+    }
+    EXPECT_EQ(sumLengths, nnz);
+    EXPECT_EQ(be32(f, 0), 1211214u);
+    EXPECT_EQ(be32(f, 4), rows);
+    EXPECT_EQ(f.size(), 8 + 8 * rows);
+    EXPECT_EQ(ref.size(), 8 + 8 * rows);
+    // First reference value: 25.0 as a big-endian double is 40 39 00 00 00 00 00 00.
+    EXPECT_EQ(static_cast<unsigned char>(ref[8]), 0x40);
+    EXPECT_EQ(static_cast<unsigned char>(ref[9]), 0x39);
     std::filesystem::remove_all(root);
 }

@@ -416,6 +416,85 @@ Result<RunRecord> RunRecord::fromCsv(const std::string& text) {
 
 // ---- References -------------------------------------------------------------------------------
 
+namespace {
+void appendBigEndian32(std::string& out, std::int32_t v) {
+    const auto u = static_cast<std::uint32_t>(v);
+    for (int s = 24; s >= 0; s -= 8) {
+        out.push_back(static_cast<char>((u >> s) & 0xFFu));
+    }
+}
+void appendBigEndianDouble(std::string& out, double v) {
+    std::uint64_t u = 0;
+    std::memcpy(&u, &v, sizeof u);
+    for (int s = 56; s >= 0; s -= 8) {
+        out.push_back(static_cast<char>((u >> s) & 0xFFu));
+    }
+}
+} // namespace
+
+Result<std::size_t> exportPetsc(const RunSpec& spec, const RunPaths& paths,
+                                const std::filesystem::path& dir) {
+    const fem3d::Design design = makeDesign(spec);
+    fem3d::MeshSpec ms;
+    ms.targetSpacing = spec.spacing;
+    ms.fixedLayerCells = spec.timCells;
+    auto mesh = fem3d::buildMesh(design, ms);
+    if (!mesh) {
+        return std::move(mesh).error();
+    }
+    auto assembled = fem3d::assemble(design, mesh.value());
+    if (!assembled) {
+        return std::move(assembled).error();
+    }
+    const fem3d::LinearSystem& sys = assembled.value();
+    const sparse::CsrMatrix& K = sys.K;
+    std::string mat;
+    mat.reserve(16 + 4 * sparse::toSize(K.rows) + 12 * K.val.size());
+    appendBigEndian32(mat, 1211216);
+    appendBigEndian32(mat, K.rows);
+    appendBigEndian32(mat, K.cols);
+    appendBigEndian32(mat, static_cast<std::int32_t>(K.nnz()));
+    for (sparse::Index i = 0; i < K.rows; ++i) {
+        appendBigEndian32(mat, static_cast<std::int32_t>(K.rowPtr[sparse::toSize(i) + 1] -
+                                                         K.rowPtr[sparse::toSize(i)]));
+    }
+    for (const sparse::Index c : K.col) {
+        appendBigEndian32(mat, c);
+    }
+    for (const double v : K.val) {
+        appendBigEndianDouble(mat, v);
+    }
+    const auto vectorBytes = [](const std::vector<double>& x) {
+        std::string vec;
+        vec.reserve(8 + 8 * x.size());
+        appendBigEndian32(vec, 1211214);
+        appendBigEndian32(vec, static_cast<std::int32_t>(x.size()));
+        for (const double v : x) {
+            appendBigEndianDouble(vec, v);
+        }
+        return vec;
+    };
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
+    if (auto w = writeFileAtomic(dir / (spec.id + ".K.petsc"), mat); !w) {
+        return std::move(w).error();
+    }
+    if (auto w = writeFileAtomic(dir / (spec.id + ".f.petsc"), vectorBytes(sys.f)); !w) {
+        return std::move(w).error();
+    }
+    const auto refFile = paths.referenceFile(systemKey(spec));
+    if (std::filesystem::exists(refFile)) {
+        auto ref = loadReference(refFile);
+        if (ref && ref.value().size() == sys.f.size()) {
+            if (auto w = writeFileAtomic(dir / (spec.id + ".ref.petsc"), vectorBytes(ref.value()));
+                !w) {
+                return std::move(w).error();
+            }
+        }
+    }
+    return sys.f.size();
+}
+
 Result<void> saveReference(const std::filesystem::path& file, const std::vector<double>& T) {
     std::string bytes = "UFREF1\n";
     const std::uint64_t n = T.size();

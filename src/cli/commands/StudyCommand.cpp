@@ -32,6 +32,7 @@ struct StudyArgs {
     bool allowDirty = false;
     std::filesystem::path out = "results/v2";
     std::filesystem::path fig = "docs/report_v2/fig";
+    std::filesystem::path to; // export destination (default DIR/petsc)
 };
 
 std::vector<std::string> splitList(const std::string& s) {
@@ -54,12 +55,14 @@ std::vector<std::string> splitList(const std::string& s) {
 }
 
 void usage(std::ostream& os) {
-    os << "Usage: uniforge_cli study <plan|run|batch|collect|figures> [options]\n"
+    os << "Usage: uniforge_cli study <plan|run|batch|collect|figures|export> [options]\n"
           "  plan     list the runs and write DIR/manifest.json\n"
           "  run      --id ID: execute one run in this process (used by batch)\n"
           "  batch    run every planned run that has no result yet, one process each\n"
           "  collect  write DIR/csv/*.csv and DIR/numbers.json from DIR/runs\n"
           "  figures  write the report figures P1-P22 from DIR to FIG (--only P4,P11)\n"
+          "  export   --id ID [--to DEST]: write the run's K, f and reference in PETSc\n"
+          "           binary format to DEST (default DIR/petsc)\n"
           "Options: --only E0,E2  --dry-run  --allow-dirty  --out DIR (default results/v2)\n"
           "         --fig FIG (default docs/report_v2/fig)\n";
 }
@@ -281,6 +284,8 @@ int runStudy(const std::vector<std::string>& args, const std::string& gitCommit,
             a.id = args[++i];
         } else if (args[i] == "--fig" && hasValue) {
             a.fig = std::filesystem::u8path(args[++i]);
+        } else if (args[i] == "--to" && hasValue) {
+            a.to = std::filesystem::u8path(args[++i]);
         } else if (args[i] == "--out" && hasValue) {
             a.out = std::filesystem::u8path(args[++i]);
         } else if (args[i] == "--dry-run") {
@@ -311,6 +316,25 @@ int runStudy(const std::vector<std::string>& args, const std::string& gitCommit,
     }
     if (a.sub == "figures") {
         return doFigures(a, out, err);
+    }
+    if (a.sub == "export") { // V3f: K and f in PETSc's binary format, for the PETSc reference
+        if (a.id.empty()) {
+            err << "error: study export needs --id\n";
+            return kExitUsage;
+        }
+        auto spec = study::findRun(a.id, a.dry);
+        if (!spec) {
+            err << "error: " << spec.error().message << "\n";
+            return kExitUsage;
+        }
+        const std::filesystem::path to = a.to.empty() ? a.out / "petsc" : a.to;
+        auto n = study::exportPetsc(spec.value(), study::RunPaths{a.out}, to);
+        if (!n) {
+            err << "error: " << n.error().message << "\n";
+            return kExitError;
+        }
+        out << a.id << ": " << n.value() << " rows written to " << to.u8string() << "\n";
+        return kExitOk;
     }
     usage(err);
     return kExitUsage;

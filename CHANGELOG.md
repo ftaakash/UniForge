@@ -8,6 +8,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### Phase V3f: external references (hypre, PETSc)
+- Optional `HyprePcg` (`HYPRE-PCG`, `HYPRE-PCG-T05`): hypre 3.2.1 PCG + BoomerAMG, linked only
+  with `UNIFORGE_WITH_HYPRE=ON`. Without it the solver returns InvalidInput and its test is
+  skipped.
+- `uniforge_cli study export --id … [--to DIR]`: K, f and the reference in PETSc binary format.
+  `tools/petsc_ref/`: PETSc 3.26.1 CG + GAMG driver, makefile and run script (WSL).
+- Experiment `V3F` (56 runs, all converged) plus 16 PETSc runs. Our AMG-PCG is 1.27–2.30×
+  faster in total time than the best external result per size on one core, and AMG-PCG-CH-SP
+  is 1.31–3.43× faster than hypre on 6 threads. Solve times are on a par (PETSc GAMG at large
+  sizes, hypre below 0.1 M); the difference is the setup. Neither library was tuned.
+- Tests: 2 new (hypre agreement or clean absence, export format); 434 pass (409 in the hypre
+  build without the GUI tests).
+
 ### Phase V3e: several load cases, pinned threads
 - `LinearOperatorSolver::solveMany` (one setup, then every load case) and `AmgBatchPcg`
   (`AMG-PCG-CH-SP-B`): L PCG recurrences in lockstep with block matrix products and a block

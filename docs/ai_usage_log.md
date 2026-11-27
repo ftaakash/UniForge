@@ -1466,6 +1466,33 @@ a persistent kernel pool instead.
   220 and 700). The draft also called "direct pays off for many loads" a V2 result, but V2's H5
   had refuted it.
 
+## 2026-11-27/28: V3f (hypre and PETSc references)
+### Prompts (representative)
+- "hypre/PETSc reference"; separately approved: download hypre, install WSL Ubuntu and PETSc.
+### Outputs (files, functions)
+- `HyprePcg` (`src/core/solvers/external/`), CMake option `UNIFORGE_WITH_HYPRE`, `exportPetsc`
+  and `study export`, `tools/petsc_ref/` (driver, makefile, script), experiment `V3F`, two
+  tests, the V3F section of `docs/v3_experiments.md`, DEPENDENCIES.md entries.
+### My edits
+- Approved the hypre download and the WSL Ubuntu + PETSc install (no MPI, root without a user
+  account).
+### Verification (tests run, numbers checked, manual checks)
+- Tests pass in both builds (434 default; 409 with hypre, no GUI). hypre agrees with our
+  AMG-PCG on the Q1 model problem. PETSc's install check passed. 56 V3F runs and 16 PETSc runs
+  converged. Ratios computed by hand from `V3F.csv` and `V3F_petsc.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Runtime mismatch:** hypre was first built with the DLL runtime (`/MD`), which cannot link
+  with UniForge's `/MT`. Caught before linking and rebuilt.
+- **OpenMP mismatch:** MSVC's OpenMP 2.0 lacks `omp_get_thread_limit` (linker error). Fixed
+  with a documented shim instead of changing the OpenMP runtime.
+- **`find_package(OpenMP COMPONENTS C)`** failed in a C++-only project; fixed by enabling C
+  when hypre is on.
+- **Draft accuracy claim corrected:** the draft said every external error was "within the same
+  order of magnitude" as ours, but hypre θ 0.5 at 1.87 M is 9× larger (6.4e-10 vs 6.7e-11 K).
+  The draft's speed-up ranges were also restated per comparison.
+- **Caveats recorded:** the external settings were not tuned, hypre's OpenMP threads were not
+  pinned, and PETSc ran in a VM while Windows was on the Balanced plan.
+
 ## Entry template
 
 ```markdown

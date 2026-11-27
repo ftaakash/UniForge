@@ -362,3 +362,89 @@ factorisation costs 10.3 s here and 73 s at 0.29 M, so ND never wins in this ran
   lockstep loads (0.047 and 0.105 s per load at L = 20).
 - **Pinning removed the one outlier.** Six to twenty threads stay within 10 % of each other at
   3.76 M.
+
+## V3F: external references (hypre BoomerAMG, PETSc GAMG)
+
+**Question.** Is our AMG close to the state of the art, or do mature libraries do much better on
+the same matrices?
+
+**Libraries (downloaded with the user's OK, built locally, not vendored).**
+- **hypre 3.2.1** (github.com/hypre-space/hypre, tag v3.2.1, tarball SHA-256 `3083cf94…4e0c`,
+  MIT or Apache-2.0). Built with MSVC as a static library: no MPI, OpenMP (MSVC's OpenMP 2.0),
+  static runtime. It is linked only with `-DUNIFORGE_WITH_HYPRE=ON -DHYPRE_ROOT=…`; the default
+  build stays offline and the hypre test is skipped there. MSVC's OpenMP lacks
+  `omp_get_thread_limit`, which hypre calls only to cap the thread count. A one-line shim
+  returns `omp_get_max_threads()`.
+- **PETSc 3.26.1** (web.cels.anl.gov release snapshot, SHA-256 `a4dc46c1…3496`, BSD-2-Clause),
+  in WSL2 Ubuntu 24.04 (installed for this step, run as root, no user account). Built with GCC
+  13.3 at `-O3 -march=native`, no MPI, sequential. PETSc's install check passed.
+
+**How each is run.**
+- **HYPRE-PCG / HYPRE-PCG-T05** (`src/core/solvers/external/HypreSolver.cpp`) run through our
+  own harness, on the same process, matrices, tolerance and repetitions. K is copied into
+  hypre's IJ/ParCSR format, and the copy is part of setup, reported as phase "copy to hypre".
+  The solver is hypre PCG (two-norm, relative residual 1e-10) with one BoomerAMG V-cycle: HMIS
+  coarsening, extended+i interpolation (≤ 4 per row), hybrid symmetric Gauss–Seidel, strength
+  threshold 0.25 (hypre's default) or 0.5 (hypre's suggestion for 3D). The settings follow
+  hypre's documentation and are not tuned for HS-7. One pinned core, and 6 threads where
+  hypre's own OpenMP threads are not pinned. Commit `9af0828`, High performance power plan,
+  56 runs (with AMG-PCG and AMG-PCG-CH-SP), all converged (`results/v3/csv/V3F.csv`).
+- **PETSc CG + GAMG** (`tools/petsc_ref/petsc_ref.c`, `run_v3f_petsc.sh`). The same eight HS-7
+  systems are exported with `uniforge_cli study export`, together with their references. PETSc
+  CG uses the unpreconditioned norm, relative tolerance 1e-10 and x₀ = 0, so it stops on the
+  same test. Setup (KSPSetUp, the GAMG hierarchy) and solve are timed separately: 5
+  repetitions, medians. Two settings: GAMG defaults, and threshold 0.02 (our θ₀). One pinned
+  virtual CPU. These timings come from a Linux VM on the same CPU, with Windows on the Balanced
+  plan, so they are **indicative**, not exactly comparable with the Windows runs
+  (`results/v3/csv/V3F_petsc.csv`).
+
+### One core: total time (setup + solve, s)
+
+| DOF | AMG-PCG (ours, V2) | hypre θ 0.25 | hypre θ 0.5 | PETSc GAMG default | PETSc GAMG thr 0.02 | best external / ours |
+|---|---|---|---|---|---|---|
+| 56,015 | **0.199** | 0.309 | 0.252 | 0.351 | 0.364 | 1.27 (hypre) |
+| 93,921 | **0.331** | 0.531 | 0.464 | 0.640 | 0.658 | 1.40 (hypre) |
+| 170,634 | **0.557** | 0.962 | 0.799 | 1.121 | 1.120 | 1.43 (hypre) |
+| 285,532 | **0.917** | 1.733 | 1.716 | 1.841 | 1.807 | 1.87 (hypre) |
+| 568,152 | **1.645** | 3.588 | 3.425 | 3.751 | 3.185 | 1.94 (PETSc) |
+| 1,022,979 | **2.849** | 7.154 | 7.298 | 6.749 | 5.475 | 1.92 (PETSc) |
+| 1,867,768 | **5.325** | 12.569 | 13.174 | 12.495 | 9.575 | 1.80 (PETSc) |
+| 3,759,720 | **9.936** | 27.336 | 29.019 | 27.667 | 22.868 | 2.30 (PETSc) |
+
+Iterations at 3.76 M: ours 23, hypre 17 and 22, PETSc 31 and 16. **Solve alone, our AMG-PCG and
+the best external solver are close at large sizes**: 6.99 s ours, 6.92 s for PETSc GAMG thr
+0.02 and 13.39 s for hypre at 3.76 M; 3.74 / 3.60 / 6.17 s at 1.87 M. hypre is the fastest
+solve below 0.1 M (0.213 vs 0.261 s at 94 k). **The difference is the setup**: 2.94 s ours,
+13.4 s PETSc and 13.9 s hypre at 3.76 M (hypre's copy of K is 1.1 s of that).
+
+### 6 threads: total time (setup + solve, s)
+
+| DOF | AMG-PCG-CH-SP (ours, V3) | hypre θ 0.25 | hypre θ 0.5 | best hypre / ours |
+|---|---|---|---|---|
+| 56,015 | **0.096** | 0.129 | 0.148 | 1.34 |
+| 93,921 | **0.141** | 0.205 | 0.221 | 1.45 |
+| 170,634 | **0.244** | 0.374 | 0.398 | 1.53 |
+| 285,532 | **0.545** | 0.714 | 1.152 | 1.31 |
+| 568,152 | **0.792** | 2.266 | 2.615 | 2.86 |
+| 1,022,979 | **1.432** | 4.134 | 4.910 | 2.89 |
+| 1,867,768 | **2.614** | 4.789 | 9.143 | 1.83 |
+| 3,759,720 | **5.267** | 18.065 | 21.052 | 3.43 |
+
+The PETSc build is sequential, so it has no 6-thread numbers. Peak process memory at 3.76 M is
+3.0 GB for our runs and 4.6–4.9 GB for hypre's. Accuracy: every external run converged to the
+same relative residual (true residual ≤ 9.9e-11). The largest error against the reference is
+6.4e-10 K (hypre θ 0.5 at 1.87 M, where ours is 6.7e-11 K). PETSc's largest is 9.6e-11 K.
+
+### Verdict
+
+On HS-7 our AMG is **faster than both mature libraries in their standard settings, at every
+size**. On one core it is 1.27–2.30× faster in total time than the best external result per
+size (1.27–2.75× against hypre alone). On 6 threads it is 1.31–3.43× faster than hypre. The gain is in the
+setup, not the solve. Per iteration and per solve, PETSc GAMG with threshold 0.02 matches our
+AMG-PCG at the large sizes, and hypre is the best solve below 0.1 M. So our smoothed-aggregation
+AMG is competitive with the state of the art. It is not ahead in convergence; it is ahead in
+setup cost. That is a large advantage for one solve and a small one when a setup is reused for
+many loads (V3E). Caveats: neither library was tuned for HS-7 (for example aggressive coarsening
+or smaller interpolation stencils in hypre, setup reuse options in GAMG); hypre runs on MSVC's
+older OpenMP without pinned threads; PETSc runs in a Linux VM. A tuned hypre or PETSc could
+close part of the setup gap.

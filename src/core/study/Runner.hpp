@@ -61,6 +61,14 @@ struct RunPaths {
 executeRun(const RunSpec& spec, const RunPaths& paths, const std::string& gitCommit,
            const sparse::KernelPool::ThreadStartFn& onThreadStart = {});
 
+// V3f: writes the run's system in PETSc's binary format for an external reference solver:
+// dir/<id>.K.petsc (Mat: classid 1211216, rows, cols, nnz, row lengths, column indices, values)
+// and dir/<id>.f.petsc (Vec: classid 1211214, n, values), all big-endian (int32, double).
+// If `paths` holds a reference solution for the system, it is written as dir/<id>.ref.petsc
+// (Vec) so the external solver can report its error. Returns the number of rows.
+[[nodiscard]] Result<std::size_t> exportPetsc(const RunSpec& spec, const RunPaths& paths,
+                                              const std::filesystem::path& dir);
+
 // Reference solutions: raw doubles with a small header (n). Saved atomically.
 Result<void> saveReference(const std::filesystem::path& file, const std::vector<double>& T);
 [[nodiscard]] Result<std::vector<double>> loadReference(const std::filesystem::path& file);

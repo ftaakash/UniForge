@@ -1,0 +1,115 @@
+[1/56] V3F-HS7-s1.000-REF ... V3F-HS7-s1.000-REF: Converged
+Converged (0.6 s)
+[2/56] V3F-HS7-s1.000-AMG-PCG ... V3F-HS7-s1.000-AMG-PCG: Converged
+Converged (1.6 s)
+[3/56] V3F-HS7-s1.000-HYPRE-PCG ... V3F-HS7-s1.000-HYPRE-PCG: Converged
+Converged (2.2 s)
+[4/56] V3F-HS7-s1.000-HYPRE-PCG-T05 ... V3F-HS7-s1.000-HYPRE-PCG-T05: Converged
+Converged (1.9 s)
+[5/56] V3F-HS7-s1.000-AMG-PCG-CH-SP-p6 ... V3F-HS7-s1.000-AMG-PCG-CH-SP-p6: Converged
+Converged (1.1 s)
+[6/56] V3F-HS7-s1.000-HYPRE-PCG-p6 ... V3F-HS7-s1.000-HYPRE-PCG-p6: Converged
+Converged (1.2 s)
+[7/56] V3F-HS7-s1.000-HYPRE-PCG-T05-p6 ... V3F-HS7-s1.000-HYPRE-PCG-T05-p6: Converged
+Converged (1.4 s)
+[8/56] V3F-HS7-s0.794-REF ... V3F-HS7-s0.794-REF: Converged
+Converged (0.6 s)
+[9/56] V3F-HS7-s0.794-AMG-PCG ... V3F-HS7-s0.794-AMG-PCG: Converged
+Converged (2.3 s)
+[10/56] V3F-HS7-s0.794-HYPRE-PCG ... V3F-HS7-s0.794-HYPRE-PCG: Converged
+Converged (3.3 s)
+[11/56] V3F-HS7-s0.794-HYPRE-PCG-T05 ... V3F-HS7-s0.794-HYPRE-PCG-T05: Converged
+Converged (3 s)
+[12/56] V3F-HS7-s0.794-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.794-AMG-PCG-CH-SP-p6: Converged
+Converged (1.4 s)
+[13/56] V3F-HS7-s0.794-HYPRE-PCG-p6 ... V3F-HS7-s0.794-HYPRE-PCG-p6: Converged
+Converged (1.6 s)
+[14/56] V3F-HS7-s0.794-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.794-HYPRE-PCG-T05-p6: Converged
+Converged (1.7 s)
+[15/56] V3F-HS7-s0.630-REF ... V3F-HS7-s0.630-REF: Converged
+Converged (0.7 s)
+[16/56] V3F-HS7-s0.630-AMG-PCG ... V3F-HS7-s0.630-AMG-PCG: Converged
+Converged (3.5 s)
+[17/56] V3F-HS7-s0.630-HYPRE-PCG ... V3F-HS7-s0.630-HYPRE-PCG: Converged
+Converged (5.6 s)
+[18/56] V3F-HS7-s0.630-HYPRE-PCG-T05 ... V3F-HS7-s0.630-HYPRE-PCG-T05: Converged
+Converged (4.8 s)
+[19/56] V3F-HS7-s0.630-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.630-AMG-PCG-CH-SP-p6: Converged
+Converged (2 s)
+[20/56] V3F-HS7-s0.630-HYPRE-PCG-p6 ... V3F-HS7-s0.630-HYPRE-PCG-p6: Converged
+Converged (2.6 s)
+[21/56] V3F-HS7-s0.630-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.630-HYPRE-PCG-T05-p6: Converged
+Converged (2.7 s)
+[22/56] V3F-HS7-s0.500-REF ... V3F-HS7-s0.500-REF: Converged
+Converged (0.8 s)
+[23/56] V3F-HS7-s0.500-AMG-PCG ... V3F-HS7-s0.500-AMG-PCG: Converged
+Converged (5.5 s)
+[24/56] V3F-HS7-s0.500-HYPRE-PCG ... V3F-HS7-s0.500-HYPRE-PCG: Converged
+Converged (9.5 s)
+[25/56] V3F-HS7-s0.500-HYPRE-PCG-T05 ... V3F-HS7-s0.500-HYPRE-PCG-T05: Converged
+Converged (9.5 s)
+[26/56] V3F-HS7-s0.500-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.500-AMG-PCG-CH-SP-p6: Converged
+Converged (3.7 s)
+[27/56] V3F-HS7-s0.500-HYPRE-PCG-p6 ... V3F-HS7-s0.500-HYPRE-PCG-p6: Converged
+Converged (5 s)
+[28/56] V3F-HS7-s0.500-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.500-HYPRE-PCG-T05-p6: Converged
+Converged (6.2 s)
+[29/56] V3F-HS7-s0.397-REF ... V3F-HS7-s0.397-REF: Converged
+Converged (1.1 s)
+[30/56] V3F-HS7-s0.397-AMG-PCG ... V3F-HS7-s0.397-AMG-PCG: Converged
+Converged (9.5 s)
+[31/56] V3F-HS7-s0.397-HYPRE-PCG ... V3F-HS7-s0.397-HYPRE-PCG: Converged
+Converged (19.2 s)
+[32/56] V3F-HS7-s0.397-HYPRE-PCG-T05 ... V3F-HS7-s0.397-HYPRE-PCG-T05: Converged
+Converged (18.5 s)
+[33/56] V3F-HS7-s0.397-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.397-AMG-PCG-CH-SP-p6: Converged
+Converged (5.2 s)
+[34/56] V3F-HS7-s0.397-HYPRE-PCG-p6 ... V3F-HS7-s0.397-HYPRE-PCG-p6: Converged
+Converged (11.6 s)
+[35/56] V3F-HS7-s0.397-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.397-HYPRE-PCG-T05-p6: Converged
+Converged (13.3 s)
+[36/56] V3F-HS7-s0.315-REF ... V3F-HS7-s0.315-REF: Converged
+Converged (1.6 s)
+[37/56] V3F-HS7-s0.315-AMG-PCG ... V3F-HS7-s0.315-AMG-PCG: Converged
+Converged (16 s)
+[38/56] V3F-HS7-s0.315-HYPRE-PCG ... V3F-HS7-s0.315-HYPRE-PCG: Converged
+Converged (37.8 s)
+[39/56] V3F-HS7-s0.315-HYPRE-PCG-T05 ... V3F-HS7-s0.315-HYPRE-PCG-T05: Converged
+Converged (38.5 s)
+[40/56] V3F-HS7-s0.315-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.315-AMG-PCG-CH-SP-p6: Converged
+Converged (8.9 s)
+[41/56] V3F-HS7-s0.315-HYPRE-PCG-p6 ... V3F-HS7-s0.315-HYPRE-PCG-p6: Converged
+Converged (20.9 s)
+[42/56] V3F-HS7-s0.315-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.315-HYPRE-PCG-T05-p6: Converged
+Converged (25.9 s)
+[43/56] V3F-HS7-s0.250-REF ... V3F-HS7-s0.250-REF: Converged
+Converged (2.5 s)
+[44/56] V3F-HS7-s0.250-AMG-PCG ... V3F-HS7-s0.250-AMG-PCG: Converged
+Converged (29.6 s)
+[45/56] V3F-HS7-s0.250-HYPRE-PCG ... V3F-HS7-s0.250-HYPRE-PCG: Converged
+Converged (40.4 s)
+[46/56] V3F-HS7-s0.250-HYPRE-PCG-T05 ... V3F-HS7-s0.250-HYPRE-PCG-T05: Converged
+Converged (42.2 s)
+[47/56] V3F-HS7-s0.250-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.250-AMG-PCG-CH-SP-p6: Converged
+Converged (16 s)
+[48/56] V3F-HS7-s0.250-HYPRE-PCG-p6 ... V3F-HS7-s0.250-HYPRE-PCG-p6: Converged
+Converged (26.6 s)
+[49/56] V3F-HS7-s0.250-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.250-HYPRE-PCG-T05-p6: Converged
+Converged (44 s)
+[50/56] V3F-HS7-s0.198-REF ... V3F-HS7-s0.198-REF: Converged
+Converged (4.3 s)
+[51/56] V3F-HS7-s0.198-AMG-PCG ... V3F-HS7-s0.198-AMG-PCG: Converged
+Converged (34.9 s)
+[52/56] V3F-HS7-s0.198-HYPRE-PCG ... V3F-HS7-s0.198-HYPRE-PCG: Converged
+Converged (87 s)
+[53/56] V3F-HS7-s0.198-HYPRE-PCG-T05 ... V3F-HS7-s0.198-HYPRE-PCG-T05: Converged
+Converged (92.2 s)
+[54/56] V3F-HS7-s0.198-AMG-PCG-CH-SP-p6 ... V3F-HS7-s0.198-AMG-PCG-CH-SP-p6: Converged
+Converged (33.3 s)
+[55/56] V3F-HS7-s0.198-HYPRE-PCG-p6 ... V3F-HS7-s0.198-HYPRE-PCG-p6: Converged
+Converged (58.9 s)
+[56/56] V3F-HS7-s0.198-HYPRE-PCG-T05-p6 ... V3F-HS7-s0.198-HYPRE-PCG-T05-p6: Converged
+Converged (68 s)
+56 runs executed, 0 already done.
+258 results collected into results/v3\csv
+  Converged: 258
