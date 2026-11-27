@@ -36,10 +36,14 @@
   .ref { color: var(--direct); font-weight: 600; }
   .verdict { background: var(--soft); padding: 3pt 7pt; margin: 3pt 0 6pt; border-left: 2.5pt solid var(--line); }
   .pb { break-before: page; }
-  table.prov { font-size: 6pt; word-break: break-all; break-inside: auto; }
-  table.prov td { padding: 0.3pt 2pt; }
-  .provcols { display: flex; gap: 8pt; align-items: flex-start; }
-  .provcols > div { flex: 1; min-width: 0; }
+  .provflow { columns: 2; column-gap: 8pt; }
+  table.prov { font-size: 6pt; line-height: 1.15; break-inside: auto; table-layout: fixed; margin: 0; }
+  table.prov td, table.prov th { padding: 0.3pt 2pt; }
+  table.prov tr { break-inside: avoid; }
+  table.prov col.pv { width: 13%; } table.prov col.pf { width: 7%; }
+  table.prov col.pr { width: 58%; } table.prov col.pc { width: 22%; }
+  table.prov td:nth-child(3) { overflow-wrap: anywhere; }
+  table.prov td:nth-child(4) { overflow-wrap: break-word; }
   .small { font-size: 8.4pt; }
 </style>
 </head>
@@ -330,10 +334,13 @@ faster than hypre. The difference is the setup. Per solve, PETSc GAMG with thres
 our AMG-PCG on the large meshes
 ({{v:petsc/GAMG-thr0.02/V3F-HS7-s0.198-AMG-PCG@solve_s|%.2f}} vs
 {{v:V3F-HS7-s0.198-AMG-PCG@solve_s_median|%.2f}} s at 3.76 M), and hypre has the best solve below
-0.1 M. Every external run reached the same residual, with errors against the reference at most
-about ten times ours (largest: hypre θ 0.5 at 1.87 M,
-{{v:V3F-HS7-s0.250-HYPRE-PCG-T05@err_vs_ref_K|e}} K against
-{{v:V3F-HS7-s0.250-AMG-PCG@err_vs_ref_K|e}} K).</p>
+0.1 M. Every external run reached the same residual. From 1.02 M up, every external run matched
+our error against the reference to within about 10×. The largest gap is hypre θ 0.5 at 1.87 M on
+one core, {{v:V3F-HS7-s0.250-HYPRE-PCG-T05@err_vs_ref_K|e}} K against our
+{{v:V3F-HS7-s0.250-AMG-PCG@err_vs_ref_K|e}} K. Up to 0.57 M all solvers, ours included, sit at
+the same 1e−9 to 6e−9 K (e.g. {{v:V3F-HS7-s0.397-AMG-PCG@err_vs_ref_K|e}} K for ours and
+{{v:V3F-HS7-s0.397-HYPRE-PCG-T05@err_vs_ref_K|e}} K for hypre θ 0.5 at 0.57 M). That is the
+accuracy of the reference there, not a solver difference.</p>
 <p class="verdict"><span class="ref">Reference only.</span> Our smoothed-aggregation AMG is
 competitive with the state of the art on HS-7. It is ahead in setup cost, not in convergence, and
 a tuned hypre or PETSc could close part of that gap.</p>
@@ -470,14 +477,17 @@ counted, nor is the author's own time reading results and this report.</p>
 <ol class="small">
   <li>M. Adams, M. Brezina, J. Hu and R. Tuminaro, "Parallel multigrid smoothing: polynomial versus Gauss–Seidel," <i>J. Comput. Phys.</i>, vol. 188, no. 2, pp. 593–610, 2003, doi: 10.1016/S0021-9991(03)00194-3.</li>
   <li>F. G. Gustavson, "Two fast algorithms for sparse matrices: multiplication and permuted transposition," <i>ACM Trans. Math. Softw.</i>, vol. 4, no. 3, pp. 250–269, 1978, doi: 10.1145/355791.355796.</li>
-  <li>R. D. Falgout and U. M. Yang, "hypre: A library of high performance preconditioners," in <i>Computational Science — ICCS 2002</i>, LNCS 2331, Springer, 2002, pp. 632–641, doi: 10.1007/3-540-47789-6_66.</li>
+  <li>R. D. Falgout and U. M. Yang, "hypre: A library of high performance preconditioners," in <i>Computational Science — ICCS 2002</i> (Lecture Notes in Computer Science). Berlin, Heidelberg: Springer, 2002, pp. 632–641, doi: 10.1007/3-540-47789-6_66.</li>
   <li>H. De Sterck, U. M. Yang and J. J. Heys, "Reducing complexity in parallel algebraic multigrid preconditioners," <i>SIAM J. Matrix Anal. Appl.</i>, vol. 27, no. 4, pp. 1019–1039, 2006, doi: 10.1137/040615729.</li>
   <li>H. De Sterck, R. D. Falgout, J. W. Nolting and U. M. Yang, "Distance-two interpolation for parallel algebraic multigrid," <i>Numer. Linear Algebra Appl.</i>, vol. 15, no. 2–3, pp. 115–139, 2008, doi: 10.1002/nla.559.</li>
   <li>S. Balay et al., <i>PETSc/TAO Users Manual</i>, Argonne National Laboratory, ANL-21/39 (release 3.26).</li>
   <li>P. Vaněk, J. Mandel and M. Brezina, "Algebraic multigrid by smoothed aggregation for second and fourth order elliptic problems," <i>Computing</i>, vol. 56, no. 3, pp. 179–196, 1996, doi: 10.1007/BF02238511 (our AMG, as in V2).</li>
 </ol>
-<p class="small">References 1–6 were written by the assistant for this draft and have not yet been
-checked against the publishers' records; reference 7 was checked for the V2 report.</p>
+<p class="small">References 1–5 were checked on 28 November 2026 against the Crossref record of
+their DOI (title, authors, journal or book, volume, issue, pages and year all match). For [3],
+the record gives the series and book title but no volume number, so none is cited. For [5],
+the print issue is dated 2008 (online 2007). Reference 6 has no DOI and was <b>not verified</b>:
+the report number and release are as recalled. Reference 7 was checked for the V2 report.</p>
 
 <h2>Appendix D. Where every number comes from</h2>
 {{provenance}}

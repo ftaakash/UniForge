@@ -101,7 +101,7 @@ def ref(text):
         # Total = setup + median solve, as in every table of docs/v3_experiments.md (the CSV's
         # total_s_median is the median of per-repetition totals, a slightly different number).
         v = number(row["setup_s"], text) + number(row["solve_s_median"], text)
-        return v, (code, rowname, "setup_s + solve_s_median")
+        return v, (code, rowname, "total")
     if col not in row:
         fail(f"row '{key}': no column {col}")
     return number(row[col], text), (code, rowname, col)
@@ -183,18 +183,17 @@ def provenance_table():
     legend = ("<p class=\"small\">Each number in this report, with the file under results/v3 it was "
               "filled in from, the run or row, and the column. Files: R = csv/all_runs.csv (one row "
               "per run of V3A–V3F and V3H), G = csv/V3G_timing.csv (phase, condition, round), "
-              "P = csv/V3F_petsc.csv (setting, exported system), N = numbers.json. A ratio names "
-              "both rows. Full list in docs/report_v3/provenance.csv.</p>")
-    half = (len(rows) + 1) // 2
-    tables = []
-    for part in (rows[:half], rows[half:]):
-        t = ['<table class="prov"><tr><th class="n">Value</th><th>F</th><th>Run / row</th><th>Column</th></tr>']
-        for text, code, row, col in part:
-            t.append(f"<tr><td class=\"n\">{html.escape(text)}</td><td>{code}</td>"
-                     f"<td>{html.escape(row)}</td><td>{html.escape(col)}</td></tr>")
-        t.append("</table>")
-        tables.append("\n".join(t))
-    return legend + '\n<div class="provcols"><div>' + tables[0] + "</div><div>" + tables[1] + "</div></div>"
+              "P = csv/V3F_petsc.csv (setting, exported system), N = numbers.json. Column "
+              "<b>total</b> = setup_s + solve_s_median. A ratio names both rows, numerator first. "
+              "Full list in docs/report_v3/provenance.csv.</p>")
+    t = ['<table class="prov"><colgroup><col class="pv"><col class="pf"><col class="pr"><col class="pc">'
+         '</colgroup><tr><th class="n">Value</th><th>F</th><th>Run / row</th><th>Column</th></tr>']
+    for text, code, row, col in rows:
+        t.append(f"<tr><td class=\"n\">{html.escape(text)}</td><td>{code}</td>"
+                 f"<td>{html.escape(row)}</td><td>{html.escape(col)}</td></tr>")
+    t.append("</table>")
+    # One table in two balanced CSS columns, so the last page is not left with two short halves.
+    return legend + '\n<div class="provflow">' + "\n".join(t) + "</div>"
 
 
 def main():

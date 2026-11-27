@@ -63,7 +63,7 @@ is an inference, not measured per core.
 ### Verdict
 
 AMG-PCG-SP does **not** clearly beat AMG-PCG on this machine. It is at most 5.7 % faster on one
-core, slower below 0.1 M unknowns, and needs 28 % more solver memory. It stays an option, not
+core, slower below 0.1 M unknowns, and needs 29 % more solver memory. It stays an option, not
 the default. The single-core result is far below the 1.1–1.6× in the literature. That means the
 V-cycle here is limited by the serial Gauss–Seidel sweep (latency and dependency chain), not by
 memory bandwidth. With threads, where the parallel kernels matter more, the saving is 10–19 %.
@@ -444,8 +444,14 @@ solve below 0.1 M (0.213 vs 0.261 s at 94 k). **The difference is the setup**: 2
 
 The PETSc build is sequential, so it has no 6-thread numbers. Peak process memory at 3.76 M is
 3.0 GB for our runs and 4.6–4.9 GB for hypre's. Accuracy: every external run converged to the
-same relative residual (true residual ≤ 9.9e-11). The largest error against the reference is
-6.4e-10 K (hypre θ 0.5 at 1.87 M, where ours is 6.7e-11 K). PETSc's largest is 9.6e-11 K.
+same relative residual (true residual ≤ 9.9e-11). From 56 k to 0.57 M every solver, ours
+included, has the same error against the reference to two digits (1.0e-9 to 6.0e-9 K, the
+largest at 0.57 M). The shared error therefore lies in the reference, not in the solvers. From
+1.02 M up every external run matched our error to within about 10×. The largest gap is hypre
+θ 0.5 at 1.87 M on one core: 6.2e-10 K against our 6.7e-11 K (9.2×). On 6 threads the same pair
+is 6.3e-10 against 6.4e-11 K. PETSc's largest there is 1.0e-10 K (default GAMG at 1.02 M,
+against our 1.6e-11 K). An earlier version of this note gave 6.4e-10 K, a misrounded 6-thread
+value, and said PETSc's largest was 9.6e-11 K, which overlooked the reference-limited sizes.
 
 ### Verdict
 

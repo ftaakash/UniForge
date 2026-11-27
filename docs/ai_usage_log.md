@@ -1559,6 +1559,32 @@ a persistent kernel pool instead.
   text was moved ahead of them.
 - **References 1–6** were written from memory and are marked in the report as not yet checked.
 
+## 2026-11-28: V3 report review fixes
+### Prompts (representative)
+- "Send all fixes": the user's review of the draft (half-empty pages, a wrong error claim,
+  unverified references, provenance layout, memory rounding).
+### Outputs (files, functions)
+- V3 figures at 820 × 340 (same width and text size, shorter); provenance as one table in two
+  balanced columns with a `total` label; corrected accuracy paragraph in the report and in
+  `v3_experiments.md`; references 1–5 checked; report rebuilt (9 pages).
+### My edits
+- None; the fixes are the ones I asked for.
+### Verification (tests run, numbers checked, manual checks)
+- 434 tests pass, and the PDF check passed. Blank space below content was measured per page
+  (largest 24 % on body pages). The changed numbers were recomputed from the CSVs and found in
+  the PDF text. References 1–5 were resolved through Crossref (title, authors, venue, volume,
+  issue, pages and year).
+### Incorrect / unsuitable suggestions and how they were caught
+- **Accuracy claim:** the draft named hypre θ 0.5 at 1.87 M as the largest error, but every
+  solver, ours included, sits at 1e-9 to 6e-9 K from 56 k to 0.57 M: there the reference
+  limits accuracy. The write-up's 6.4e-10 was a misrounded 6-thread value (6.345e-10). Its "PETSc
+  largest 9.6e-11 K" overlooked the reference-limited sizes (2.3e-9 K at 0.29 M). Caught in the
+  user's review and confirmed against the CSV.
+- **Reference [3]:** "LNCS 2331" is not in the DOI record and was removed. [6] (PETSc manual,
+  no DOI) stays marked unverified.
+- **Rounding:** single-precision memory +28.5 % was given as 28 % in the write-up and 29 % in the
+  report; both now say 29 % (nearest integer).
+
 ## Entry template
 
 ```markdown

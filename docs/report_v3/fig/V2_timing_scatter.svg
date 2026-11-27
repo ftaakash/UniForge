@@ -1,67 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="340" viewBox="0 0 820 340" font-family="Inter, 'Segoe UI', Arial, sans-serif">
 <title>One solve, 21 runs: AMG-PCG-CH-SP, HS-7 3.76 M DOF, 8 threads (V3G)</title>
 <rect width="100%" height="100%" fill="#FFFFFF"/>
-<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="230.00"/></clipPath></defs>
 <g stroke="#D3D9E1" stroke-width="1">
-<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
-<line x1="169.20" y1="48.00" x2="169.20" y2="368.00"/>
-<line x1="258.40" y1="48.00" x2="258.40" y2="368.00"/>
-<line x1="347.60" y1="48.00" x2="347.60" y2="368.00"/>
-<line x1="436.80" y1="48.00" x2="436.80" y2="368.00"/>
-<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
-<line x1="80.00" y1="368.00" x2="526.00" y2="368.00"/>
-<line x1="80.00" y1="314.67" x2="526.00" y2="314.67"/>
-<line x1="80.00" y1="261.33" x2="526.00" y2="261.33"/>
-<line x1="80.00" y1="208.00" x2="526.00" y2="208.00"/>
-<line x1="80.00" y1="154.67" x2="526.00" y2="154.67"/>
-<line x1="80.00" y1="101.33" x2="526.00" y2="101.33"/>
+<line x1="80.00" y1="48.00" x2="80.00" y2="278.00"/>
+<line x1="169.20" y1="48.00" x2="169.20" y2="278.00"/>
+<line x1="258.40" y1="48.00" x2="258.40" y2="278.00"/>
+<line x1="347.60" y1="48.00" x2="347.60" y2="278.00"/>
+<line x1="436.80" y1="48.00" x2="436.80" y2="278.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="278.00"/>
+<line x1="80.00" y1="278.00" x2="526.00" y2="278.00"/>
+<line x1="80.00" y1="239.67" x2="526.00" y2="239.67"/>
+<line x1="80.00" y1="201.33" x2="526.00" y2="201.33"/>
+<line x1="80.00" y1="163.00" x2="526.00" y2="163.00"/>
+<line x1="80.00" y1="124.67" x2="526.00" y2="124.67"/>
+<line x1="80.00" y1="86.33" x2="526.00" y2="86.33"/>
 <line x1="80.00" y1="48.00" x2="526.00" y2="48.00"/>
 </g>
 <g font-size="12" fill="#59616E">
-<text x="80.00" y="386.00" text-anchor="middle">0</text>
-<text x="169.20" y="386.00" text-anchor="middle">5</text>
-<text x="258.40" y="386.00" text-anchor="middle">10</text>
-<text x="347.60" y="386.00" text-anchor="middle">15</text>
-<text x="436.80" y="386.00" text-anchor="middle">20</text>
-<text x="526.00" y="386.00" text-anchor="middle">25</text>
-<text x="72.00" y="372.00" text-anchor="end">3</text>
-<text x="72.00" y="318.67" text-anchor="end">3.5</text>
-<text x="72.00" y="265.33" text-anchor="end">4</text>
-<text x="72.00" y="212.00" text-anchor="end">4.5</text>
-<text x="72.00" y="158.67" text-anchor="end">5</text>
-<text x="72.00" y="105.33" text-anchor="end">5.5</text>
+<text x="80.00" y="296.00" text-anchor="middle">0</text>
+<text x="169.20" y="296.00" text-anchor="middle">5</text>
+<text x="258.40" y="296.00" text-anchor="middle">10</text>
+<text x="347.60" y="296.00" text-anchor="middle">15</text>
+<text x="436.80" y="296.00" text-anchor="middle">20</text>
+<text x="526.00" y="296.00" text-anchor="middle">25</text>
+<text x="72.00" y="282.00" text-anchor="end">3</text>
+<text x="72.00" y="243.67" text-anchor="end">3.5</text>
+<text x="72.00" y="205.33" text-anchor="end">4</text>
+<text x="72.00" y="167.00" text-anchor="end">4.5</text>
+<text x="72.00" y="128.67" text-anchor="end">5</text>
+<text x="72.00" y="90.33" text-anchor="end">5.5</text>
 <text x="72.00" y="52.00" text-anchor="end">6</text>
 </g>
-<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<rect x="80.00" y="48.00" width="446.00" height="230.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
 <text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">One solve, 21 runs: AMG-PCG-CH-SP, HS-7 3.76 M DOF, 8 threads (V3G)</text>
-<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">run in batch order (1-12 Balanced plan, 13-21 High performance)</text>
-<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">solve time, median of 5 (s)</text>
+<text x="303.00" y="324.00" font-size="13" text-anchor="middle" fill="#1A1E24">run in batch order (1-12 Balanced plan, 13-21 High performance)</text>
+<text transform="translate(20 163.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">solve time, median of 5 (s)</text>
 <g clip-path="url(#plot-area)">
-<circle cx="97.84" cy="175.25" r="3.5" fill="#E69F00"/>
-<circle cx="169.20" cy="329.74" r="3.5" fill="#E69F00"/>
-<circle cx="240.56" cy="179.44" r="3.5" fill="#E69F00"/>
-<circle cx="311.92" cy="332.24" r="3.5" fill="#E69F00"/>
-<circle cx="365.44" cy="155.35" r="3.5" fill="#E69F00"/>
-<circle cx="418.96" cy="330.70" r="3.5" fill="#E69F00"/>
-<rect x="112.48" y="166.44" width="6.4" height="6.4" fill="#D55E00"/>
-<rect x="183.84" y="271.30" width="6.4" height="6.4" fill="#D55E00"/>
-<rect x="255.20" y="158.79" width="6.4" height="6.4" fill="#D55E00"/>
-<polygon points="133.52,297.38 138.02,301.88 133.52,306.38 129.02,301.88" fill="#CC79A7"/>
-<polygon points="204.88,268.98 209.38,273.48 204.88,277.98 200.38,273.48" fill="#CC79A7"/>
-<polygon points="276.24,174.37 280.74,178.87 276.24,183.37 271.74,178.87" fill="#CC79A7"/>
-<polygon points="329.76,327.88 334.26,332.38 329.76,336.88 325.26,332.38" fill="#CC79A7"/>
-<polygon points="383.28,324.32 387.78,328.82 383.28,333.32 378.78,328.82" fill="#CC79A7"/>
-<polygon points="436.80,86.89 441.30,91.39 436.80,95.89 432.30,91.39" fill="#CC79A7"/>
-<polygon points="151.36,305.76 155.36,312.96 147.36,312.96" fill="#009E73"/>
-<polygon points="222.72,298.50 226.72,305.70 218.72,305.70" fill="#009E73"/>
-<polygon points="294.08,306.73 298.08,313.93 290.08,313.93" fill="#009E73"/>
-<polygon points="347.60,302.33 351.60,309.53 343.60,309.53" fill="#009E73"/>
-<polygon points="401.12,306.22 405.12,313.42 397.12,313.42" fill="#009E73"/>
-<polygon points="454.64,300.51 458.64,307.71 450.64,307.71" fill="#009E73"/>
-<polyline fill="none" stroke="#7A828E" stroke-width="1.00" stroke-linejoin="round" stroke-dasharray="7 4" points="303.00,343.05 303.00,79.45"/>
+<circle cx="97.84" cy="139.46" r="3.5" fill="#E69F00"/>
+<circle cx="169.20" cy="250.50" r="3.5" fill="#E69F00"/>
+<circle cx="240.56" cy="142.47" r="3.5" fill="#E69F00"/>
+<circle cx="311.92" cy="252.30" r="3.5" fill="#E69F00"/>
+<circle cx="365.44" cy="125.16" r="3.5" fill="#E69F00"/>
+<circle cx="418.96" cy="251.19" r="3.5" fill="#E69F00"/>
+<rect x="112.48" y="132.23" width="6.4" height="6.4" fill="#D55E00"/>
+<rect x="183.84" y="207.60" width="6.4" height="6.4" fill="#D55E00"/>
+<rect x="255.20" y="126.73" width="6.4" height="6.4" fill="#D55E00"/>
+<polygon points="133.52,225.98 138.02,230.48 133.52,234.98 129.02,230.48" fill="#CC79A7"/>
+<polygon points="204.88,205.56 209.38,210.06 204.88,214.56 200.38,210.06" fill="#CC79A7"/>
+<polygon points="276.24,137.56 280.74,142.06 276.24,146.56 271.74,142.06" fill="#CC79A7"/>
+<polygon points="329.76,247.90 334.26,252.40 329.76,256.90 325.26,252.40" fill="#CC79A7"/>
+<polygon points="383.28,245.34 387.78,249.84 383.28,254.34 378.78,249.84" fill="#CC79A7"/>
+<polygon points="436.80,74.68 441.30,79.18 436.80,83.68 432.30,79.18" fill="#CC79A7"/>
+<polygon points="151.36,232.08 155.36,239.28 147.36,239.28" fill="#009E73"/>
+<polygon points="222.72,226.87 226.72,234.07 218.72,234.07" fill="#009E73"/>
+<polygon points="294.08,232.78 298.08,239.98 290.08,239.98" fill="#009E73"/>
+<polygon points="347.60,229.62 351.60,236.82 343.60,236.82" fill="#009E73"/>
+<polygon points="401.12,232.41 405.12,239.61 397.12,239.61" fill="#009E73"/>
+<polygon points="454.64,228.31 458.64,235.51 450.64,235.51" fill="#009E73"/>
+<polyline fill="none" stroke="#7A828E" stroke-width="1.00" stroke-linejoin="round" stroke-dasharray="7 4" points="303.00,260.07 303.00,70.61"/>
 </g>
-<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v3/csv/V3G_timing.csv</text>
+<text x="812.00" y="336.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v3/csv/V3G_timing.csv</text>
 <g font-size="12" fill="#1A1E24">
 <circle cx="622.00" cy="62.00" r="3.5" fill="#E69F00"/>
 <text x="644.00" y="66.00">V3B code, unpinned</text>

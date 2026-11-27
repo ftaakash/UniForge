@@ -2033,6 +2033,7 @@ Result<void> figV1(Ctx& ctx) {
         spec.series.push_back(t);
     }
     spec.note = "data: results/v3/csv/V3H.csv (medians of 5 solves, observer-on rows)";
+    spec.height = 340; // V3 report: shorter figures so text flows around them on A4
     return ctx.plot("V1", "V1_speedup_vs_dof.svg", spec, "results/v3/csv/V3H.csv");
 }
 
@@ -2083,6 +2084,7 @@ Result<void> figV2(Ctx& ctx) {
     }
     spec.series.push_back(reference("power plan switch", {12.5, 12.5}, {lo * 0.97, hi * 1.02}));
     spec.note = "data: results/v3/csv/V3G_timing.csv";
+    spec.height = 340; // V3 report: shorter figures so text flows around them on A4
     return ctx.plot("V2", "V2_timing_scatter.svg", spec, "results/v3/csv/V3G_timing.csv");
 }
 
@@ -2155,6 +2157,7 @@ Result<void> figV3(Ctx& ctx) {
         return makeError(ErrorCode::InvalidInput, "V3 needs the V3F rows and V3F_petsc.csv");
     }
     spec.note = "data: results/v3/csv/V3F.csv, V3F_petsc.csv (PETSc in a Linux VM: indicative)";
+    spec.height = 340; // V3 report: shorter figures so text flows around them on A4
     return ctx.plot("V3", "V3_external_references.svg", spec,
                     "results/v3/csv/V3F.csv, results/v3/csv/V3F_petsc.csv");
 }
@@ -2210,6 +2213,7 @@ Result<void> figV4(Ctx& ctx) {
         return makeError(ErrorCode::InvalidInput, "V4 needs the V3E rows of all_runs.csv");
     }
     spec.note = "data: results/v3/csv/V3E.csv (CH-SP on 12 pinned threads; DIRECT-ND only to 0.29 M)";
+    spec.height = 340; // V3 report: shorter figures so text flows around them on A4
     return ctx.plot("V4", "V4_load_cases.svg", spec, "results/v3/csv/V3E.csv");
 }
 
@@ -2261,6 +2265,7 @@ Result<void> figV5(Ctx& ctx) {
     }
     spec.series.push_back(reference("equal time", {x0, x1}, {1.0, 1.0}));
     spec.note = "data: results/v3/csv/V3D.csv, V3H.csv";
+    spec.height = 340; // V3 report: shorter figures so text flows around them on A4
     return ctx.plot("V5", "V5_gmg_vs_amg.svg", spec,
                     "results/v3/csv/V3D.csv, results/v3/csv/V3H.csv");
 }

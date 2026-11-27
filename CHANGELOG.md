@@ -9,7 +9,7 @@ V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Eac
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
 ### V3 report (draft for review)
-- `docs/report_v3/UniForge_V3_Report.pdf` (11 pages): V3A–V3H with a verdict each, the pinned
+- `docs/report_v3/UniForge_V3_Report.pdf` (9 pages after the review fixes): V3A–V3H with a verdict each, the pinned
   V3H numbers as headlines, the hypre/PETSc comparison with its caveats, memory costs,
   limitations, effort and AI-use note, and a provenance appendix for all 217 numbers.
 - Same pipeline as V2: `tools/report_v3/fill_numbers.py` (placeholders → CSV row and column),
@@ -97,7 +97,7 @@ experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_ex
   ignores the option.
 - Experiment `V3A` (run only when named): AMG-PCG vs AMG-PCG-SP on the HS-7 ladder (1 core)
   and on the three largest meshes with 8 and 20 threads. 36 runs, all converged.
-- Result: at most 5.7 % faster on one core, slower below 0.1 M unknowns, 28 % more solver
+- Result: at most 5.7 % faster on one core, slower below 0.1 M unknowns, 29 % more solver
   memory; 10–19 % faster with threads. Not made the default. The serial Gauss–Seidel smoother
   is the bottleneck, so the next step is a parallel smoother.
 - Tests: 2 new (single-precision accuracy and bytes per cycle; stand-alone AMG stays double);
