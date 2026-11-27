@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -404,10 +405,153 @@ CsrMatrix smoothedProlongator(const CsrMatrix& A, const std::vector<char>& stron
     return P;
 }
 
+CsrMatrix geometricProlongator(const CsrMatrix& A,
+                               const std::vector<std::array<std::int32_t, 3>>& grid,
+                               std::int32_t stride, const std::array<std::vector<double>, 3>& lines,
+                               std::vector<std::array<std::int32_t, 3>>& coarseGrid,
+                               sparse::KernelPool* pool) {
+    const Index n = A.rows;
+    std::array<std::int64_t, 3> dims{};
+    for (int a = 0; a < 3; ++a) {
+        dims[a] = static_cast<std::int64_t>(lines[a].size());
+    }
+    const auto pointOf = [&](std::int64_t i, std::int64_t j, std::int64_t k) {
+        return i + dims[0] * (j + dims[1] * k);
+    };
+    // Node of each aligned grid point (all indices multiples of stride), −1 elsewhere.
+    std::vector<std::int32_t> alignedNode(static_cast<std::size_t>(dims[0] * dims[1] * dims[2]),
+                                          -1);
+    // role: 0 = empty row (decoupled), 1 = coarse (aligned or promoted), 2 = interpolated.
+    std::vector<char> role(toSize(n), 2);
+    forRows(pool, n, [&](Index begin, Index end) {
+        for (Index v = begin; v < end; ++v) {
+            const auto& g = grid[toSize(v)];
+            if (A.rowPtr[toSize(v) + 1] - A.rowPtr[toSize(v)] <= 1) {
+                role[toSize(v)] = 0;
+            } else if (g[0] % stride == 0 && g[1] % stride == 0 && g[2] % stride == 0) {
+                role[toSize(v)] = 1;
+                alignedNode[static_cast<std::size_t>(pointOf(g[0], g[1], g[2]))] = v;
+            }
+        }
+    });
+    // The corners of node v's stride box with their trilinear weights; corners that are not
+    // aligned coupled nodes are skipped. Returns the number written to out (≤ 8).
+    struct Corner {
+        Index node;
+        double w;
+    };
+    const auto corners = [&](Index v, std::array<Corner, 8>& out) {
+        const auto& g = grid[toSize(v)];
+        std::array<std::array<std::pair<std::int32_t, double>, 2>, 3> axis{};
+        std::array<int, 3> count{};
+        for (int a = 0; a < 3; ++a) {
+            const std::int32_t lo = g[a] - g[a] % stride;
+            const std::int32_t hi = lo + stride;
+            if (lo == g[a] || hi >= static_cast<std::int32_t>(dims[a])) {
+                axis[a][0] = {lo, 1.0};
+                count[a] = 1;
+            } else {
+                const double x = lines[a][toSize(g[a])];
+                const double xl = lines[a][toSize(lo)];
+                const double xh = lines[a][toSize(hi)];
+                const double wl = (xh - x) / (xh - xl);
+                axis[a][0] = {lo, wl};
+                axis[a][1] = {hi, 1.0 - wl};
+                count[a] = 2;
+            }
+        }
+        int m = 0;
+        for (int c = 0; c < count[2]; ++c) {
+            for (int b = 0; b < count[1]; ++b) {
+                for (int a = 0; a < count[0]; ++a) {
+                    const std::int32_t u = alignedNode[static_cast<std::size_t>(
+                        pointOf(axis[0][a].first, axis[1][b].first, axis[2][c].first))];
+                    if (u >= 0 && role[toSize(u)] == 1) {
+                        out[toSize(m)] = {u, axis[0][a].second * axis[1][b].second *
+                                                 axis[2][c].second};
+                        ++m;
+                    }
+                }
+            }
+        }
+        return m;
+    };
+    // Promote interpolated nodes without any corner. Promotion only reads aligned nodes, so the
+    // order of the rows does not matter.
+    std::vector<char> promote(toSize(n), 0);
+    forRows(pool, n, [&](Index begin, Index end) {
+        std::array<Corner, 8> c{};
+        for (Index v = begin; v < end; ++v) {
+            if (role[toSize(v)] == 2 && corners(v, c) == 0) {
+                promote[toSize(v)] = 1;
+            }
+        }
+    });
+    // Coarse numbering in fine-node order.
+    std::vector<Index> coarseOf(toSize(n), -1);
+    Index count = 0;
+    coarseGrid.clear();
+    for (Index v = 0; v < n; ++v) {
+        if (role[toSize(v)] == 1 || promote[toSize(v)] != 0) {
+            coarseOf[toSize(v)] = count++;
+            coarseGrid.push_back(grid[toSize(v)]);
+        }
+    }
+    // P: identity rows for coarse nodes, renormalised trilinear rows for the others.
+    CsrMatrix P;
+    P.rows = n;
+    P.cols = count;
+    P.rowPtr.assign(toSize(n) + 1, 0);
+    forRows(pool, n, [&](Index begin, Index end) {
+        std::array<Corner, 8> c{};
+        for (Index v = begin; v < end; ++v) {
+            Offset len = 0;
+            if (coarseOf[toSize(v)] >= 0) {
+                len = 1;
+            } else if (role[toSize(v)] == 2) {
+                len = corners(v, c);
+            }
+            P.rowPtr[toSize(v) + 1] = len;
+        }
+    });
+    for (std::size_t i = 0; i < toSize(n); ++i) {
+        P.rowPtr[i + 1] += P.rowPtr[i];
+    }
+    P.col.resize(toSize(P.nnz()));
+    P.val.resize(toSize(P.nnz()));
+    forRows(pool, n, [&](Index begin, Index end) {
+        std::array<Corner, 8> c{};
+        for (Index v = begin; v < end; ++v) {
+            const std::size_t at = toSize(P.rowPtr[toSize(v)]);
+            if (coarseOf[toSize(v)] >= 0) {
+                P.col[at] = coarseOf[toSize(v)];
+                P.val[at] = 1.0;
+                continue;
+            }
+            if (role[toSize(v)] != 2) {
+                continue;
+            }
+            const int m = corners(v, c);
+            double sum = 0.0;
+            for (int q = 0; q < m; ++q) {
+                sum += c[toSize(q)].w;
+            }
+            std::sort(c.begin(), c.begin() + m, [&](const Corner& x, const Corner& y) {
+                return coarseOf[toSize(x.node)] < coarseOf[toSize(y.node)];
+            });
+            for (int q = 0; q < m; ++q) {
+                P.col[at + toSize(q)] = coarseOf[toSize(c[toSize(q)].node)];
+                P.val[at + toSize(q)] = c[toSize(q)].w / sum;
+            }
+        }
+    });
+    return P;
+}
+
 // ---- Hierarchy --------------------------------------------------------------------------------
 
 Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& pool,
-                                        const SolverOptions& options) {
+                                        const SolverOptions& options, const CoordinateHint& hint) {
     if (K.rows != K.cols) {
         return makeError(ErrorCode::InvalidInput,
                          "AMG needs a square matrix, got " + std::to_string(K.rows) + " × " +
@@ -435,6 +579,51 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     fl_.clear();
     SetupReport report;
 
+    // Geometric coarsening: grid lines from the hint (V3d).
+    const bool geometric = options.coarsening == Coarsening::Geometric;
+    std::vector<std::array<std::int32_t, 3>> levelGrid;
+    std::array<std::vector<double>, 3> lines;
+    if (geometric) {
+        if (hint.grid == nullptr || hint.xyz == nullptr || hint.grid->size() != toSize(K.rows) ||
+            hint.xyz->size() != toSize(K.rows)) {
+            report.status = SolveStatus::Breakdown;
+            report.detail = "Geometric multigrid needs the grid index and coordinates of every "
+                            "node (CoordinateHint); none were given for this matrix.";
+            report.seconds = secondsSince(t0);
+            return report;
+        }
+        levelGrid = *hint.grid;
+        std::array<std::int32_t, 3> top{};
+        for (const auto& g : levelGrid) {
+            for (int a = 0; a < 3; ++a) {
+                top[a] = std::max(top[a], g[a]);
+            }
+        }
+        const double points = (top[0] + 1.0) * (top[1] + 1.0) * (top[2] + 1.0);
+        if (points > 4.0e8) {
+            report.status = SolveStatus::OverBudget;
+            report.detail = "The node grid has too many points for geometric coarsening.";
+            report.seconds = secondsSince(t0);
+            return report;
+        }
+        for (int a = 0; a < 3; ++a) {
+            lines[a].assign(toSize(top[a]) + 1, std::numeric_limits<double>::quiet_NaN());
+        }
+        for (std::size_t v = 0; v < levelGrid.size(); ++v) {
+            for (int a = 0; a < 3; ++a) {
+                lines[a][toSize(levelGrid[v][a])] = (*hint.xyz)[v][a];
+            }
+        }
+        for (int a = 0; a < 3; ++a) { // a line without nodes: index-linear fill (not expected)
+            auto& x = lines[a];
+            for (std::size_t i = 0; i < x.size(); ++i) {
+                if (std::isnan(x[i])) {
+                    x[i] = i > 0 ? x[i - 1] + (i > 1 ? x[i - 1] - x[i - 2] : 1e-3) : 0.0;
+                }
+            }
+        }
+    }
+
     const auto tc = Clock::now();
     // Time of each coarsening step summed over the levels (V3c profile).
     double tStrength = 0.0;
@@ -445,22 +634,34 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     while (ops_.back()->rows > options.amgCoarseSize &&
            static_cast<int>(ops_.size()) < options.amgMaxLevels) {
         const CsrMatrix& A = *ops_.back();
-        const double theta =
-            options.amgStrengthThreshold *
-            std::pow(options.amgStrengthDecay, static_cast<double>(ops_.size() - 1));
-        auto ts = Clock::now();
-        const std::vector<char> strong = strongConnections(A, theta, pool_);
-        tStrength += secondsSince(ts);
         Index count = 0;
         Level lv;
-        ts = Clock::now();
-        lv.aggregateOf = aggregate(A, strong, count);
-        tAggregate += secondsSince(ts);
-        if (count == 0 || static_cast<double>(count) > 0.9 * static_cast<double>(A.rows)) {
-            break; // coarsening stalled
+        auto ts = Clock::now();
+        if (geometric) {
+            const auto stride = static_cast<std::int32_t>(1) << ops_.size(); // 2, 4, 8, …
+            std::vector<std::array<std::int32_t, 3>> coarseGrid;
+            lv.P = geometricProlongator(A, levelGrid, stride, lines, coarseGrid, pool_);
+            count = lv.P.cols;
+            if (count == 0 || static_cast<double>(count) > 0.9 * static_cast<double>(A.rows)) {
+                break; // coarsening stalled
+            }
+            levelGrid = std::move(coarseGrid);
+        } else {
+            const double theta =
+                options.amgStrengthThreshold *
+                std::pow(options.amgStrengthDecay, static_cast<double>(ops_.size() - 1));
+            const std::vector<char> strong = strongConnections(A, theta, pool_);
+            tStrength += secondsSince(ts);
+            ts = Clock::now();
+            lv.aggregateOf = aggregate(A, strong, count);
+            tAggregate += secondsSince(ts);
+            if (count == 0 || static_cast<double>(count) > 0.9 * static_cast<double>(A.rows)) {
+                break; // coarsening stalled
+            }
+            ts = Clock::now();
+            lv.P =
+                smoothedProlongator(A, strong, tentativeProlongator(lv.aggregateOf, count), pool_);
         }
-        ts = Clock::now();
-        lv.P = smoothedProlongator(A, strong, tentativeProlongator(lv.aggregateOf, count), pool_);
         lv.R = sparse::transpose(lv.P);
         tProlong += secondsSince(ts);
         ts = Clock::now();
@@ -788,7 +989,7 @@ MemoryFootprint AmgHierarchy::footprint() const {
 // ---- AMG as preconditioner --------------------------------------------------------------------
 
 SetupReport AmgPreconditioner::setup(const CsrMatrix& K, sparse::KernelPool& pool) {
-    auto r = h_.build(K, pool, options_);
+    auto r = h_.build(K, pool, options_, hint_);
     if (!r) {
         SetupReport fail;
         fail.status = SolveStatus::Breakdown;

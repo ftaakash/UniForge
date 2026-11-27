@@ -5,6 +5,7 @@
 #include "core/solvers/amg/Amg.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <memory>
@@ -389,6 +390,127 @@ TEST(Amg, ParallelSetupBuildsTheSameHierarchyForAnyThreadCount) {
     const CsrMatrix Pp = smoothedProlongator(A, strong, P0, &pool);
     EXPECT_EQ(Pp.col, P.col);
     EXPECT_EQ(Pp.val, P.val);
+}
+
+// V3d helpers: grid indices and coordinates of q1Laplacian3d's nodes (i fastest), with graded
+// lines x_i = h·i^1.3 so the interpolation weights are not all 1/2.
+struct GridHint {
+    std::vector<std::array<std::int32_t, 3>> grid;
+    std::vector<std::array<double, 3>> xyz;
+    std::array<std::vector<double>, 3> lines;
+    CoordinateHint hint() const { return {&xyz, &grid}; }
+};
+
+GridHint gridOf(Index m) {
+    GridHint h;
+    for (int a = 0; a < 3; ++a) {
+        for (Index i = 0; i < m; ++i) {
+            h.lines[a].push_back(1e-3 * std::pow(static_cast<double>(i), 1.3) * (1.0 + 0.1 * a));
+        }
+    }
+    for (Index k = 0; k < m; ++k) {
+        for (Index j = 0; j < m; ++j) {
+            for (Index i = 0; i < m; ++i) {
+                h.grid.push_back({i, j, k});
+                h.xyz.push_back(
+                    {h.lines[0][toSize(i)], h.lines[1][toSize(j)], h.lines[2][toSize(k)]});
+            }
+        }
+    }
+    return h;
+}
+
+TEST(Gmg, GeometricProlongatorKeepsConstantsAndLinearFields) {
+    const Index m = 9; // indices 0…8: every node lies inside a stride-2 box
+    const CsrMatrix A = q1Laplacian3d(m);
+    const GridHint g = gridOf(m);
+    std::vector<std::array<std::int32_t, 3>> coarseGrid;
+    KernelPool pool(3);
+    const CsrMatrix P = geometricProlongator(A, g.grid, 2, g.lines, coarseGrid, &pool);
+    std::vector<std::array<std::int32_t, 3>> serialGrid;
+    const CsrMatrix Ps = geometricProlongator(A, g.grid, 2, g.lines, serialGrid);
+    EXPECT_EQ(P.col, Ps.col);
+    EXPECT_EQ(P.val, Ps.val);
+    EXPECT_EQ(coarseGrid, serialGrid);
+    ASSERT_EQ(P.cols, 125); // 5³ coarse nodes
+    ASSERT_EQ(coarseGrid.size(), 125u);
+    // A linear field f = 1 + 2x − 3y + 0.5z on the coarse nodes, prolonged, equals f on every
+    // fine node (graded lines: the weights follow the coordinates, not the indices).
+    const auto f = [&](const std::array<std::int32_t, 3>& q) {
+        return 1.0 + 2.0 * g.lines[0][toSize(q[0])] - 3.0 * g.lines[1][toSize(q[1])] +
+               0.5 * g.lines[2][toSize(q[2])];
+    };
+    Vector xc(coarseGrid.size());
+    for (std::size_t c = 0; c < coarseGrid.size(); ++c) {
+        xc[c] = f(coarseGrid[c]);
+    }
+    Vector x(toSize(A.rows), 0.0);
+    uniforge::sparse::spmv(pool, P, xc, x);
+    for (std::size_t v = 0; v < x.size(); ++v) {
+        EXPECT_NEAR(x[v], f(g.grid[v]), 1e-12) << v;
+    }
+    // A node whose stride box has no coarse corner becomes coarse: all-odd indices here.
+    GridHint odd = g;
+    for (auto& q : odd.grid) {
+        for (int a = 0; a < 3; ++a) {
+            q[a] = 2 * q[a] + 1;
+        }
+    }
+    for (int a = 0; a < 3; ++a) {
+        odd.lines[a].assign(2 * toSize(m) + 1, 0.0);
+        for (std::size_t i = 0; i < odd.lines[a].size(); ++i) {
+            odd.lines[a][i] = 1e-3 * static_cast<double>(i);
+        }
+    }
+    const CsrMatrix Pid = geometricProlongator(A, odd.grid, 2, odd.lines, coarseGrid, &pool);
+    EXPECT_EQ(Pid.cols, A.rows);
+    EXPECT_EQ(Pid.nnz(), A.rows);
+}
+
+// GMG-PCG on the Q1 model problem: converges, mesh-independent iterations, the same answer for
+// 1 and 4 threads, and a clear Breakdown status (not a crash) without the grid hint.
+TEST(Gmg, GeometricMultigridPcgConvergesAndNeedsTheHint) {
+    const auto run = [](Index m, int threads, bool chebyshevSingle) {
+        const CsrMatrix A = q1Laplacian3d(m);
+        const GridHint g = gridOf(m);
+        KernelPool pool(threads);
+        SolverOptions o = smallCoarse();
+        o.coarsening = Coarsening::Geometric;
+        if (chebyshevSingle) {
+            o.amgSmoother = AmgSmoother::Chebyshev;
+            o.amgSinglePrecision = true;
+        }
+        Pcg pcg(SolverKind::GmgPcg, std::make_unique<AmgPreconditioner>(o));
+        auto su = pcg.setup(A, g.hint(), pool, {});
+        EXPECT_TRUE(su.ok());
+        EXPECT_EQ(su.value().status, SolveStatus::Converged) << su.value().detail;
+        EXPECT_GE(su.value().levels.size(), 3u);
+        Vector x(toSize(A.rows), 0.0);
+        SolveControl c;
+        c.relTol = 1e-10;
+        auto r = pcg.solve(randomVec(x.size(), 13), x, c);
+        EXPECT_TRUE(r.ok());
+        EXPECT_EQ(r.value().status, SolveStatus::Converged);
+        return std::make_pair(r.value().iterations, x);
+    };
+    const auto [i17, x17] = run(17, 1, false);
+    const auto [i33, x33] = run(33, 1, false);
+    const auto [i17p, x17p] = run(17, 4, false);
+    const auto [i33c, x33c] = run(33, 4, true);
+    std::printf("[GMG-PCG Q1] 17³ %d its, 33³ %d its; Chebyshev single 33³ %d its\n", i17, i33,
+                i33c);
+    EXPECT_LE(i33, i17 + 6);
+    EXPECT_EQ(i17, i17p);
+    EXPECT_EQ(x17, x17p);
+    EXPECT_LE(i33c, i33 + 10);
+
+    KernelPool pool(1);
+    SolverOptions o = smallCoarse();
+    o.coarsening = Coarsening::Geometric;
+    Pcg noHint(SolverKind::GmgPcg, std::make_unique<AmgPreconditioner>(o));
+    auto su = noHint.setup(q1Laplacian3d(9), {}, pool, {});
+    ASSERT_TRUE(su.ok());
+    EXPECT_EQ(su.value().status, SolveStatus::Breakdown);
 }
 
 // Stand-alone AMG ignores the flag: its iterate must stay in double precision.

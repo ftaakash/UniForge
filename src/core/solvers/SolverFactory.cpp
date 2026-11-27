@@ -37,6 +37,17 @@ Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind) {
         return std::unique_ptr<LinearOperatorSolver>(
             std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>(o)));
     }
+    case SolverKind::GmgPcg:
+    case SolverKind::GmgPcgChebSp: {
+        SolverOptions o;
+        o.coarsening = Coarsening::Geometric;
+        if (kind == SolverKind::GmgPcgChebSp) {
+            o.amgSinglePrecision = true;
+            o.amgSmoother = AmgSmoother::Chebyshev;
+        }
+        return std::unique_ptr<LinearOperatorSolver>(
+            std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>(o)));
+    }
     }
     return makeError(ErrorCode::InvalidInput,
                      "Unknown solver kind " + std::to_string(static_cast<int>(kind)) + ".",

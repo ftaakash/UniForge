@@ -16,6 +16,9 @@ public:
     Preconditioner& operator=(const Preconditioner&) = delete;
 
     [[nodiscard]] virtual std::string_view name() const noexcept = 0;
+    // Mesh information for preconditioners that use it (geometric multigrid, V3d), given by PCG
+    // before setup(). The arrays must outlive setup(). Default: ignored.
+    virtual void setHint(const CoordinateHint& /*hint*/) {}
     // Status Converged = ready; Breakdown when M cannot be built (detail says why).
     virtual SetupReport setup(const CsrMatrix& K, sparse::KernelPool& pool) = 0;
     virtual void apply(const Vector& r, Vector& z) = 0;

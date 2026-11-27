@@ -42,9 +42,10 @@ Pcg::Pcg(SolverKind kind, std::unique_ptr<Preconditioner> preconditioner)
     : kind_(kind)
     , m_(std::move(preconditioner)) {}
 
-Result<SetupReport> Pcg::setup(const CsrMatrix& K, const CoordinateHint& /*hint*/,
+Result<SetupReport> Pcg::setup(const CsrMatrix& K, const CoordinateHint& hint,
                                sparse::KernelPool& pool, const SolverOptions& options) {
     ready_ = false;
+    m_->setHint(hint);
     if (K.rows != K.cols) {
         return makeError(ErrorCode::InvalidInput,
                          "PCG needs a square matrix, got " + std::to_string(K.rows) + " × " +

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -48,11 +49,27 @@ namespace uniforge::solvers {
                                             const CsrMatrix& P0,
                                             sparse::KernelPool* pool = nullptr);
 
+// Geometric coarsening (V3d). `grid` holds the original tensor-grid index (i, j, k) of every
+// node of the current level; coarse nodes are those with all indices multiples of `stride`
+// (2, 4, 8, … on levels 0, 1, 2, …). A fine node interpolates linearly along the grid lines
+// (`lines[a][i]` = coordinate of line i on axis a) from the coarse nodes at the corners of its
+// stride box. Corners that are not nodes (holes in the cell mask) are dropped and the weights
+// renormalised, so constants are kept; a node with no corner left becomes a coarse node itself.
+// Rows of A holding only a diagonal (eliminated Dirichlet nodes) get an empty row. Returns P;
+// `coarseGrid` receives the grid indices of the coarse nodes, in coarse order.
+[[nodiscard]] CsrMatrix geometricProlongator(const CsrMatrix& A,
+                                             const std::vector<std::array<std::int32_t, 3>>& grid,
+                                             std::int32_t stride,
+                                             const std::array<std::vector<double>, 3>& lines,
+                                             std::vector<std::array<std::int32_t, 3>>& coarseGrid,
+                                             sparse::KernelPool* pool = nullptr);
+
 class AmgHierarchy {
 public:
-    // Errors: misuse only (not square, NaN). Breakdown status if the coarsest factorisation fails.
+    // Errors: misuse only (not square, NaN). Breakdown status if the coarsest factorisation fails
+    // or geometric coarsening has no usable hint (detail says why).
     Result<SetupReport> build(const CsrMatrix& K, sparse::KernelPool& pool,
-                              const SolverOptions& options);
+                              const SolverOptions& options, const CoordinateHint& hint = {});
 
     // One V-cycle for A_0·x = b, improving x in place (x is the initial guess).
     void vcycle(const Vector& b, Vector& x);
@@ -129,7 +146,10 @@ public:
     explicit AmgPreconditioner(SolverOptions options = {})
         : options_(options) {}
 
-    [[nodiscard]] std::string_view name() const noexcept override { return "AMG V-cycle"; }
+    [[nodiscard]] std::string_view name() const noexcept override {
+        return options_.coarsening == Coarsening::Geometric ? "GMG V-cycle" : "AMG V-cycle";
+    }
+    void setHint(const CoordinateHint& hint) override { hint_ = hint; }
     SetupReport setup(const CsrMatrix& K, sparse::KernelPool& pool) override;
     void apply(const Vector& r, Vector& z) override;
     [[nodiscard]] MemoryFootprint footprint() const override { return h_.footprint(); }
@@ -138,6 +158,7 @@ public:
 
 private:
     SolverOptions options_;
+    CoordinateHint hint_;
     AmgHierarchy h_;
 };
 

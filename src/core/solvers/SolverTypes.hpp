@@ -22,7 +22,8 @@ using sparse::Vector;
 
 // The six solver variants compared in V2 (build spec §5, labels used in every table and plot),
 // plus the V3 candidates: AmgPcgSp (single-precision hierarchy, V3a), AmgPcgCheb and
-// AmgPcgChebSp (Chebyshev–Jacobi smoother instead of Gauss–Seidel, double / single, V3b).
+// AmgPcgChebSp (Chebyshev–Jacobi smoother instead of Gauss–Seidel, double / single, V3b),
+// GmgPcg and GmgPcgChebSp (geometric coarsening on the mesh grid instead of aggregation, V3d).
 enum class SolverKind {
     DirectND,
     DirectRCM,
@@ -32,10 +33,17 @@ enum class SolverKind {
     AmgPcg,
     AmgPcgSp,
     AmgPcgCheb,
-    AmgPcgChebSp
+    AmgPcgChebSp,
+    GmgPcg,
+    GmgPcgChebSp
 };
 
 enum class AmgSmoother { GaussSeidel, Chebyshev };
+
+// How the multigrid hierarchy is coarsened: smoothed aggregation from the matrix alone (V2), or
+// geometrically from the tensor-grid indices of the nodes (V3d, needs CoordinateHint::grid and
+// ::xyz): every second grid line per axis, linear interpolation along the lines.
+enum class Coarsening { Aggregation, Geometric };
 
 [[nodiscard]] constexpr std::string_view label(SolverKind kind) noexcept {
     switch (kind) {
@@ -57,6 +65,10 @@ enum class AmgSmoother { GaussSeidel, Chebyshev };
         return "AMG-PCG-CH";
     case SolverKind::AmgPcgChebSp:
         return "AMG-PCG-CH-SP";
+    case SolverKind::GmgPcg:
+        return "GMG-PCG";
+    case SolverKind::GmgPcgChebSp:
+        return "GMG-PCG-CH-SP";
     }
     return "?";
 }
@@ -146,6 +158,8 @@ struct SolverOptions {
     int amgChebyshevDegree = 2;
     double amgChebyshevRatio = 30.0;
     int amgChebyshevPowerIterations = 20; // 10 under-estimates λ_max on HS-7 (V3c: CG breakdown)
+    // V3d: aggregation (AMG) or geometric coarsening (GMG). Geometric needs the hint.
+    Coarsening coarsening = Coarsening::Aggregation;
 };
 
 class IterationObserver;

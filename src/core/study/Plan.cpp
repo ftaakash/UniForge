@@ -331,6 +331,20 @@ void planV3C(Planner& p, bool dry) {
     }
 }
 
+// V3d: geometric multigrid. GMG-PCG against AMG-PCG on one pinned core (both Gauss–Seidel), and
+// GMG-PCG-CH-SP against AMG-PCG-CH-SP on 20 threads (the V3C best), whole ladder, observer on.
+void planV3D(Planner& p, bool dry) {
+    const int kMax = dry ? 1 : 7;
+    for (int k = 0; k <= kMax; ++k) {
+        RunSpec r;
+        r.design = DesignKey::HS7;
+        r.spacing = ladderSpacing(k);
+        p.system("V3D", r, {SolverKind::AmgPcg, SolverKind::GmgPcg});
+        r.threads = 20;
+        p.system("V3D", r, {SolverKind::AmgPcgChebSp, SolverKind::GmgPcgChebSp});
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -390,8 +404,8 @@ double ladderSpacing(int k) {
 }
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
-    const std::vector<std::string> order{"T0", "E1", "E0", "E7",  "E8",  "E3",
-                                         "E4", "E6", "E2", "V3A", "V3B", "V3C"};
+    const std::vector<std::string> order{"T0", "E1", "E0",  "E7",  "E8",  "E3", "E4",
+                                         "E6", "E2", "V3A", "V3B", "V3C", "V3D"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
@@ -425,6 +439,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planV3B(p, dryRun);
         } else if (e == "V3C") {
             planV3C(p, dryRun);
+        } else if (e == "V3D") {
+            planV3D(p, dryRun);
         }
     }
     return p.runs;
@@ -432,7 +448,8 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
     for (const RunSpec& r : planExperiments(
-             {"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A", "V3B", "V3C"}, dryRun)) {
+             {"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A", "V3B", "V3C", "V3D"},
+             dryRun)) {
         if (r.id == id) {
             return r;
         }

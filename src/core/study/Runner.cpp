@@ -559,7 +559,8 @@ Result<RunRecord> executeRun(const RunSpec& spec, const RunPaths& paths,
             return makeError(ErrorCode::InvalidInput,
                              "Cannot create the solver of " + spec.id + ".");
         }
-        auto su = solver->setup(sys.K, {}, pool, opt);
+        const solvers::CoordinateHint hint{&m.nodeXyz, &m.nodeGrid}; // geometric multigrid
+        auto su = solver->setup(sys.K, hint, pool, opt);
         if (!su) {
             return std::move(su).error();
         }
