@@ -8,6 +8,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### V3 report (draft for review)
+- `docs/report_v3/UniForge_V3_Report.pdf` (11 pages): V3A–V3H with a verdict each, the pinned
+  V3H numbers as headlines, the hypre/PETSc comparison with its caveats, memory costs,
+  limitations, effort and AI-use note, and a provenance appendix for all 217 numbers.
+- Same pipeline as V2: `tools/report_v3/fill_numbers.py` (placeholders → CSV row and column),
+  `build_report_v3.ps1` (headless Edge), `check_pdf.py`.
+- `study figures --only V1,...,V5`: speed-up vs DOF (V3H), timing scatter (V3G), hypre/PETSc
+  (V3F), load cases (V3E), GMG vs AMG (V3D/V3H). The V2 figure set is unchanged.
+
 ### Phase V3h: V3B–V3D thread runs re-timed pinned
 - Experiment `V3H` (56 runs, all converged, Balanced plan): every multi-threaded row of V3B, V3C
   and V3D with P-core-first pinning, plus V2's AMG-PCG on one core in the same batch.

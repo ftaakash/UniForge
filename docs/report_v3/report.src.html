@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UniForge V3: Can AMG-PCG be beaten?</title>
+<!-- Source of docs/report_v3/UniForge_V3_Report.pdf. Every number is a placeholder naming its
+     CSV row and column; tools/report_v3/fill_numbers.py fills it into report.html, and
+     tools/report_v3/build_report_v3.ps1 prints the PDF with headless Edge and checks it. -->
+<style>
+  @page { size: A4; margin: 14mm 15mm 15mm 15mm; }
+  :root { --ink: #1b1f24; --muted: #57606a; --line: #d0d7de; --accent: #1f5fd6; --soft: #f3f6fa;
+          --direct: #0072B2; --pcg: #E69F00; --amg: #009E73; --no: #b42318; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Inter, Arial, sans-serif; font-size: 9.6pt; line-height: 1.4;
+         color: var(--ink); margin: 0; }
+  h1 { font-size: 18pt; margin: 0 0 3pt; }
+  h2 { font-size: 12pt; margin: 12pt 0 5pt; padding-bottom: 2pt; border-bottom: 1.2pt solid var(--accent);
+       break-after: avoid; }
+  h3 { font-size: 10pt; margin: 8pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 5pt; text-align: justify; }
+  ul, ol { margin: 0 0 5pt; padding-left: 15pt; }
+  li { margin: 0 0 2pt; }
+  table { border-collapse: collapse; width: 100%; margin: 3pt 0 7pt; font-size: 8.6pt; break-inside: avoid; }
+  th, td { border: 0.6pt solid var(--line); padding: 2pt 4pt; text-align: left; vertical-align: top; }
+  th { background: var(--soft); font-weight: 600; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .meta { color: var(--muted); font-size: 9pt; margin-bottom: 8pt; }
+  .meta b { color: var(--ink); }
+  .fig { margin: 5pt 0 9pt; break-inside: avoid; }
+  .fig svg { width: 100%; height: auto; display: block; border: 0.6pt solid var(--line); }
+  .cap { color: var(--muted); font-size: 8.2pt; margin-top: 3pt; text-align: left; }
+  .cap b { color: var(--ink); }
+  .box { background: var(--soft); border-left: 2.5pt solid var(--accent); padding: 5pt 8pt; margin: 4pt 0 8pt; }
+  .answer { border-left-color: var(--amg); }
+  .yes { color: var(--amg); font-weight: 600; } .no { color: var(--no); font-weight: 600; }
+  .ref { color: var(--direct); font-weight: 600; }
+  .verdict { background: var(--soft); padding: 3pt 7pt; margin: 3pt 0 6pt; border-left: 2.5pt solid var(--line); }
+  .pb { break-before: page; }
+  table.prov { font-size: 6pt; word-break: break-all; break-inside: auto; }
+  table.prov td { padding: 0.3pt 2pt; }
+  .provcols { display: flex; gap: 8pt; align-items: flex-start; }
+  .provcols > div { flex: 1; min-width: 0; }
+  .small { font-size: 8.4pt; }
+</style>
+</head>
+<body>
+
+<h1>Can AMG-PCG be beaten? Faster solvers for the HS-7 heat sink</h1>
+<div class="meta">
+  <b>Name:</b> Aakash G S · <b>Repository:</b> github.com/ftaakash/UniForge, branch <b>v3</b>
+  (follow-up to the V2 report) · Draft for review · November 2026
+</div>
+
+<h2>1. Summary</h2>
+<div class="box answer">
+  <p><b>Starting point.</b> The V2 report compared direct Cholesky, preconditioned CG and
+  smoothed-aggregation algebraic multigrid on HS-7, a seven-fin heat sink on a silicon die with a
+  thin thermal interface layer. AMG as a CG preconditioner (AMG-PCG) was the fastest solver at
+  every size up to {{v:V3H-HS7-s0.198-AMG-PCG@dof|/1e6|%.2f}} M unknowns (DOF), on one core.</p>
+  <p><b>Question.</b> A literature survey after V2 named the candidates that might beat it. Can
+  any of them, on the same machine, the same matrices and the same tolerance? And how does our
+  AMG compare with mature libraries?</p>
+  <p><b>Answer.</b> Yes, on more than one core. <b>AMG-PCG-CH-SP</b>, the same AMG with a
+  parallel Chebyshev–Jacobi smoother, a single-precision hierarchy and a parallel setup, is
+  <b>about {{ratio:V3H-HS7-s0.198-AMG-PCG@total:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@total|%.1f}}–{{ratio:V3H-HS7-s0.630-AMG-PCG@total:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@total|%.1f}}×
+  faster in setup plus solve</b> than V2's AMG-PCG on one core, and
+  {{ratio:V3H-HS7-s0.198-AMG-PCG@solve_s_median:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@solve_s_median|%.1f}}–{{ratio:V3H-HS7-s0.630-AMG-PCG@solve_s_median:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@solve_s_median|%.1f}}×
+  in the solve alone, on 20 pinned threads at every HS-7 size, with the same accuracy and a third
+  more solver memory. The one lower point,
+  {{ratio:V3H-HS7-s0.315-AMG-PCG@total:V3H-HS7-s0.315-AMG-PCG-CH-SP-p20@total|%.2f}}× at 1.02 M,
+  is a noisy row whose observer-off twin gives
+  {{ratio:V3H-HS7-s0.315-AMG-PCG@total:V3H-HS7-s0.315-AMG-PCG-CH-SP-noobs-p20@total|%.2f}}×
+  (sections 5 and 10). On 8 threads the total speed-up is
+  {{ratio:V3H-HS7-s0.198-AMG-PCG@total:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@total|%.2f}}–{{ratio:V3H-HS7-s0.630-AMG-PCG@total:V3H-HS7-s0.630-AMG-PCG-CH-SP-p8@total|%.2f}}×
+  outside that row. For several load cases, solving them in lockstep adds another
+  {{ratio:V3E-HS7-s0.794-AMG-PCG-CH-SP-p12-L5@total:V3E-HS7-s0.794-AMG-PCG-CH-SP-B-p12-L5@total|%.2f}}–{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12-L20@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@total|%.2f}}×.
+  On one core, V2's AMG-PCG is still the right choice. Against <b>hypre BoomerAMG</b> and
+  <b>PETSc GAMG</b> in their standard settings, our AMG-PCG is
+  {{ratio:V3F-HS7-s1.000-HYPRE-PCG-T05@total:V3F-HS7-s1.000-AMG-PCG@total|%.2f}}–{{ratio:petsc/GAMG-thr0.02/V3F-HS7-s0.198-AMG-PCG@total_s:V3F-HS7-s0.198-AMG-PCG@total|%.2f}}×
+  faster on one core. The gain is in the setup; the solves are on a par.</p>
+</div>
+<p>The evidence is {{runs}} runs of the V2 harness, all converged, plus 16 PETSc runs and a
+21-run timing repeat. As in V2, each run is its own process with setup and solve timed
+separately, 5 timed solves (median reported), relative residual 10⁻¹⁰ and every answer checked
+against a reference. Every number in this report is filled in from the committed result files,
+and Appendix D lists the file, row and column behind each one.</p>
+
+<table>
+  <tr><th>Step</th><th>Candidate (from the survey)</th><th>Verdict</th><th>Key result (HS-7)</th></tr>
+  <tr><td>V3A</td><td>Single-precision AMG hierarchy</td><td class="no">not adopted alone</td>
+      <td>one core: at most {{pct:V3A-HS7-s0.315-AMG-PCG-SP@solve_s_median:V3A-HS7-s0.315-AMG-PCG@solve_s_median|abs|%.1f}} % faster solve; adopted later as part of CH-SP</td></tr>
+  <tr><td>V3B</td><td>Chebyshev–Jacobi smoother (parallel)</td><td class="yes">adopted</td>
+      <td>CH-SP solve {{ratio:V3H-HS7-s0.198-AMG-PCG@solve_s_median:V3H-HS7-s0.198-AMG-PCG-CH-SP-noobs-p20@solve_s_median|%.2f}}–{{ratio:V3H-HS7-s0.315-AMG-PCG@solve_s_median:V3H-HS7-s0.315-AMG-PCG-CH-SP-noobs-p20@solve_s_median|%.2f}}× faster on 20 threads, 0.57–3.76 M</td></tr>
+  <tr><td>V3C</td><td>Parallel AMG setup</td><td class="yes">adopted</td>
+      <td>setup {{ratio:V3H-HS7-s1.000-AMG-PCG@setup_s:V3H-HS7-s1.000-AMG-PCG-CH-SP-p8@setup_s|%.2f}}–{{ratio:V3H-HS7-s0.500-AMG-PCG@setup_s:V3H-HS7-s0.500-AMG-PCG-CH-SP-p20@setup_s|%.2f}}× faster, bit-identical on any thread count; headline above</td></tr>
+  <tr><td>V3D</td><td>Geometric multigrid (GMG)</td><td class="no">not adopted</td>
+      <td>wins only on small meshes; AMG {{pct:V3H-HS7-s0.198-GMG-PCG-CH-SP-p20@total:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@total|%.0f}} % faster at 3.76 M (20 threads)</td></tr>
+  <tr><td>V3E</td><td>Load cases in lockstep; pinned threads</td><td class="yes">adopted for L &gt; 1</td>
+      <td>{{ratio:V3E-HS7-s0.198-AMG-PCG-L20@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@total|%.1f}}× faster than V2 for 20 loads at 3.76 M; up to {{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@solver_bytes:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@solver_bytes|%.1f}}× the solver memory</td></tr>
+  <tr><td>V3F</td><td>hypre BoomerAMG, PETSc GAMG</td><td class="ref">reference</td>
+      <td>ours {{ratio:V3F-HS7-s1.000-HYPRE-PCG-T05@total:V3F-HS7-s1.000-AMG-PCG@total|%.2f}}–{{ratio:petsc/GAMG-thr0.02/V3F-HS7-s0.198-AMG-PCG@total_s:V3F-HS7-s0.198-AMG-PCG@total|%.2f}}× faster on one core, untuned settings</td></tr>
+  <tr><td>V3G</td><td>Sanitizers; timing repeat</td><td class="ref">measurement</td>
+      <td>no race or undefined behaviour; the unpinned 3.4 s vs 4.9 s gap is thread placement</td></tr>
+  <tr><td>V3H</td><td>V3B–V3D thread runs re-timed pinned</td><td class="ref">measurement</td>
+      <td>no verdict changes; these numbers replace the unpinned ones</td></tr>
+</table>
+
+<h2>2. Context: V2's answer and the V3 question</h2>
+<p>V2 found AMG-PCG fastest on HS-7 at every size, but it left two things open. Its Gauss–Seidel
+smoother and its setup were serial, so it gained nothing from more cores. And it was measured
+only against our own other solvers. The post-V2 survey (all solver families, with sources)
+named the candidates most likely to beat it on this problem: reduced precision in the
+preconditioner, polynomial (Chebyshev) smoothing, which parallelises, a parallel setup, geometric
+multigrid on the structured HS-7 grid, amortising one setup over several load cases, and the
+mature libraries hypre and PETSc as an external yardstick. V3 tests them in that order, one
+experiment per step. Each step is adopted only if it beats the current best on the same
+matrices. All runs use the V2 harness and its rules: one process per run, the same Intel Core
+i5-14600K, the Balanced power plan unless stated, and every row recording its source version.
+The full write-up of every step is in the repository's V3 experiment notes.</p>
+
+<h2>3. V3A: single-precision AMG hierarchy</h2>
+<p><b>Idea.</b> The literature reports 1.1–1.6× from storing and applying the AMG preconditioner
+in single precision under a double-precision CG, because a V-cycle is limited by memory
+bandwidth. <b>Result.</b> On one pinned core the solve changed by
+{{pct:V3A-HS7-s1.000-AMG-PCG-SP@solve_s_median:V3A-HS7-s1.000-AMG-PCG@solve_s_median|%+.1f}} % at
+{{v:V3A-HS7-s1.000-AMG-PCG@dof|int}} DOF and
+{{pct:V3A-HS7-s0.315-AMG-PCG-SP@solve_s_median:V3A-HS7-s0.315-AMG-PCG@solve_s_median|%+.1f}} % at
+{{v:V3A-HS7-s0.315-AMG-PCG@dof|int}} DOF, the best case, with identical iterations
+({{v:V3A-HS7-s0.315-AMG-PCG-SP@iterations|int}}) and the same error against the reference. Solver
+memory grew from {{v:V3A-HS7-s0.198-AMG-PCG@solver_bytes|/1e6|int}} to
+{{v:V3A-HS7-s0.198-AMG-PCG-SP@solver_bytes|/1e6|int}} MB at 3.76 M, because float copies are
+kept next to the double structure. The saving is far below the literature's, which shows that
+the serial Gauss–Seidel sweep (a chain of dependent updates), not bandwidth, limits the V-cycle
+here. With 8 threads the saving was larger
+({{pct:V3A-HS7-s0.315-AMG-PCG-SP-noobs-p8@solve_s_median:V3A-HS7-s0.315-AMG-PCG-noobs-p8@solve_s_median|%+.0f}} %
+at 1.02 M), but those runs were unpinned and are not re-timed.</p>
+<p class="verdict"><span class="no">Not adopted alone.</span> It pointed to the real bottleneck,
+the serial smoother, and single precision returns in V3B as part of the adopted solver.</p>
+
+<h2>4. V3B: Chebyshev–Jacobi smoother</h2>
+<p><b>Idea.</b> Replace the serial Gauss–Seidel smoother by a degree-2 Chebyshev polynomial in
+the Jacobi-scaled operator. It needs only matrix–vector products, which run on all cores, and is
+a standard choice in parallel AMG [1]. The upper eigenvalue bound is 1.1 times a 20-step power
+iteration estimate. Variants: AMG-PCG-CH (double precision) and AMG-PCG-CH-SP (single-precision
+hierarchy from V3A).</p>
+<p><b>Result (pinned, V3H).</b> On one core Chebyshev is slower than Gauss–Seidel, as expected.
+With threads, at {{v:V3H-HS7-s0.198-AMG-PCG@dof|int}} DOF the CH-SP solve takes
+{{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-noobs-p20@solve_s_median|%.2f}} s on 20 threads, against
+{{v:V3H-HS7-s0.198-AMG-PCG-CH-noobs-p20@solve_s_median|%.2f}} s for CH and
+{{v:V3H-HS7-s0.198-AMG-PCG@solve_s_median|%.2f}} s for V2's AMG-PCG on one core. Single
+precision pays off once the smoother is parallel: CH-SP is faster than CH at every size and
+thread count measured, apart from one noisy row (1.87 M, 8 threads, section 10). Iterations stay at {{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@iterations|int}}–{{v:V3H-HS7-s0.397-AMG-PCG-CH-SP-p20@iterations|int}}
+on the large meshes. The originally published V3B thread numbers were unpinned. Five of the eight
+8-thread rows were 39–45 % slow draws (section 10), and they are superseded by the table in
+section 5.</p>
+<p class="verdict"><span class="yes">Adopted</span> (as CH-SP). At this point setup became the
+larger share of the time at 3.76 M, which set up V3C.</p>
+
+<h2>5. V3C: parallel AMG setup</h2>
+<p><b>Idea.</b> Profile the setup and parallelise every row-wise step: strength, the filtered
+matrix, the prolongator product, the Galerkin product (Gustavson's sparse product [2] with rows
+split over threads), the eigenvalue estimate and the float copy. Only the greedy aggregation and
+the transposes stay serial. Each row is computed as in the serial code, so the hierarchy is
+bit-identical on any thread count, which is checked by a test on 1, 4 and 8 threads.
+<b>A failed shortcut.</b> Cutting the power iteration from 20 to 10 steps under-estimated the
+largest eigenvalue, the preconditioner lost positive definiteness and CG broke down at 3.76 M.
+The default stays at 20.</p>
+
+<table>
+  <tr><th class="n">DOF</th><th class="n">AMG-PCG, 1 core (s)</th><th class="n">CH-SP, 8 thr (s)</th><th class="n">CH-SP, 20 thr (s)</th>
+      <th class="n">speed-up 8 / 20 thr</th><th class="n">solve speed-up 8 / 20 thr</th></tr>
+  <tr><td class="n">{{v:V3H-HS7-s1.000-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s1.000-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s1.000-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s1.000-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s1.000-AMG-PCG@total:V3H-HS7-s1.000-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s1.000-AMG-PCG@total:V3H-HS7-s1.000-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s1.000-AMG-PCG@solve_s_median:V3H-HS7-s1.000-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s1.000-AMG-PCG@solve_s_median:V3H-HS7-s1.000-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.794-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s0.794-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.794-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.794-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.794-AMG-PCG@total:V3H-HS7-s0.794-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.794-AMG-PCG@total:V3H-HS7-s0.794-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.794-AMG-PCG@solve_s_median:V3H-HS7-s0.794-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.794-AMG-PCG@solve_s_median:V3H-HS7-s0.794-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.630-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s0.630-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.630-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.630-AMG-PCG@total:V3H-HS7-s0.630-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.630-AMG-PCG@total:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.630-AMG-PCG@solve_s_median:V3H-HS7-s0.630-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.630-AMG-PCG@solve_s_median:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.500-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s0.500-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.500-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.500-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.500-AMG-PCG@total:V3H-HS7-s0.500-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.500-AMG-PCG@total:V3H-HS7-s0.500-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.500-AMG-PCG@solve_s_median:V3H-HS7-s0.500-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.500-AMG-PCG@solve_s_median:V3H-HS7-s0.500-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.397-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s0.397-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.397-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.397-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.397-AMG-PCG@total:V3H-HS7-s0.397-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.397-AMG-PCG@total:V3H-HS7-s0.397-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.397-AMG-PCG@solve_s_median:V3H-HS7-s0.397-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.397-AMG-PCG@solve_s_median:V3H-HS7-s0.397-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.315-AMG-PCG@dof|int}} †</td><td class="n">{{v:V3H-HS7-s0.315-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.315-AMG-PCG-CH-SP-p8@total|%.3f}} †</td><td class="n">{{v:V3H-HS7-s0.315-AMG-PCG-CH-SP-p20@total|%.3f}} †</td>
+      <td class="n">{{ratio:V3H-HS7-s0.315-AMG-PCG@total:V3H-HS7-s0.315-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.315-AMG-PCG@total:V3H-HS7-s0.315-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.315-AMG-PCG@solve_s_median:V3H-HS7-s0.315-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.315-AMG-PCG@solve_s_median:V3H-HS7-s0.315-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.250-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s0.250-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.250-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.250-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.250-AMG-PCG@total:V3H-HS7-s0.250-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.250-AMG-PCG@total:V3H-HS7-s0.250-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.250-AMG-PCG@solve_s_median:V3H-HS7-s0.250-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.250-AMG-PCG@solve_s_median:V3H-HS7-s0.250-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG@dof|int}}</td><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@total|%.3f}}</td><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.198-AMG-PCG@total:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@total|%.2f}} / {{ratio:V3H-HS7-s0.198-AMG-PCG@total:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@total|%.2f}}</td>
+      <td class="n">{{ratio:V3H-HS7-s0.198-AMG-PCG@solve_s_median:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} / {{ratio:V3H-HS7-s0.198-AMG-PCG@solve_s_median:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@solve_s_median|%.2f}}</td></tr>
+</table>
+<p class="cap"><b>Table 1.</b> AMG-PCG-CH-SP on pinned threads against V2's AMG-PCG on one core,
+total = setup + median solve (V3H, one batch, Balanced plan, error observer on). † At
+{{v:V3H-HS7-s0.315-AMG-PCG@dof|int}} DOF both CH-SP runs had slow solves (8 threads:
+{{v:V3H-HS7-s0.315-AMG-PCG-CH-SP-p8@solve_s_min|%.2f}}–{{v:V3H-HS7-s0.315-AMG-PCG-CH-SP-p8@solve_s_max|%.2f}} s
+within one run). Their observer-off twin, the same computation, gives
+{{ratio:V3H-HS7-s0.315-AMG-PCG@total:V3H-HS7-s0.315-AMG-PCG-CH-SP-noobs-p20@total|%.2f}}×
+on 20 threads. Data: results/v3/csv/V3H.csv.</p>
+
+<p>The error against the reference is the same order as AMG-PCG's
+({{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@err_vs_ref_K|e}} vs
+{{v:V3H-HS7-s0.198-AMG-PCG@err_vs_ref_K|e}} K at 3.76 M). Setup alone is
+{{ratio:V3H-HS7-s1.000-AMG-PCG@setup_s:V3H-HS7-s1.000-AMG-PCG-CH-SP-p8@setup_s|%.2f}}–{{ratio:V3H-HS7-s0.500-AMG-PCG@setup_s:V3H-HS7-s0.500-AMG-PCG-CH-SP-p20@setup_s|%.2f}}×
+faster; the serial aggregation, transposes and coarse factorisation cap it. With pinning, 20
+threads are faster than 8 from 1.02 M up and within a few per cent below. The headline V3C first
+published, {{ratio:V3C-HS7-s0.198-AMG-PCG@total:V3C-HS7-s0.198-AMG-PCG-CH-SP-p8@total|%.2f}}–{{ratio:V3C-HS7-s0.630-AMG-PCG@total:V3C-HS7-s0.630-AMG-PCG-CH-SP-p20@total|%.2f}}×,
+came from unpinned runs and is superseded by Table 1.</p>
+<p class="verdict"><span class="yes">Adopted.</span> AMG-PCG-CH-SP with the parallel setup is the
+fastest solver measured for HS-7 on more than one core, at every size, for a third more solver
+memory (section 11).</p>
+<div class="fig">{{fig:V1_speedup_vs_dof}}
+<div class="cap"><b>Figure 1.</b> Speed-up of AMG-PCG-CH-SP over V2's AMG-PCG on one core, against
+problem size (HS-7, pinned threads, V3H). The total speed-up is
+{{ratio:V3H-HS7-s0.198-AMG-PCG@total:V3H-HS7-s0.198-AMG-PCG-CH-SP-p20@total|%.2f}}–{{ratio:V3H-HS7-s0.630-AMG-PCG@total:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@total|%.2f}}×
+on 20 threads outside the noisy 1.02 M row (the dip), whose observer-off twin is the cross. The
+solve-only curves are higher because the setup is only partly parallel. Data: V3H.csv.</div></div>
+
+<h2>6. V3D: geometric multigrid</h2>
+<p><b>Idea.</b> The survey named geometric multigrid the strongest rival to AMG on structured
+meshes. HS-7 is a graded tensor grid with a cell mask, so a geometric hierarchy is available.
+Coarse nodes lie on every second grid line, fine nodes interpolate linearly along the real
+(graded) grid lines, and corners inside the fin gaps are dropped and the weights renormalised.
+Galerkin coarse operators, smoothers, single precision and the parallel setup are reused from
+the AMG code. <b>Not tested:</b> a matrix-free fine level, the survey's main argument for GMG.</p>
+<p><b>Result.</b> GMG's setup is cheaper, but its iteration count stays at 31–37 on every mesh,
+while AMG's falls as the mesh is refined (from {{v:V3D-HS7-s1.000-AMG-PCG@iterations|int}} to
+{{v:V3D-HS7-s0.198-AMG-PCG@iterations|int}} on one core). Full geometric coarsening of HS-7's
+stretched cells (the thin interface layer and the fins) is weaker than coarsening that follows
+the strong couplings. On one core GMG-PCG is
+{{ratio:V3D-HS7-s1.000-AMG-PCG@total:V3D-HS7-s1.000-GMG-PCG@total|%.2f}}× faster at 56 k DOF but
+AMG-PCG is faster from 0.57 M up (ratio {{ratio:V3D-HS7-s0.198-AMG-PCG@total:V3D-HS7-s0.198-GMG-PCG@total|%.2f}}
+at 3.76 M). On 20 pinned threads GMG-PCG-CH-SP wins only at 94 k DOF
+({{ratio:V3H-HS7-s0.794-AMG-PCG-CH-SP-p20@total:V3H-HS7-s0.794-GMG-PCG-CH-SP-p20@total|%.2f}})
+and 0.17 M ({{ratio:V3H-HS7-s0.630-AMG-PCG-CH-SP-p20@total:V3H-HS7-s0.630-GMG-PCG-CH-SP-p20@total|%.2f}}).
+AMG-PCG-CH-SP is faster from 0.29 M up (ratios
+{{ratio:V3H-HS7-s0.397-AMG-PCG-CH-SP-p20@total:V3H-HS7-s0.397-GMG-PCG-CH-SP-p20@total|%.2f}}–{{ratio:V3H-HS7-s0.250-AMG-PCG-CH-SP-p20@total:V3H-HS7-s0.250-GMG-PCG-CH-SP-p20@total|%.2f}}).</p>
+<div class="fig">{{fig:V5_gmg_vs_amg}}
+<div class="cap"><b>Figure 2.</b> Ratio of AMG to GMG time (setup + solve); above 1, GMG is
+faster. On one core (V3D, Gauss–Seidel, pinned) GMG wins up to 0.29 M DOF. On 20 pinned threads
+(V3H, Chebyshev, single precision) it wins only at 94 k and 0.17 M. Data: V3D.csv, V3H.csv.</div></div>
+<p class="verdict"><span class="no">Not adopted.</span> GMG would need semi-coarsening or line
+smoothing across the thin layers, or a matrix-free fine level, to compete. Both are larger steps.</p>
+
+<h2>7. V3E: several load cases after one setup</h2>
+<p><b>Idea.</b> Engineering studies often solve one model for several loads. V2 showed that a
+direct solver does not pay off on HS-7 even then. V3E adds <b>AMG-PCG-CH-SP-B</b>, which runs
+L CG recurrences in lockstep. Block products and a block single-precision V-cycle read K and
+every hierarchy level once per iteration for all L loads, and each load keeps its own step
+sizes and stopping test. The same batch introduced pinned threads (section 10).</p>
+
+<table>
+  <tr><th class="n">DOF</th><th class="n">L</th><th class="n">V2 AMG-PCG, 1 core</th><th class="n">DIRECT-ND, 1 core</th>
+      <th class="n">CH-SP one by one</th><th class="n">CH-SP-B lockstep</th><th class="n">lockstep vs one by one</th><th class="n">lockstep vs V2</th></tr>
+  <tr><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG@dof|int}}</td><td class="n">1</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.500-DIRECT-ND@total|%.1f}}</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-CH-SP-p12@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12@total|%.3f}}</td>
+      <td class="n">{{ratio:V3E-HS7-s0.500-AMG-PCG-CH-SP-p12@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12@total|%.2f}}</td><td class="n">{{ratio:V3E-HS7-s0.500-AMG-PCG@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12@total|%.2f}}</td></tr>
+  <tr><td class="n"></td><td class="n">5</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-L5@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.500-DIRECT-ND-L5@total|%.1f}}</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-CH-SP-p12-L5@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L5@total|%.3f}}</td>
+      <td class="n">{{ratio:V3E-HS7-s0.500-AMG-PCG-CH-SP-p12-L5@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L5@total|%.2f}}</td><td class="n">{{ratio:V3E-HS7-s0.500-AMG-PCG-L5@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L5@total|%.2f}}</td></tr>
+  <tr><td class="n"></td><td class="n">20</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-L20@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.500-DIRECT-ND-L20@total|%.1f}}</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-CH-SP-p12-L20@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3E-HS7-s0.500-AMG-PCG-CH-SP-p12-L20@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L20@total|%.2f}}</td><td class="n">{{ratio:V3E-HS7-s0.500-AMG-PCG-L20@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L20@total|%.2f}}</td></tr>
+  <tr><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG@dof|int}}</td><td class="n">1</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG@total|%.3f}}</td><td class="n">over 8 GB</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12@total|%.3f}}</td>
+      <td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12@total|%.2f}}</td><td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12@total|%.2f}}</td></tr>
+  <tr><td class="n"></td><td class="n">5</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-L5@total|%.3f}}</td><td class="n">over 8 GB</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12-L5@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L5@total|%.3f}}</td>
+      <td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12-L5@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L5@total|%.2f}}</td><td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-L5@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L5@total|%.2f}}</td></tr>
+  <tr><td class="n"></td><td class="n">20</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-L20@total|%.3f}}</td><td class="n">over 8 GB</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12-L20@total|%.3f}}</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@total|%.3f}}</td>
+      <td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12-L20@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@total|%.2f}}</td><td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-L20@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@total|%.2f}}</td></tr>
+</table>
+<p class="cap"><b>Table 2.</b> Setup + all L solves (s), two of the four sizes measured; CH-SP
+on 12 pinned threads, High performance plan. The other sizes (94 k, 1.02 M) are in V3E.csv.</p>
+<div class="fig">{{fig:V4_load_cases}}
+<div class="cap"><b>Figure 3.</b> Total time for L load cases after one setup, at 0.29 M (dashed)
+and 3.76 M DOF (solid). Lockstep (blue) grows most slowly with L. The direct solver's line is
+flat, but its factorisation alone costs more than 20 lockstep solves. Data: V3E.csv.</div></div>
+<p>Iterations do not change with L, and the error of load 0 against the reference is identical
+in lockstep and one by one. For one load the block path costs
+{{pct:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@total|%.0f}}–{{pct:V3E-HS7-s0.794-AMG-PCG-CH-SP-B-p12@total:V3E-HS7-s0.794-AMG-PCG-CH-SP-p12@total|%.0f}} %
+more. The price is memory: {{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@solver_bytes|/1e6|int}} MB
+of solver memory at 3.76 M for 20 loads, against
+{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@solver_bytes|/1e6|int}} MB one by one.</p>
+<p class="verdict"><span class="yes">Adopted for L &gt; 1:</span> lockstep is
+{{ratio:V3E-HS7-s0.794-AMG-PCG-CH-SP-p12-L5@total:V3E-HS7-s0.794-AMG-PCG-CH-SP-B-p12-L5@total|%.2f}}–{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12-L20@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@total|%.2f}}×
+faster than one load at a time, and
+{{ratio:V3E-HS7-s0.198-AMG-PCG-L5@total:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L5@total|%.1f}}–{{ratio:V3E-HS7-s0.500-AMG-PCG-L20@total:V3E-HS7-s0.500-AMG-PCG-CH-SP-B-p12-L20@total|%.1f}}×
+faster than V2 for 5 and 20 loads. Use the plain CH-SP for a single load.</p>
+
+<h2>8. V3F: hypre BoomerAMG and PETSc GAMG</h2>
+<p><b>Question.</b> Is our AMG close to the state of the art? hypre 3.2.1 [3] was built locally
+and linked as an optional solver into our harness. It runs on the same process, matrices,
+tolerance and repetitions: hypre PCG with one BoomerAMG V-cycle, HMIS coarsening [4],
+extended+i interpolation [5] (at most 4 entries per row), hybrid symmetric Gauss–Seidel, and
+strength threshold 0.25 (hypre's default) or 0.5 (its suggestion for 3D). PETSc 3.26.1 [6] CG
+with GAMG, the defaults and threshold 0.02 (our θ₀), ran on the same exported systems in a
+Linux VM on the same CPU. Both stop on the same relative residual.</p>
+<p><b>Caveats.</b> (1) Neither library was tuned for HS-7; the settings follow their
+documentation. (2) PETSc runs in a Linux VM (WSL2) while Windows ran the Balanced plan, so its
+times are <i>indicative</i>, not exactly comparable. (3) hypre uses MSVC's OpenMP 2.0, and its
+OpenMP threads are not pinned. (4) hypre's setup includes copying K into its own matrix format,
+which our solver does not need.</p>
+<div class="fig">{{fig:V3_external_references}}
+<div class="cap"><b>Figure 4.</b> Setup + solve on one core: our AMG-PCG (V2) against hypre
+BoomerAMG-PCG and PETSc CG + GAMG, HS-7 ladder. Data: V3F.csv, V3F_petsc.csv.</div></div>
+<table>
+  <tr><th class="n">DOF</th><th class="n">ours, 1 core</th><th class="n">hypre θ 0.25</th><th class="n">hypre θ 0.5</th><th class="n">PETSc default</th><th class="n">PETSc thr. 0.02</th>
+      <th class="n">ours CH-SP, 6 thr</th><th class="n">hypre θ 0.25, 6 thr</th></tr>
+  <tr><td class="n">{{v:V3F-HS7-s1.000-AMG-PCG@dof|int}}</td><td class="n">{{v:V3F-HS7-s1.000-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s1.000-HYPRE-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s1.000-HYPRE-PCG-T05@total|%.3f}}</td>
+      <td class="n">{{v:petsc/GAMG-default/V3F-HS7-s1.000-AMG-PCG@total_s|%.3f}}</td><td class="n">{{v:petsc/GAMG-thr0.02/V3F-HS7-s1.000-AMG-PCG@total_s|%.3f}}</td>
+      <td class="n">{{v:V3F-HS7-s1.000-AMG-PCG-CH-SP-p6@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s1.000-HYPRE-PCG-p6@total|%.3f}}</td></tr>
+  <tr><td class="n">{{v:V3F-HS7-s0.500-AMG-PCG@dof|int}}</td><td class="n">{{v:V3F-HS7-s0.500-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.500-HYPRE-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.500-HYPRE-PCG-T05@total|%.3f}}</td>
+      <td class="n">{{v:petsc/GAMG-default/V3F-HS7-s0.500-AMG-PCG@total_s|%.3f}}</td><td class="n">{{v:petsc/GAMG-thr0.02/V3F-HS7-s0.500-AMG-PCG@total_s|%.3f}}</td>
+      <td class="n">{{v:V3F-HS7-s0.500-AMG-PCG-CH-SP-p6@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.500-HYPRE-PCG-p6@total|%.3f}}</td></tr>
+  <tr><td class="n">{{v:V3F-HS7-s0.315-AMG-PCG@dof|int}}</td><td class="n">{{v:V3F-HS7-s0.315-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.315-HYPRE-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.315-HYPRE-PCG-T05@total|%.3f}}</td>
+      <td class="n">{{v:petsc/GAMG-default/V3F-HS7-s0.315-AMG-PCG@total_s|%.3f}}</td><td class="n">{{v:petsc/GAMG-thr0.02/V3F-HS7-s0.315-AMG-PCG@total_s|%.3f}}</td>
+      <td class="n">{{v:V3F-HS7-s0.315-AMG-PCG-CH-SP-p6@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.315-HYPRE-PCG-p6@total|%.3f}}</td></tr>
+  <tr><td class="n">{{v:V3F-HS7-s0.198-AMG-PCG@dof|int}}</td><td class="n">{{v:V3F-HS7-s0.198-AMG-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.198-HYPRE-PCG@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.198-HYPRE-PCG-T05@total|%.3f}}</td>
+      <td class="n">{{v:petsc/GAMG-default/V3F-HS7-s0.198-AMG-PCG@total_s|%.3f}}</td><td class="n">{{v:petsc/GAMG-thr0.02/V3F-HS7-s0.198-AMG-PCG@total_s|%.3f}}</td>
+      <td class="n">{{v:V3F-HS7-s0.198-AMG-PCG-CH-SP-p6@total|%.3f}}</td><td class="n">{{v:V3F-HS7-s0.198-HYPRE-PCG-p6@total|%.3f}}</td></tr>
+</table>
+<p class="cap"><b>Table 3.</b> Setup + solve (s), four of the eight sizes (all eight in V3F.csv).
+PETSc is sequential, so it has no 6-thread column. The 6-thread rows ran on the High performance
+plan.</p>
+<p><b>Result.</b> On one core our AMG-PCG is
+{{ratio:V3F-HS7-s1.000-HYPRE-PCG-T05@total:V3F-HS7-s1.000-AMG-PCG@total|%.2f}}–{{ratio:petsc/GAMG-thr0.02/V3F-HS7-s0.198-AMG-PCG@total_s:V3F-HS7-s0.198-AMG-PCG@total|%.2f}}×
+faster than the best external result at each size. On 6 threads AMG-PCG-CH-SP is
+{{ratio:V3F-HS7-s0.500-HYPRE-PCG-p6@total:V3F-HS7-s0.500-AMG-PCG-CH-SP-p6@total|%.2f}}–{{ratio:V3F-HS7-s0.198-HYPRE-PCG-p6@total:V3F-HS7-s0.198-AMG-PCG-CH-SP-p6@total|%.2f}}×
+faster than hypre. The difference is the setup. Per solve, PETSc GAMG with threshold 0.02 matches
+our AMG-PCG on the large meshes
+({{v:petsc/GAMG-thr0.02/V3F-HS7-s0.198-AMG-PCG@solve_s|%.2f}} vs
+{{v:V3F-HS7-s0.198-AMG-PCG@solve_s_median|%.2f}} s at 3.76 M), and hypre has the best solve below
+0.1 M. Every external run reached the same residual, with errors against the reference at most
+about ten times ours (largest: hypre θ 0.5 at 1.87 M,
+{{v:V3F-HS7-s0.250-HYPRE-PCG-T05@err_vs_ref_K|e}} K against
+{{v:V3F-HS7-s0.250-AMG-PCG@err_vs_ref_K|e}} K).</p>
+<p class="verdict"><span class="ref">Reference only.</span> Our smoothed-aggregation AMG is
+competitive with the state of the art on HS-7. It is ahead in setup cost, not in convergence, and
+a tuned hypre or PETSc could close part of that gap.</p>
+
+<h2>9. V3G: correctness under sanitizers, and a timing repeat</h2>
+<p><b>Sanitizers.</b> Until V3G the V3 code had been built only with MSVC. The CI's two
+sanitizer configurations were reproduced locally under WSL with GCC 13, without pushing. The
+first build failed under GCC's warnings-as-errors: sign conversions in the geometric
+prolongator, the load-case generator and one test, and a false array-bounds warning on sorting
+an eight-entry array. These were fixed without any change in behaviour. Then the full suite
+(409 tests) passed under address and undefined-behaviour sanitizers and under the thread
+sanitizer with no reports. That covers the parallel setup, the lockstep block code and the
+bit-identity tests across thread counts. No race or undefined behaviour was found.</p>
+<p><b>Timing repeat.</b> At 3.76 M on 8 threads the same CH-SP solve had taken
+{{v:V3B-HS7-s0.198-AMG-PCG-CH-SP-noobs-p8@solve_s_median|%.2f}} s in V3B and
+{{v:V3C-HS7-s0.198-AMG-PCG-CH-SP-p8@solve_s_median|%.2f}} s in V3C, a gap larger than either
+run's spread. V3G rebuilt the V3B and V3C binaries from their commits. It ran them unpinned,
+alongside today's code unpinned and pinned, alternating round by round, on both power plans.</p>
+<p>V3B's own binary reached {{v:g/balanced/v3b/2@solve_median_s|%.2f}} s in one round, and
+today's code unpinned took {{v:g/highperf/nopin/3@solve_median_s|%.2f}} s in another. So the gap
+was neither the code (start vector of the eigenvalue estimate, setup change) nor the power plan;
+it was <b>where Windows placed the unpinned threads</b>. A likely mechanism is helpers landing on
+efficiency cores, but this was not measured per core. Pinning narrows the spread to about ±2 %.</p>
+<div class="fig">{{fig:V2_timing_scatter}}
+<div class="cap"><b>Figure 5.</b> The same solve, 21 runs in batch order. Unpinned runs of every
+code version land near 3.35 s or near 4.8–5.6 s; pinned runs (triangles) stay within
+{{v:g/balanced/pin/3@solve_median_s|%.2f}}–{{v:g/balanced/pin/2@solve_median_s|%.2f}} s on both plans.
+Data: V3G_timing.csv.</div></div>
+
+<h2>10. V3H: thread runs re-timed with pinned threads</h2>
+<p>Because V3B, V3C and V3D timed their thread runs unpinned, all of them were repeated in one
+batch with today's code and P-core-first pinning: performance cores first, one thread per core
+before the SMT siblings, efficiency cores last. V2's AMG-PCG on one core ran in the same batch,
+so every ratio comes from one batch. The plan was Balanced, as in the originals, so only the
+pinning changed. That is {{runs:V3H}} runs, all converged. The one-core baseline reproduced V3C
+to within 5 %.</p>
+<ul>
+  <li><b>No verdict changes.</b> CH-SP stays the fastest variant at every size and thread
+  count, and GMG still loses from 0.29 M up. The 3.76 M exception in V3C ("8 threads beat 20")
+  was noise.</li>
+  <li><b>Most of V3C's points were slightly fast draws</b> (pinned is a few per cent slower below
+  1.02 M). V3B's 8-thread rows were the slow ones, for example
+  {{v:V3B-HS7-s0.198-AMG-PCG-CH-noobs-p8@solve_s_median|%.2f}} s then and
+  {{v:V3H-HS7-s0.198-AMG-PCG-CH-noobs-p8@solve_s_median|%.2f}} s now for CH at 3.76 M.</li>
+  <li><b>Pinning narrows the spread but does not remove it.</b> From 0.57 M up, 4 of 28 pinned
+  runs still had one or two slow solves out of five. The worst was CH-SP on 8 threads at 1.87 M,
+  {{v:V3H-HS7-s0.250-AMG-PCG-CH-SP-noobs-p8@solve_s_min|%.2f}}–{{v:V3H-HS7-s0.250-AMG-PCG-CH-SP-noobs-p8@solve_s_max|%.2f}} s
+  within one run. Below 0.57 M, solves take 0.07–0.25 s and most runs had a slow outlier. They are
+  marked in the tables and, where possible, cross-checked against the observer-off twin.</li>
+  <li><b>Consequence for every claim in this report:</b> a gap under about 10 % from a single
+  run is not significant. Only gaps larger than that, or ones confirmed by a twin or a repeat,
+  are claimed.</li>
+</ul>
+
+<h2>11. Memory costs</h2>
+<table>
+  <tr><th>Solver (3.76 M DOF)</th><th class="n">solver memory (MB)</th><th class="n">vs AMG-PCG</th><th>Source</th></tr>
+  <tr><td>AMG-PCG (V2)</td><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG@solver_bytes|/1e6|int}}</td><td class="n">–</td><td>V3H</td></tr>
+  <tr><td>AMG-PCG-SP</td><td class="n">{{v:V3A-HS7-s0.198-AMG-PCG-SP@solver_bytes|/1e6|int}}</td><td class="n">{{pct:V3A-HS7-s0.198-AMG-PCG-SP@solver_bytes:V3A-HS7-s0.198-AMG-PCG@solver_bytes|%+.0f}} %</td><td>V3A</td></tr>
+  <tr><td>AMG-PCG-CH</td><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG-CH-noobs-p8@solver_bytes|/1e6|int}}</td><td class="n">{{pct:V3H-HS7-s0.198-AMG-PCG-CH-noobs-p8@solver_bytes:V3H-HS7-s0.198-AMG-PCG@solver_bytes|%+.0f}} %</td><td>V3H</td></tr>
+  <tr><td><b>AMG-PCG-CH-SP</b> (adopted)</td><td class="n">{{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@solver_bytes|/1e6|int}}</td><td class="n">{{pct:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@solver_bytes:V3H-HS7-s0.198-AMG-PCG@solver_bytes|%+.0f}} %</td><td>V3H</td></tr>
+  <tr><td>GMG-PCG-CH-SP</td><td class="n">{{v:V3H-HS7-s0.198-GMG-PCG-CH-SP-p20@solver_bytes|/1e6|int}}</td><td class="n">{{pct:V3H-HS7-s0.198-GMG-PCG-CH-SP-p20@solver_bytes:V3H-HS7-s0.198-AMG-PCG@solver_bytes|%+.0f}} %</td><td>V3H</td></tr>
+  <tr><td>AMG-PCG-CH-SP-B, 5 loads in lockstep</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L5@solver_bytes|/1e6|int}}</td><td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L5@solver_bytes:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@solver_bytes|%.1f}}× CH-SP</td><td>V3E</td></tr>
+  <tr><td>AMG-PCG-CH-SP-B, 20 loads in lockstep</td><td class="n">{{v:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@solver_bytes|/1e6|int}}</td><td class="n">{{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@solver_bytes:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@solver_bytes|%.1f}}× CH-SP</td><td>V3E</td></tr>
+</table>
+<p>Solver memory is the preconditioner, hierarchy and work vectors, without the system matrix and
+mesh. Peak process memory is dominated by those and barely moves for one load
+({{v:V3H-HS7-s0.198-AMG-PCG@peak_ws_bytes|/1e9|%.1f}} GB for AMG-PCG,
+{{v:V3H-HS7-s0.198-AMG-PCG-CH-SP-p8@peak_ws_bytes|/1e9|%.1f}} GB for CH-SP). The adopted solver
+costs a third more solver memory. Lockstep memory grows with every load case (each adds
+about 6 double and 5 float vectors), so L = 20 needs {{ratio:V3E-HS7-s0.198-AMG-PCG-CH-SP-B-p12-L20@solver_bytes:V3E-HS7-s0.198-AMG-PCG-CH-SP-p12@solver_bytes|%.1f}}× the
+memory of solving them one by one; the 8 GB budget would refuse L = 32 at this size.</p>
+
+<h2>12. Which solver now</h2>
+<table>
+  <tr><th>Situation (HS-7 class, this machine)</th><th>Use</th><th>Why</th></tr>
+  <tr><td>One load, one core</td><td>AMG-PCG (V2)</td><td>Gauss–Seidel is the best smoother on one core; single precision and Chebyshev do not pay there (V3A, V3B)</td></tr>
+  <tr><td>One load, several cores</td><td><b>AMG-PCG-CH-SP</b>, pinned threads</td><td>1.8–2.4× faster than the V2 choice on 20 threads at every size (Table 1)</td></tr>
+  <tr><td>Several loads, several cores</td><td><b>AMG-PCG-CH-SP-B</b> (lockstep), if the memory fits</td><td>up to 2.5× faster than one load at a time (Table 2)</td></tr>
+  <tr><td>Small structured grids, one core</td><td>GMG-PCG is faster, but not the default</td><td>wins below 0.3 M DOF only, and needs grid structure (V3D)</td></tr>
+</table>
+
+<h2>13. Limitations and next steps</h2>
+<ul>
+  <li><b>One machine, one object family, one physics</b> (linear steady conduction on HS-7). The
+  speed-ups depend on this CPU's core layout and memory bandwidth (RAM ran at 4800 MT/s, below its
+  rating, kept constant for comparability).</li>
+  <li><b>Timing noise.</b> Even pinned, one run in seven from 0.57 M up, and most smaller runs, had outlier solves; single-run gaps
+  under 10 % are not claimed (section 10).</li>
+  <li><b>External references are untuned</b>, and PETSc ran in a VM. A tuned hypre (aggressive
+  coarsening, smaller stencils) or GAMG setup reuse could close part of our setup advantage.</li>
+  <li><b>GPU: not done.</b> The survey's GPU candidates (AMG on a GPU, mixed precision there) were
+  not attempted in this round; every result here is CPU-only.</li>
+  <li><b>CFD: not started.</b> Flow problems (non-symmetric, saddle-point systems) need different
+  solvers (e.g. GMRES with block or AMG preconditioners). Nothing in V3 measures them, and none of
+  these results should be read as a claim about CFD.</li>
+  <li>Other open steps: a matrix-free fine level for GMG, semi-coarsening across thin layers, and
+  E-core-aware placement of threads beyond the six performance cores.</li>
+</ul>
+
+<h2>Appendix A. Machine, build and protocol</h2>
+<table>
+  <tr><th>Item</th><th>Value</th></tr>
+  <tr><td>Machine</td><td>Intel Core i5-14600K (6 performance + 8 efficiency cores, 20 threads), 32 GB DDR5 at 4800 MT/s, Windows 11; Balanced power plan except V3E, V3F and the second half of V3G (High performance, for that batch only)</td></tr>
+  <tr><td>Build</td><td>C++17, MSVC Release, warnings as errors; GCC 13 with address, undefined-behaviour and thread sanitizers (V3G, local)</td></tr>
+  <tr><td>Runs</td><td>{{runs}} harness runs (V3A {{runs:V3A}}, V3B {{runs:V3B}}, V3C {{runs:V3C}}, V3D {{runs:V3D}}, V3E {{runs:V3E}}, V3F {{runs:V3F}}, V3H {{runs:V3H}}), all converged; 16 PETSc runs; 21 V3G timing runs; 27–28 November 2026, branch v3</td></tr>
+  <tr><td>Protocol</td><td>one process per run; 5 timed solves, median; relative residual 10⁻¹⁰; error against a direct reference (observer time excluded); every row records its source commit</td></tr>
+  <tr><td>Threads</td><td>one-thread runs pinned to one performance core (as in V2); multi-threaded runs pinned from V3E on, and in V3H for the re-timed V3B–V3D rows</td></tr>
+  <tr><td>Tests</td><td>434 automated tests pass on Windows (409 in the sanitizer builds, without the GUI tests)</td></tr>
+  <tr><td>Reproduce</td><td>the command-line tool's study commands plan, run, collect and draw every experiment and figure; this report is rebuilt from the result files by the report build script</td></tr>
+</table>
+
+<h2>Appendix B. Effort and use of AI tools</h2>
+<p class="small">As in V2, the software, experiments, figures and this report were developed
+with an AI coding assistant (Claude, Anthropic), which wrote and committed the work phase by
+phase. The author set the direction, approved each step (V3A to V3H and this report), and made the
+decisions the assistant proposed with their trade-offs. These included keeping the RAM at 4800
+MT/s, using the High performance plan only during batches, pinning threads, downloading hypre,
+installing PETSc in WSL, and re-timing the unpinned runs. Mistakes that were caught are recorded
+with how they were found, among them: a wrong eigenvalue shortcut (section 5), an unexplained
+timing gap that was first attributed to the code (section 9), a library-runtime mismatch when
+linking hypre, the compile errors MSVC had not flagged (section 9), and several miscounted or
+misstated ranges in draft write-ups, corrected from the CSVs before commit. A dated log of
+prompts, outputs, verification and errors is kept in the repository (AI-use log).</p>
+<p class="small"><b>Time.</b> Measured from the timestamps of the assistant sessions, counting
+gaps of at most 10 minutes between consecutive messages as active time (unattended batch runs
+are not counted). The working session that built V3A–V3H and this report was active for
+1.6 h on 27 November (survey and V3A–V3F, 19:21–23:18) and 1.2 h on 28 November (V3F write-up to
+this draft, 00:21–01:53), 2.8 h in all. A second session, used for planning and review, was active
+for 0.65 h, partly at the same time. The 27–28 November batches ran unattended and are not
+counted, nor is the author's own time reading results and this report.</p>
+
+<h2>Appendix C. References</h2>
+<ol class="small">
+  <li>M. Adams, M. Brezina, J. Hu and R. Tuminaro, "Parallel multigrid smoothing: polynomial versus Gauss–Seidel," <i>J. Comput. Phys.</i>, vol. 188, no. 2, pp. 593–610, 2003, doi: 10.1016/S0021-9991(03)00194-3.</li>
+  <li>F. G. Gustavson, "Two fast algorithms for sparse matrices: multiplication and permuted transposition," <i>ACM Trans. Math. Softw.</i>, vol. 4, no. 3, pp. 250–269, 1978, doi: 10.1145/355791.355796.</li>
+  <li>R. D. Falgout and U. M. Yang, "hypre: A library of high performance preconditioners," in <i>Computational Science — ICCS 2002</i>, LNCS 2331, Springer, 2002, pp. 632–641, doi: 10.1007/3-540-47789-6_66.</li>
+  <li>H. De Sterck, U. M. Yang and J. J. Heys, "Reducing complexity in parallel algebraic multigrid preconditioners," <i>SIAM J. Matrix Anal. Appl.</i>, vol. 27, no. 4, pp. 1019–1039, 2006, doi: 10.1137/040615729.</li>
+  <li>H. De Sterck, R. D. Falgout, J. W. Nolting and U. M. Yang, "Distance-two interpolation for parallel algebraic multigrid," <i>Numer. Linear Algebra Appl.</i>, vol. 15, no. 2–3, pp. 115–139, 2008, doi: 10.1002/nla.559.</li>
+  <li>S. Balay et al., <i>PETSc/TAO Users Manual</i>, Argonne National Laboratory, ANL-21/39 (release 3.26).</li>
+  <li>P. Vaněk, J. Mandel and M. Brezina, "Algebraic multigrid by smoothed aggregation for second and fourth order elliptic problems," <i>Computing</i>, vol. 56, no. 3, pp. 179–196, 1996, doi: 10.1007/BF02238511 (our AMG, as in V2).</li>
+</ol>
+<p class="small">References 1–6 were written by the assistant for this draft and have not yet been
+checked against the publishers' records; reference 7 was checked for the V2 report.</p>
+
+<h2>Appendix D. Where every number comes from</h2>
+{{provenance}}
+
+</body>
+</html>

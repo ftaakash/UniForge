@@ -1533,6 +1533,32 @@ a persistent kernel pool instead.
   of 28/12) and misstated three ranges (pinned-vs-V3C slowdown, V3B slow rows, 8 vs 20
   threads). All were caught by recomputing from the CSV.
 
+## 2026-11-28: V3 report (draft)
+### Prompts (representative)
+- "Write up V3 results": a V3 report in the style and pipeline of the V2 report, with pinned
+  headlines, every caveat, a provenance appendix and an honest effort note.
+### Outputs (files, functions)
+- `figV1`–`figV5` in `Figures.cpp` (run only when named), `tools/report_v3/` (fill, build,
+  check), `docs/report_v3/` (source, filled HTML, provenance, PDF, figures).
+### My edits
+- None yet; the draft is for my review.
+### Verification (tests run, numbers checked, manual checks)
+- 434 tests pass. All 217 numbers are filled from the CSVs, and the PDF check passed. 14 PDF
+  numbers were recomputed independently from the CSVs with awk and all matched. Every page was
+  inspected as an image for layout.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Wrong "total":** the first fill used the CSV's `total_s_median`, which disagreed with the
+  write-up's 1.31× at 0.29 M. The write-up defines total as setup + median solve, and the filler
+  now does the same.
+- **Over-broad headline:** "1.8–2.4× on 8 or 20 threads" was false for 8 threads (1.71× at
+  3.76 M). It now states 20 threads, gives the 8-thread range, and names the noisy 1.02 M row.
+- **Unsupported claims removed:** "this machine has no suitable setup" for GPU (not known), a
+  per-load memory of 302 MB (L20 / 20, not the increment), "CH-SP faster than CH everywhere"
+  (not on one noisy row), and an 8-thread maximum taken from the wrong size.
+- **Layout:** two figures were pushed to the next page, leaving half-empty pages; the following
+  text was moved ahead of them.
+- **References 1–6** were written from memory and are marked in the report as not yet checked.
+
 ## Entry template
 
 ```markdown
