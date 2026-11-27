@@ -99,11 +99,14 @@ int doRun(const StudyArgs& a, const std::string& commit, std::ostream& out, std:
     // One thread: pinned to a performance core (amendment A8). Several threads (V3e): the caller
     // and every helper pinned, performance cores first, so serial work never lands on an
     // efficiency core. `core` records the caller's CPU (−1 = not pinned).
+    // UNIFORGE_NO_PIN=1 leaves multi-threaded runs unpinned, as before V3e (V3g timing repeat).
     int core = -1;
     sparse::KernelPool::ThreadStartFn onThreadStart;
+    const char* noPin = std::getenv("UNIFORGE_NO_PIN");
+    const bool pinThreads = noPin == nullptr || std::string(noPin) != "1";
     if (spec.value().threads == 1) {
         core = platform::pinToPerformanceCore();
-    } else {
+    } else if (pinThreads) {
         const std::vector<int> cpus = platform::performanceFirstCpus(spec.value().threads);
         if (!cpus.empty() && platform::pinThreadToCpu(cpus.front())) {
             core = cpus.front();
