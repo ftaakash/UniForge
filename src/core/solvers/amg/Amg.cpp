@@ -95,6 +95,71 @@ void spmvSingle(sparse::KernelPool& pool, const FloatCsr& A, const std::vector<f
     });
 }
 
+// Chebyshev–Jacobi smoother (V3b), values stored as T (double or float), sums in double.
+// Chebyshev acceleration of x ← x + D⁻¹(b − A·x) for eigenvalues of D⁻¹A in [λ̂/ratio, λ̂]
+// (Saad, Iterative Methods for Sparse Linear Systems, 2nd ed., Alg. 12.1), starting from the
+// given x. Its error propagator I − p(D⁻¹A)·D⁻¹A is A-self-adjoint, so the same smoother before
+// and after the coarse correction keeps the V-cycle symmetric. Every pass is a parallel loop
+// over rows; the update of x is a separate pass because the next residual reads neighbours.
+template <class T>
+void chebyshev(sparse::KernelPool& pool, Index n, const Offset* rowPtr, const Index* col,
+               const T* val, const T* invD, const T* b, T* x, T* r, T* d, double lambdaMax,
+               double ratio, int degree) {
+    const double beta = lambdaMax;
+    const double alpha = lambdaMax / ratio;
+    const double theta = 0.5 * (beta + alpha);
+    const double delta = 0.5 * (beta - alpha);
+    const double sigma = theta / delta;
+    double rho = 1.0 / sigma;
+    const auto rowResidual = [&](Index i) {
+        double s = b[i];
+        for (Offset q = rowPtr[i]; q < rowPtr[i + 1]; ++q) {
+            s -= static_cast<double>(val[q]) * static_cast<double>(x[col[q]]);
+        }
+        return s;
+    };
+    pool.parallelFor(n, [&](Index begin, Index end) {
+        for (Index i = begin; i < end; ++i) {
+            const double ri = rowResidual(i);
+            r[i] = static_cast<T>(ri);
+            d[i] = static_cast<T>(static_cast<double>(invD[i]) * ri / theta);
+        }
+    });
+    for (int k = 1; k <= degree; ++k) {
+        pool.parallelFor(n, [&](Index begin, Index end) {
+            for (Index i = begin; i < end; ++i) {
+                x[i] = static_cast<T>(static_cast<double>(x[i]) + static_cast<double>(d[i]));
+            }
+        });
+        if (k == degree) {
+            break;
+        }
+        const double rhoNew = 1.0 / (2.0 * sigma - rho);
+        const double c1 = rhoNew * rho;
+        const double c2 = 2.0 * rhoNew / delta;
+        pool.parallelFor(n, [&](Index begin, Index end) {
+            for (Index i = begin; i < end; ++i) {
+                const double ri = rowResidual(i);
+                r[i] = static_cast<T>(ri);
+                d[i] = static_cast<T>(c1 * static_cast<double>(d[i]) +
+                                      c2 * static_cast<double>(invD[i]) * ri);
+            }
+        });
+        rho = rhoNew;
+    }
+}
+
+// Bytes of one Chebyshev application: degree residual passes (each also writes r and d and
+// reads 1/a_ii) and degree updates of x (read x and d, write x). `bytes` = 8 (double) or 4.
+double chebyshevBytes(const CsrMatrix& A, int degree, double valueBytes) {
+    const double nnz = static_cast<double>(A.nnz());
+    const double n = static_cast<double>(A.rows);
+    const double residualPass = (4.0 + valueBytes) * nnz + 8.0 * (n + 1.0) +
+                                valueBytes * n * 5.0; // x gathered, b, 1/a_ii, d, r written
+    const double updatePass = 3.0 * valueBytes * n;
+    return degree * (residualPass + updatePass);
+}
+
 void gaussSeidel(const CsrMatrix& A, const Vector& b, Vector& x, bool forward) {
     const Index n = A.rows;
     for (Index step = 0; step < n; ++step) {
@@ -300,6 +365,9 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     levels_.clear();
     coarse_.reset();
     single_ = options.amgSinglePrecision;
+    smoother_ = options.amgSmoother;
+    chebDegree_ = std::max(1, options.amgChebyshevDegree);
+    chebRatio_ = options.amgChebyshevRatio > 1.0 ? options.amgChebyshevRatio : 30.0;
     fl_.clear();
     SetupReport report;
 
@@ -361,6 +429,11 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
         return report;
     }
     coarseSolution_.assign(toSize(ops_.back()->rows), 0.0);
+    if (smoother_ == AmgSmoother::Chebyshev) {
+        const auto te = Clock::now();
+        buildChebyshev();
+        report.phases.emplace_back("Chebyshev eigenvalue estimates", secondsSince(te));
+    }
     if (single_) {
         const auto ts = Clock::now();
         buildSinglePrecision();
@@ -378,8 +451,11 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
     bytesPerCycle_ = 0.0;
     const auto pass = single_ ? passBytesSingle : passBytes;
     for (std::size_t l = 0; l < levels_.size(); ++l) {
-        bytesPerCycle_ += 2.0 * sweeps_ * pass(*ops_[l]) + pass(*ops_[l]) + pass(levels_[l].R) +
-                          pass(levels_[l].P);
+        const double smoothing =
+            smoother_ == AmgSmoother::Chebyshev
+                ? 2.0 * chebyshevBytes(*ops_[l], chebDegree_, single_ ? 4.0 : 8.0)
+                : 2.0 * sweeps_ * pass(*ops_[l]);
+        bytesPerCycle_ += smoothing + pass(*ops_[l]) + pass(levels_[l].R) + pass(levels_[l].P);
     }
     if (single_) { // b and x converted to float and back on level 0
         bytesPerCycle_ += 24.0 * static_cast<double>(K.rows);
@@ -414,7 +490,11 @@ void AmgHierarchy::buildSinglePrecision() {
             f.tmp.assign(toSize(ops_[l]->rows), 0.0f);
             // The double work vectors and transfer values are not used by the float cycle.
             Level& lv = levels_[l];
-            for (Vector* v : {&lv.r, &lv.tmp, &lv.bc, &lv.xc}) {
+            if (smoother_ == AmgSmoother::Chebyshev) {
+                f.invDiag = toFloat(lv.invDiag);
+                f.d.assign(toSize(ops_[l]->rows), 0.0f);
+            }
+            for (Vector* v : {&lv.r, &lv.tmp, &lv.bc, &lv.xc, &lv.invDiag, &lv.d}) {
                 v->clear();
                 v->shrink_to_fit();
             }
@@ -459,9 +539,18 @@ void AmgHierarchy::cycleSingle(std::size_t level) {
         return;
     }
     FloatLevel& c = fl_[level + 1];
-    for (int s = 0; s < sweeps_; ++s) {
-        gaussSeidelSingle(f.A, f.b, f.x, true);
-    }
+    const auto smooth = [&](bool forward) {
+        if (smoother_ == AmgSmoother::Chebyshev) {
+            chebyshev<float>(*pool_, f.A.rows, f.A.rowPtr->data(), f.A.col->data(), f.A.val.data(),
+                             f.invDiag.data(), f.b.data(), f.x.data(), f.r.data(), f.d.data(),
+                             levels_[level].lambdaMax, chebRatio_, chebDegree_);
+            return;
+        }
+        for (int s = 0; s < sweeps_; ++s) {
+            gaussSeidelSingle(f.A, f.b, f.x, forward);
+        }
+    };
+    smooth(true);
     spmvSingle(*pool_, f.A, f.x, f.r, &f.b);
     spmvSingle(*pool_, f.R, f.r, c.b);
     std::fill(c.x.begin(), c.x.end(), 0.0f);
@@ -472,9 +561,7 @@ void AmgHierarchy::cycleSingle(std::size_t level) {
             f.x[toSize(i)] += f.tmp[toSize(i)];
         }
     });
-    for (int s = 0; s < sweeps_; ++s) {
-        gaussSeidelSingle(f.A, f.b, f.x, false);
-    }
+    smooth(false);
 }
 
 void AmgHierarchy::cycle(std::size_t level, const Vector& b, Vector& x) {
@@ -486,17 +573,71 @@ void AmgHierarchy::cycle(std::size_t level, const Vector& b, Vector& x) {
     }
     const CsrMatrix& A = *ops_[level];
     Level& lv = levels_[level];
-    for (int s = 0; s < sweeps_; ++s) {
-        gaussSeidel(A, b, x, true);
-    }
+    const auto smooth = [&](bool forward) {
+        if (smoother_ == AmgSmoother::Chebyshev) {
+            chebyshev<double>(*pool_, A.rows, A.rowPtr.data(), A.col.data(), A.val.data(),
+                              lv.invDiag.data(), b.data(), x.data(), lv.r.data(), lv.d.data(),
+                              lv.lambdaMax, chebRatio_, chebDegree_);
+            return;
+        }
+        for (int s = 0; s < sweeps_; ++s) {
+            gaussSeidel(A, b, x, forward);
+        }
+    };
+    smooth(true);
     sparse::residual(*pool_, A, x, b, lv.r);
     sparse::spmv(*pool_, lv.R, lv.r, lv.bc);
     std::fill(lv.xc.begin(), lv.xc.end(), 0.0);
     cycle(level + 1, lv.bc, lv.xc);
     sparse::spmv(*pool_, lv.P, lv.xc, lv.tmp);
     sparse::axpy(*pool_, 1.0, lv.tmp, x);
-    for (int s = 0; s < sweeps_; ++s) {
-        gaussSeidel(A, b, x, false);
+    smooth(false);
+}
+
+void AmgHierarchy::buildChebyshev() {
+    // λ̂ = 1.1 × the Rayleigh quotient vᵀAv / vᵀDv after 20 power iterations with D⁻¹A, from a
+    // fixed pseudo-random start (deterministic, and not near the smooth near-null space).
+    for (std::size_t l = 0; l < levels_.size(); ++l) {
+        const CsrMatrix& A = *ops_[l];
+        Level& lv = levels_[l];
+        const std::size_t n = toSize(A.rows);
+        const Vector diag = sparse::diagonal(A);
+        lv.invDiag.assign(n, 0.0);
+        for (std::size_t i = 0; i < n; ++i) {
+            lv.invDiag[i] = diag[i] != 0.0 ? 1.0 / diag[i] : 0.0;
+        }
+        lv.d.assign(n, 0.0);
+        Vector v(n);
+        Vector w(n, 0.0);
+        std::uint32_t h = 2463534242u;
+        for (std::size_t i = 0; i < n; ++i) {
+            h ^= h << 13;
+            h ^= h >> 17;
+            h ^= h << 5;
+            v[i] = static_cast<double>(h % 2001u) / 1000.0 - 1.0;
+        }
+        double lambda = 0.0;
+        for (int it = 0; it < 20; ++it) {
+            sparse::spmv(*pool_, A, v, w);
+            double vAv = 0.0;
+            double vDv = 0.0;
+            double norm = 0.0;
+            for (std::size_t i = 0; i < n; ++i) {
+                vAv += v[i] * w[i];
+                vDv += v[i] * v[i] * diag[i];
+                w[i] *= lv.invDiag[i];
+                norm += w[i] * w[i];
+            }
+            lambda = vDv > 0.0 ? vAv / vDv : 0.0;
+            norm = std::sqrt(norm);
+            if (!(norm > 0.0)) {
+                break;
+            }
+            for (std::size_t i = 0; i < n; ++i) {
+                v[i] = w[i] / norm;
+            }
+        }
+        lv.lambdaMax = 1.1 * (lambda > 0.0 ? lambda : 2.0);
     }
 }
 
@@ -511,7 +652,8 @@ MemoryFootprint AmgHierarchy::footprint() const {
     std::size_t work = 0;
     for (const Level& lv : levels_) {
         transfer += lv.P.bytes() + lv.R.bytes();
-        work += (lv.r.capacity() + lv.tmp.capacity() + lv.bc.capacity() + lv.xc.capacity()) *
+        work += (lv.r.capacity() + lv.tmp.capacity() + lv.bc.capacity() + lv.xc.capacity() +
+                 lv.invDiag.capacity() + lv.d.capacity()) *
                     sizeof(double) +
                 lv.aggregateOf.capacity() * sizeof(Index);
     }
@@ -523,7 +665,8 @@ MemoryFootprint AmgHierarchy::footprint() const {
         for (const FloatLevel& lv : fl_) {
             values +=
                 (lv.A.val.capacity() + lv.P.val.capacity() + lv.R.val.capacity()) * sizeof(float);
-            vectors += (lv.b.capacity() + lv.x.capacity() + lv.r.capacity() + lv.tmp.capacity()) *
+            vectors += (lv.b.capacity() + lv.x.capacity() + lv.r.capacity() + lv.tmp.capacity() +
+                        lv.invDiag.capacity() + lv.d.capacity()) *
                        sizeof(float);
         }
         f.add("AMG single-precision values (level 0 included)", values);

@@ -290,6 +290,30 @@ void planV3A(Planner& p, bool dry) {
     }
 }
 
+// V3b: Chebyshev–Jacobi smoother (parallel) against the serial Gauss–Seidel of AMG-PCG. Ladder
+// on one pinned core with the error observer (as E2), then the four largest meshes with 8 and
+// 20 threads (timing only, as E6), double and single precision.
+void planV3B(Planner& p, bool dry) {
+    const int kMax = dry ? 1 : 7;
+    for (int k = 0; k <= kMax; ++k) {
+        RunSpec r;
+        r.design = DesignKey::HS7;
+        r.spacing = ladderSpacing(k);
+        p.system("V3B", r, {SolverKind::AmgPcg, SolverKind::AmgPcgCheb});
+    }
+    const std::vector<int> ks = dry ? std::vector<int>{1} : std::vector<int>{4, 5, 6, 7};
+    for (const int k : ks) {
+        for (const int t : {8, 20}) {
+            RunSpec r;
+            r.design = DesignKey::HS7;
+            r.spacing = ladderSpacing(k);
+            r.threads = t;
+            r.observer = false;
+            p.system("V3B", r, {SolverKind::AmgPcgCheb, SolverKind::AmgPcgChebSp});
+        }
+    }
+}
+
 void planT0(Planner& p) {
     RunSpec r;
     r.design = DesignKey::V1Bar;
@@ -349,13 +373,14 @@ double ladderSpacing(int k) {
 }
 
 std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments, bool dryRun) {
-    const std::vector<std::string> order{"T0", "E1", "E0", "E7", "E8",
-                                         "E3", "E4", "E6", "E2", "V3A"};
+    const std::vector<std::string> order{"T0", "E1", "E0", "E7",  "E8", "E3",
+                                         "E4", "E6", "E2", "V3A", "V3B"};
     std::set<std::string> wanted(experiments.begin(), experiments.end());
     Planner p(dryRun);
     for (const auto& e : order) {
         // The default plan is the V2 study (E0–E8); V3 experiments run only when named.
-        const bool selected = wanted.empty() ? (e != "T0" && e != "V3A") : wanted.count(e) > 0;
+        const bool selected =
+            wanted.empty() ? (e != "T0" && e.rfind("V3", 0) != 0) : wanted.count(e) > 0;
         if (!selected) {
             continue;
         }
@@ -379,14 +404,16 @@ std::vector<RunSpec> planExperiments(const std::vector<std::string>& experiments
             planE8(p, dryRun);
         } else if (e == "V3A") {
             planV3A(p, dryRun);
+        } else if (e == "V3B") {
+            planV3B(p, dryRun);
         }
     }
     return p.runs;
 }
 
 Result<RunSpec> findRun(const std::string& id, bool dryRun) {
-    for (const RunSpec& r :
-         planExperiments({"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A"}, dryRun)) {
+    for (const RunSpec& r : planExperiments(
+             {"T0", "E0", "E1", "E2", "E3", "E4", "E6", "E7", "E8", "V3A", "V3B"}, dryRun)) {
         if (r.id == id) {
             return r;
         }

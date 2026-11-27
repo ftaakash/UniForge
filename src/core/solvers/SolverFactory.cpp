@@ -27,11 +27,15 @@ Result<std::unique_ptr<LinearOperatorSolver>> makeSolver(SolverKind kind) {
     case SolverKind::AmgPcg:
         return std::unique_ptr<LinearOperatorSolver>(
             std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>()));
-    case SolverKind::AmgPcgSp: {
-        SolverOptions sp;
-        sp.amgSinglePrecision = true;
+    case SolverKind::AmgPcgSp:
+    case SolverKind::AmgPcgCheb:
+    case SolverKind::AmgPcgChebSp: {
+        SolverOptions o;
+        o.amgSinglePrecision = kind != SolverKind::AmgPcgCheb;
+        o.amgSmoother =
+            kind == SolverKind::AmgPcgSp ? AmgSmoother::GaussSeidel : AmgSmoother::Chebyshev;
         return std::unique_ptr<LinearOperatorSolver>(
-            std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>(sp)));
+            std::make_unique<Pcg>(kind, std::make_unique<AmgPreconditioner>(o)));
     }
     }
     return makeError(ErrorCode::InvalidInput,

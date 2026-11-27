@@ -64,6 +64,11 @@ public:
     // True when the V-cycle runs in single precision (amgSinglePrecision). The double values of
     // op(l) for 0 < l < coarsest are then released; patterns and the coarsest op stay intact.
     [[nodiscard]] bool singlePrecision() const noexcept { return single_; }
+    [[nodiscard]] AmgSmoother smoother() const noexcept { return smoother_; }
+    // λ̂ used by the Chebyshev smoother on a non-coarsest level (0 with Gauss–Seidel).
+    [[nodiscard]] double chebyshevLambdaMax(std::size_t level) const noexcept {
+        return levels_[level].lambdaMax;
+    }
 
 private:
     struct Level {
@@ -72,6 +77,9 @@ private:
         std::vector<Index> aggregateOf;
         Vector r, tmp; // work: residual, prolonged correction (size of this level)
         Vector bc, xc; // right-hand side and solution of the next coarser level
+        // Chebyshev smoother (V3b): 1/a_ii, search direction, and λ̂ ≥ λ_max(D⁻¹A).
+        Vector invDiag, d;
+        double lambdaMax = 0.0;
     };
     void cycle(std::size_t level, const Vector& b, Vector& x);
 
@@ -89,12 +97,17 @@ private:
         FloatCsr A, P, R;        // P, R empty on the coarsest level
         std::vector<float> b, x; // right-hand side and iterate of this level
         std::vector<float> r, tmp;
+        std::vector<float> invDiag, d; // Chebyshev smoother
     };
     void buildSinglePrecision();
     void cycleSingle(std::size_t level);
+    void buildChebyshev();
 
     sparse::KernelPool* pool_ = nullptr;
     int sweeps_ = 1;
+    AmgSmoother smoother_ = AmgSmoother::GaussSeidel;
+    int chebDegree_ = 2;
+    double chebRatio_ = 30.0;
     bool single_ = false;
     std::vector<FloatLevel> fl_;
     Vector coarseRhs_;

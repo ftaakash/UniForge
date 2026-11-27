@@ -21,8 +21,21 @@ using sparse::Index;
 using sparse::Vector;
 
 // The six solver variants compared in V2 (build spec §5, labels used in every table and plot),
-// plus the V3 candidates (AmgPcgSp: AMG-PCG with a single-precision hierarchy, V3a).
-enum class SolverKind { DirectND, DirectRCM, PcgJacobi, PcgIc0, Amg, AmgPcg, AmgPcgSp };
+// plus the V3 candidates: AmgPcgSp (single-precision hierarchy, V3a), AmgPcgCheb and
+// AmgPcgChebSp (Chebyshev–Jacobi smoother instead of Gauss–Seidel, double / single, V3b).
+enum class SolverKind {
+    DirectND,
+    DirectRCM,
+    PcgJacobi,
+    PcgIc0,
+    Amg,
+    AmgPcg,
+    AmgPcgSp,
+    AmgPcgCheb,
+    AmgPcgChebSp
+};
+
+enum class AmgSmoother { GaussSeidel, Chebyshev };
 
 [[nodiscard]] constexpr std::string_view label(SolverKind kind) noexcept {
     switch (kind) {
@@ -40,6 +53,10 @@ enum class SolverKind { DirectND, DirectRCM, PcgJacobi, PcgIc0, Amg, AmgPcg, Amg
         return "AMG-PCG";
     case SolverKind::AmgPcgSp:
         return "AMG-PCG-SP";
+    case SolverKind::AmgPcgCheb:
+        return "AMG-PCG-CH";
+    case SolverKind::AmgPcgChebSp:
+        return "AMG-PCG-CH-SP";
     }
     return "?";
 }
@@ -120,6 +137,14 @@ struct SolverOptions {
     // precision; the coarsest factorisation and the outer CG stay in double. Only for AMG as a
     // preconditioner: stand-alone AMG ignores it (its iterate must stay in double precision).
     bool amgSinglePrecision = false;
+    // V3b: smoother of the V-cycle. Gauss–Seidel (V2) is serial; Chebyshev–Jacobi uses only
+    // matrix–vector products and vector updates, so it runs on the kernel pool's threads
+    // (Adams, Brezina, Hu, Tuminaro, J. Comput. Phys. 188 (2003)). The polynomial of degree
+    // amgChebyshevDegree targets the eigenvalues of D⁻¹A in [λ̂/ratio, λ̂], λ̂ = 1.1 × a power
+    // iteration estimate of λ_max(D⁻¹A). amgSweeps applies to Gauss–Seidel only.
+    AmgSmoother amgSmoother = AmgSmoother::GaussSeidel;
+    int amgChebyshevDegree = 2;
+    double amgChebyshevRatio = 30.0;
 };
 
 class IterationObserver;

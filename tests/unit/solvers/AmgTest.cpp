@@ -296,6 +296,64 @@ TEST(Amg, SinglePrecisionHierarchyKeepsCgAccuracy) {
     EXPECT_LT(diff, 1e-7 * scale);
 }
 
+// V3b: the Chebyshev–Jacobi smoother. Its λ̂ bounds λ_max(D⁻¹A) from above, AMG-PCG with it
+// converges in a mesh-independent number of iterations, the V-cycle stays symmetric, and the
+// result is bit-identical for 1 and 4 threads (chunked kernels, amendment N2).
+TEST(Amg, ChebyshevSmootherConvergesAndIsThreadIndependent) {
+    const CsrMatrix A = q1Laplacian3d(16);
+    SolverOptions o = smallCoarse();
+    o.amgSmoother = AmgSmoother::Chebyshev;
+    {
+        KernelPool pool(1);
+        AmgHierarchy h;
+        ASSERT_TRUE(h.build(A, pool, o).ok());
+        EXPECT_EQ(h.smoother(), AmgSmoother::Chebyshev);
+        // Gershgorin: λ_max(D⁻¹A) ≤ max_i Σ_j |a_ij| / a_ii. λ̂ must be positive, at most 1.1×
+        // that bound, and close to it from below (power iteration plus the 10 % margin).
+        double gersh = 0.0;
+        for (Index i = 0; i < A.rows; ++i) {
+            double s = 0.0;
+            for (Offset q = A.rowPtr[toSize(i)]; q < A.rowPtr[toSize(i) + 1]; ++q) {
+                s += std::fabs(A.val[toSize(q)]);
+            }
+            gersh = std::max(gersh, s / A.at(i, i));
+        }
+        EXPECT_GT(h.chebyshevLambdaMax(0), 0.5 * gersh);
+        EXPECT_LE(h.chebyshevLambdaMax(0), 1.1 * gersh + 1e-12);
+        // Symmetry of the V-cycle as a linear operator: uᵀM⁻¹v = vᵀM⁻¹u.
+        const Vector u = randomVec(toSize(A.rows), 31);
+        const Vector v = randomVec(toSize(A.rows), 32);
+        Vector Mu(u.size(), 0.0);
+        Vector Mv(v.size(), 0.0);
+        h.vcycle(u, Mu);
+        h.vcycle(v, Mv);
+        EXPECT_NEAR(dotv(v, Mu), dotv(u, Mv), 1e-10 * std::fabs(dotv(v, Mu)));
+    }
+    const auto solve = [&](const CsrMatrix& M, int threads, bool single) {
+        KernelPool pool(threads);
+        SolverOptions oo = o;
+        oo.amgSinglePrecision = single;
+        Pcg pcg(SolverKind::AmgPcgCheb, std::make_unique<AmgPreconditioner>(oo));
+        EXPECT_EQ(pcg.setup(M, {}, pool, {}).value().status, SolveStatus::Converged);
+        Vector x(toSize(M.rows), 0.0);
+        SolveControl c;
+        c.relTol = 1e-10;
+        auto r = pcg.solve(randomVec(x.size(), 7), x, c);
+        EXPECT_TRUE(r.ok());
+        EXPECT_EQ(r.value().status, SolveStatus::Converged);
+        return std::make_pair(r.value().iterations, x);
+    };
+    const auto [it1, x1] = solve(A, 1, false);
+    const auto [it4, x4] = solve(A, 4, false);
+    EXPECT_EQ(it1, it4);
+    EXPECT_EQ(x1, x4);
+    const auto [itSp, xSp] = solve(A, 4, true);
+    EXPECT_LE(itSp, it1 + 2);
+    const auto [itBig, xBig] = solve(q1Laplacian3d(28), 4, false);
+    std::printf("[Q1 AMG-PCG Chebyshev] 16³ %d its (single %d), 28³ %d its\n", it1, itSp, itBig);
+    EXPECT_LE(itBig, it1 + 6);
+}
+
 // Stand-alone AMG ignores the flag: its iterate must stay in double precision.
 TEST(Amg, StandAloneAmgStaysInDoublePrecision) {
     KernelPool pool(1);

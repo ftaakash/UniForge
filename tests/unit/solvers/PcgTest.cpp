@@ -289,11 +289,14 @@ TEST(Pcg, MisuseIsAnError) {
 TEST(SolverFactory, EveryKindIsBuilt) {
     for (const SolverKind k :
          {SolverKind::DirectND, SolverKind::DirectRCM, SolverKind::PcgJacobi, SolverKind::PcgIc0,
-          SolverKind::Amg, SolverKind::AmgPcg, SolverKind::AmgPcgSp}) {
+          SolverKind::Amg, SolverKind::AmgPcg, SolverKind::AmgPcgSp, SolverKind::AmgPcgCheb,
+          SolverKind::AmgPcgChebSp}) {
         auto s = makeSolver(k);
         ASSERT_TRUE(s.ok()) << label(k);
         EXPECT_EQ(s.value()->kind(), k) << label(k);
     }
     EXPECT_EQ(label(SolverKind::AmgPcg), "AMG-PCG");
     EXPECT_EQ(label(SolverKind::AmgPcgSp), "AMG-PCG-SP");
+    EXPECT_EQ(label(SolverKind::AmgPcgCheb), "AMG-PCG-CH");
+    EXPECT_EQ(label(SolverKind::AmgPcgChebSp), "AMG-PCG-CH-SP");
 }
