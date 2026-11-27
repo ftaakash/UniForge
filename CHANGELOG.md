@@ -8,6 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### Phase V3d: geometric multigrid
+- `Coarsening::Geometric` and `geometricProlongator`: coarsening on the mesh's tensor-grid
+  indices, linear interpolation along the graded grid lines, renormalised at holes in the cell
+  mask. Kinds `GMG-PCG` and `GMG-PCG-CH-SP`. `Preconditioner::setHint`; PCG and the study runner
+  pass the node coordinates and grid indices.
+- Experiment `V3D`: 40 runs, all converged. GMG's setup is 1.7–1.9× cheaper on one core, but
+  its iterations stay at 31–37 while AMG's fall to 23. GMG-PCG wins on one core up to 0.29 M
+  unknowns (1.11–1.54×). On 20 threads AMG-PCG-CH-SP stays best at most sizes (up to 17 %
+  faster). Matrix-free GMG and semi-coarsening were not tested.
+- Tests: 2 new; 431 pass on Windows Release.
+
 ### Phase V3c: parallel AMG setup
 - `sparse::multiply(pool, A, B)` and parallel strength, filtered matrix, prolongator smoothing,
   power iteration and float copy. Each row is computed as in the serial code, so the hierarchy

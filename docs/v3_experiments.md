@@ -210,3 +210,68 @@ With a parallel setup, **AMG-PCG-CH-SP is faster than V2's best at every HS-7 si
 solver memory. The serial parts left (aggregation, transposes, coarse factorisation) cap setup
 at 1.3–1.7×. On one core, V2's Gauss–Seidel AMG-PCG is still the right choice. On this 20-thread
 machine, 20 threads beat 8 except at 3.76 M.
+
+## V3D: geometric multigrid (GMG-PCG, GMG-PCG-CH-SP)
+
+**Hypothesis.** The survey found geometric multigrid (GMG) to be the strongest rival to AMG on
+structured meshes: no strength or aggregation step, a cheap setup, and simple transfers. The
+HS-7 mesh is a graded tensor grid with a cell mask, so every node has a grid index (i, j, k) and
+a geometric hierarchy is available.
+
+**Implementation** (commit `cea14c0`). `geometricProlongator` in `Amg.cpp`. Coarse nodes are
+those whose original grid indices are multiples of 2^(l+1) on level l (every second grid line
+per axis). A fine node interpolates linearly along the real grid lines from the corners of its
+box, so linear fields are reproduced exactly on the graded grid. Corners that are holes in the
+cell mask (gaps between fins) are dropped and the weights renormalised, which keeps constants.
+A node with no corner left becomes coarse itself. Eliminated Dirichlet rows get no
+interpolation. The Galerkin coarse operators, the smoothers (Gauss–Seidel or Chebyshev), the
+single-precision cycle and the parallel setup are all reused from the AMG hierarchy. PCG now
+passes the mesh hint (node coordinates and grid indices) to the preconditioner, and the study
+runner supplies it. Tests: `Gmg.GeometricProlongatorKeepsConstantsAndLinearFields` (graded
+lines, promotion, serial = parallel) and `Gmg.GeometricMultigridPcgConvergesAndNeedsTheHint`
+(8 CG iterations at both 17³ and 33³ on the Q1 model problem; Breakdown, not a crash, without
+the hint). 431 tests pass.
+
+**Not tested here.** The survey's main argument for GMG is a *matrix-free* operator: no
+assembled matrix, so less memory traffic. This GMG still assembles K and the Galerkin coarse
+operators. A matrix-free version is a separate, larger step.
+
+**Runs.** HS-7 ladder k = 0…7: AMG-PCG and GMG-PCG on one pinned core (Gauss–Seidel), and
+AMG-PCG-CH-SP and GMG-PCG-CH-SP on 20 threads. Error observer on throughout. 40 runs, all
+Converged, commit `cea14c0` (`results/v3/csv/V3D.csv`).
+
+### Ratio AMG time / GMG time (> 1: GMG faster)
+
+| DOF | 1 core total | 1 core setup | 1 core solve | 20 thr total | 20 thr setup | 20 thr solve | iterations AMG / GMG (1 core) |
+|---|---|---|---|---|---|---|---|
+| 56,015 | **1.54** | 1.75 | 1.49 | 0.85 | 1.05 | 0.78 | 50 / 34 |
+| 93,921 | **1.34** | 1.81 | 1.25 | 1.07 | 1.49 | 0.92 | 42 / 32 |
+| 170,634 | **1.22** | 1.85 | 1.11 | 0.98 | 1.44 | 0.81 | 35 / 31 |
+| 285,532 | **1.11** | 1.82 | 0.97 | 0.89 | 1.30 | 0.74 | 31 / 31 |
+| 568,152 | 0.88 | 1.72 | 0.75 | 0.83 | 1.31 | 0.68 | 28 / 37 |
+| 1,022,979 | 0.91 | 1.67 | 0.77 | 1.01 | 1.51 | 0.84 | 26 / 33 |
+| 1,867,768 | 0.91 | 1.69 | 0.77 | 0.96 | 1.26 | 0.85 | 26 / 33 |
+| 3,759,720 | 0.77 | 1.69 | 0.62 | 0.90 | 1.25 | 0.79 | 23 / 36 |
+
+GMG uses 4–7 levels at operator complexity 1.11–1.14, against AMG's 3–4 levels at 1.04–1.06.
+Its V-cycle therefore does more work. Solver memory is within 6 % of AMG's at every size
+(e.g. 723 vs 747 MB at 3.76 M on one core). Both stop at the same 1e-10 relative residual.
+GMG's error against the reference equals AMG's up to 0.57 M; from 1 M up it is 2.0–4.6× larger,
+with a largest value of 2.1e-10 K (AMG: at most 6.7e-11 K there). That is still far below any
+engineering tolerance.
+
+### Verdict
+
+GMG does **not** replace AMG on HS-7. Its setup is consistently 1.7–1.9× cheaper on one core
+and 1.25–1.5× on 20 threads. Its iterations stay at 31–37 on every mesh, while AMG's fall from
+50 to 23 as the mesh is refined. Full geometric coarsening of HS-7's stretched cells (thin TIM
+layer, fins) is weaker than coarsening that follows the strong couplings. So GMG wins only where
+setup dominates:
+
+- one core, up to 0.29 M unknowns: GMG-PCG is 1.11–1.54× faster than AMG-PCG;
+- 20 threads: GMG-PCG-CH-SP is 7 % faster at 94 k and ties within 2 % at 0.17 M and 1.02 M;
+  AMG-PCG-CH-SP is faster at the other five sizes, by up to 17 % (ratio 0.83 at 0.57 M).
+
+The best solver from 0.3 M unknowns up stays AMG-PCG-CH-SP on threads (V3C). Two things could
+change the GMG result: semi-coarsening or line smoothing across the thin layers (the usual cure
+for anisotropy in GMG), and a matrix-free fine level. Both are larger than this step.

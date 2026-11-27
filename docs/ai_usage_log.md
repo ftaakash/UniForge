@@ -1417,6 +1417,27 @@ a persistent kernel pool instead.
 - **Unexplained timing difference** (3.76 M, 8 threads: 3.38 s vs 4.85 s in V3B) is reported as
   open, not explained away.
 
+## 2026-11-27: V3d (geometric multigrid)
+### Prompts (representative)
+- "Geometric multigrid".
+### Outputs (files, functions)
+- `geometricProlongator`, the geometric branch of `AmgHierarchy::build`, `Coarsening`,
+  `Preconditioner::setHint`, hint plumbing in `Pcg::setup` and the study runner, kinds
+  `GMG-PCG` and `GMG-PCG-CH-SP`, experiment `V3D`, two tests, V3D section of
+  `docs/v3_experiments.md`.
+### My edits
+- Approved the step.
+### Verification (tests run, numbers checked, manual checks)
+- 431 tests pass. Smoke runs on HS-7 at 1 mm and 0.5 mm before the batch. The binary embedded
+  `cea14c0`. 40 V3D runs converged. Ratios computed by script from `results/v3/csv/V3D.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **First draft of the verdict** called the 20-thread result "a tie within ±7 % up to 0.17 M".
+  The table shows AMG 15 % faster at 56 k, so the sentence was corrected. The draft also said
+  memory was "within 3 %" when the largest difference is 5.8 % (0.29 M), and its error
+  sentence was muddled; both were rewritten from the CSV.
+- **Scope stated plainly:** this GMG is matrix-based, so the literature's matrix-free advantage
+  was not tested, and the write-up says so.
+
 ## Entry template
 
 ```markdown

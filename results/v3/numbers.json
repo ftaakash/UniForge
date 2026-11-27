@@ -1,11 +1,12 @@
 {
-  "runs": 108,
+  "runs": 148,
   "per_experiment": {
     "V3A": 36,
     "V3B": 40,
-    "V3C": 32
+    "V3C": 32,
+    "V3D": 40
   },
   "per_status": {
-    "Converged": 108
+    "Converged": 148
   }
 }
