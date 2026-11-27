@@ -1374,6 +1374,24 @@ a persistent kernel pool instead.
 - **Placeholder in the changelog draft** ("428 → 426?") was replaced with the measured count
   before committing.
 
+## 2026-11-27: V3b (Chebyshev–Jacobi smoother)
+### Prompts (representative)
+- "Yes, start V3b": the parallel-smoother test proposed after V3a.
+### Outputs (files, functions)
+- `chebyshev<T>`, `chebyshevBytes`, `AmgHierarchy::buildChebyshev` in `Amg.cpp`; options
+  `amgSmoother`, `amgChebyshevDegree`, `amgChebyshevRatio`; kinds `AMG-PCG-CH`,
+  `AMG-PCG-CH-SP`; experiment `V3B`; one test; V3B section of `docs/v3_experiments.md`.
+### My edits
+- Approved the step; the smoother choice (Chebyshev over multicolour Gauss–Seidel) followed the
+  proposal.
+### Verification (tests run, numbers checked, manual checks)
+- 427 tests pass. The binary was checked to embed the commit hash `ecbf093` before the batch.
+  40 V3B runs converged. Every ratio in the write-up was recomputed by hand from
+  `results/v3/csv/V3B.csv` (a scripted ratio attempt failed on a key mismatch and was not used).
+### Incorrect / unsuitable suggestions and how they were caught
+- None found in the results. The write-up states that Chebyshev is slower on one core and that
+  the total-time gain is smaller than the solve-time gain.
+
 ## Entry template
 
 ```markdown

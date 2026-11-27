@@ -72,3 +72,82 @@ memory bandwidth. With threads, where the parallel kernels matter more, the savi
 and for threading. The next candidate is therefore a parallel smoother (Chebyshev–Jacobi or
 multicolour Gauss–Seidel) inside the same AMG. That is also the smoother the geometric-multigrid
 test (V3 step 2) needs.
+
+## V3B: Chebyshev–Jacobi smoother (AMG-PCG-CH, AMG-PCG-CH-SP)
+
+**Hypothesis.** V3A showed that the serial Gauss–Seidel sweep limits AMG-PCG, both in single
+precision and with threads. A polynomial smoother uses only matrix–vector products and vector
+updates, so it runs on every thread (Adams, Brezina, Hu and Tuminaro, J. Comput. Phys. 188,
+2003). It moves more bytes per cycle than Gauss–Seidel. It can only win when threads pay for
+that.
+
+**Implementation** (commit `ecbf093`, `src/core/solvers/amg/Amg.cpp`). `SolverOptions::
+amgSmoother = Chebyshev`: a degree-2 Chebyshev polynomial in D⁻¹A on [λ̂/30, λ̂], with λ̂ = 1.1 ×
+the Rayleigh quotient after 20 power iterations from a fixed pseudo-random start. The same
+smoother runs before and after the coarse correction, so the V-cycle stays symmetric. Every
+pass is a chunked parallel loop, so the result is bit-identical for any thread count. It works
+in double (AMG-PCG-CH) and in the V3A single-precision hierarchy (AMG-PCG-CH-SP). Test
+`Amg.ChebyshevSmootherConvergesAndIsThreadIndependent`: λ̂ within the Gershgorin bound,
+symmetric V-cycle, identical iterates on 1 and 4 threads, and 16 CG iterations at both 16³ and
+28³ (Q1).
+
+**Runs.** HS-7 ladder k = 0…7, 1 pinned core, observer on: AMG-PCG (Gauss–Seidel) and
+AMG-PCG-CH. k = 4…7 with 8 and 20 threads, observer off: AMG-PCG-CH and AMG-PCG-CH-SP. 40 runs,
+all Converged, commit `ecbf093` (`results/v3/csv/V3B.csv`).
+
+### One core: Chebyshev against Gauss–Seidel
+
+| DOF | GS solve (s) | CH solve (s) | CH / GS | iterations GS / CH |
+|---|---|---|---|---|
+| 56,015 | 0.160 | 0.185 | 1.15 | 50 / 38 |
+| 93,921 | 0.263 | 0.271 | 1.03 | 42 / 31 |
+| 170,634 | 0.431 | 0.437 | 1.01 | 35 / 26 |
+| 285,532 | 0.635 | 0.756 | 1.19 | 31 / 26 |
+| 568,152 | 1.166 | 1.617 | 1.39 | 28 / 27 |
+| 1,022,979 | 1.993 | 2.882 | 1.45 | 26 / 26 |
+| 1,867,768 | 3.743 | 5.527 | 1.48 | 26 / 27 |
+| 3,759,720 | 6.637 | 10.915 | 1.64 | 23 / 26 |
+
+On one core Chebyshev is never faster. It needs the same or fewer iterations, and up to 1.64×
+the time, because each smoothing step reads the matrix twice. The error against the reference
+is the same order at every size (e.g. 1.5e-11 vs 2.0e-11 K at 3.76 M).
+
+### Threads: against V2's AMG-PCG on one core (the V2 best)
+
+Speed-up = (AMG-PCG, 1 core) / (variant). "Total" includes setup.
+
+| DOF | variant | threads | solve (s) | solve speed-up | total speed-up |
+|---|---|---|---|---|---|
+| 568,152 | CH | 8 | 0.660 | 1.77 | 1.35 |
+| 568,152 | CH-SP | 8 | 0.495 | **2.36** | **1.51** |
+| 568,152 | CH-SP | 20 | 0.554 | 2.10 | 1.33 |
+| 1,022,979 | CH | 20 | 1.246 | 1.60 | 1.21 |
+| 1,022,979 | CH-SP | 8 | 1.276 | 1.56 | 1.13 |
+| 1,022,979 | CH-SP | 20 | 0.969 | **2.06** | **1.34** |
+| 1,867,768 | CH | 20 | 2.307 | 1.62 | 1.19 |
+| 1,867,768 | CH-SP | 8 | 2.471 | 1.51 | 1.12 |
+| 1,867,768 | CH-SP | 20 | 1.787 | **2.09** | **1.32** |
+| 3,759,720 | CH | 8 | 6.287 | 1.06 | 0.91 |
+| 3,759,720 | CH | 20 | 4.573 | 1.45 | 1.10 |
+| 3,759,720 | CH-SP | 8 | 4.852 | 1.37 | 1.01 |
+| 3,759,720 | CH-SP | 20 | 3.604 | **1.84** | **1.19** |
+
+(CH with 8 threads at 1.0 M and 1.87 M: solve 1.19× and 1.18×, total 0.99× both.)
+
+Iterations with threads equal the one-core Chebyshev counts (26–27). Solver memory: CH +8 %,
+CH-SP +33 % against AMG-PCG (809 and 991 vs 747 MB at 3.76 M).
+
+### Verdict
+
+**AMG-PCG-CH-SP on 20 threads is the first candidate that beats AMG-PCG.** Its solve is 1.8–2.4×
+faster from 0.57 M to 3.76 M unknowns. Setup is still serial and grew by about 1.5 s at 3.76 M
+(coarsening plus the power iteration, 4.46 s vs 2.94 s), so setup plus solve is 1.2–1.5× faster.
+On one core the V2 choice, Gauss–Seidel, stays best.
+
+The V2 decision changes as follows. On a multicore machine, AMG-PCG with a Chebyshev smoother in
+single precision is the fastest solver measured for HS-7 above about 0.5 M unknowns. Its cost is
+a third more solver memory.
+
+**Next.** Setup is now the larger share at 3.76 M (4.5 s setup vs 3.6 s solve). The next gains
+are a parallel setup (power iteration and aggregation) and fewer power iterations, before
+geometric multigrid (V3 step 2). Multi-load reuse (step 4) amortises setup in any case.
