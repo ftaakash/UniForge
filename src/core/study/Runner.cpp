@@ -73,7 +73,7 @@ std::vector<solvers::Vector> loadCases(const fem3d::LinearSystem& sys, const fem
     std::array<double, 2> lo{1e300, 1e300};
     std::array<double, 2> hi{-1e300, -1e300};
     for (const auto& p : m.nodeXyz) {
-        for (int a = 0; a < 2; ++a) {
+        for (std::size_t a = 0; a < 2; ++a) {
             lo[a] = std::min(lo[a], p[a]);
             hi[a] = std::max(hi[a], p[a]);
         }

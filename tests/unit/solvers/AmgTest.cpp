@@ -404,9 +404,10 @@ struct GridHint {
 
 GridHint gridOf(Index m) {
     GridHint h;
-    for (int a = 0; a < 3; ++a) {
+    for (std::size_t a = 0; a < 3; ++a) {
         for (Index i = 0; i < m; ++i) {
-            h.lines[a].push_back(1e-3 * std::pow(static_cast<double>(i), 1.3) * (1.0 + 0.1 * a));
+            h.lines[a].push_back(1e-3 * std::pow(static_cast<double>(i), 1.3) *
+                                 (1.0 + 0.1 * static_cast<double>(a)));
         }
     }
     for (Index k = 0; k < m; ++k) {
@@ -453,11 +454,11 @@ TEST(Gmg, GeometricProlongatorKeepsConstantsAndLinearFields) {
     // A node whose stride box has no coarse corner becomes coarse: all-odd indices here.
     GridHint odd = g;
     for (auto& q : odd.grid) {
-        for (int a = 0; a < 3; ++a) {
+        for (std::size_t a = 0; a < 3; ++a) {
             q[a] = 2 * q[a] + 1;
         }
     }
-    for (int a = 0; a < 3; ++a) {
+    for (std::size_t a = 0; a < 3; ++a) {
         odd.lines[a].assign(2 * toSize(m) + 1, 0.0);
         for (std::size_t i = 0; i < odd.lines[a].size(); ++i) {
             odd.lines[a][i] = 1e-3 * static_cast<double>(i);

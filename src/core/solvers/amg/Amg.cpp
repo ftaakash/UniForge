@@ -515,7 +515,7 @@ CsrMatrix geometricProlongator(const CsrMatrix& A,
                                sparse::KernelPool* pool) {
     const Index n = A.rows;
     std::array<std::int64_t, 3> dims{};
-    for (int a = 0; a < 3; ++a) {
+    for (std::size_t a = 0; a < 3; ++a) {
         dims[a] = static_cast<std::int64_t>(lines[a].size());
     }
     const auto pointOf = [&](std::int64_t i, std::int64_t j, std::int64_t k) {
@@ -546,8 +546,8 @@ CsrMatrix geometricProlongator(const CsrMatrix& A,
     const auto corners = [&](Index v, std::array<Corner, 8>& out) {
         const auto& g = grid[toSize(v)];
         std::array<std::array<std::pair<std::int32_t, double>, 2>, 3> axis{};
-        std::array<int, 3> count{};
-        for (int a = 0; a < 3; ++a) {
+        std::array<std::size_t, 3> count{};
+        for (std::size_t a = 0; a < 3; ++a) {
             const std::int32_t lo = g[a] - g[a] % stride;
             const std::int32_t hi = lo + stride;
             if (lo == g[a] || hi >= static_cast<std::int32_t>(dims[a])) {
@@ -564,9 +564,9 @@ CsrMatrix geometricProlongator(const CsrMatrix& A,
             }
         }
         int m = 0;
-        for (int c = 0; c < count[2]; ++c) {
-            for (int b = 0; b < count[1]; ++b) {
-                for (int a = 0; a < count[0]; ++a) {
+        for (std::size_t c = 0; c < count[2]; ++c) {
+            for (std::size_t b = 0; b < count[1]; ++b) {
+                for (std::size_t a = 0; a < count[0]; ++a) {
                     const std::int32_t u = alignedNode[static_cast<std::size_t>(
                         pointOf(axis[0][a].first, axis[1][b].first, axis[2][c].first))];
                     if (u >= 0 && role[toSize(u)] == 1) {
@@ -639,9 +639,17 @@ CsrMatrix geometricProlongator(const CsrMatrix& A,
             for (int q = 0; q < m; ++q) {
                 sum += c[toSize(q)].w;
             }
-            std::sort(c.begin(), c.begin() + m, [&](const Corner& x, const Corner& y) {
-                return coarseOf[toSize(x.node)] < coarseOf[toSize(y.node)];
-            });
+            // Insertion sort by coarse column (m ≤ 8, distinct keys). std::sort on the 8-entry
+            // array triggers a GCC 13 -Warray-bounds false positive under -O2 + sanitizers.
+            for (int q = 1; q < m; ++q) {
+                const Corner key = c[toSize(q)];
+                int p = q - 1;
+                while (p >= 0 && coarseOf[toSize(c[toSize(p)].node)] > coarseOf[toSize(key.node)]) {
+                    c[toSize(p + 1)] = c[toSize(p)];
+                    --p;
+                }
+                c[toSize(p + 1)] = key;
+            }
             for (int q = 0; q < m; ++q) {
                 P.col[at + toSize(q)] = coarseOf[toSize(c[toSize(q)].node)];
                 P.val[at + toSize(q)] = c[toSize(q)].w / sum;
@@ -698,7 +706,7 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
         levelGrid = *hint.grid;
         std::array<std::int32_t, 3> top{};
         for (const auto& g : levelGrid) {
-            for (int a = 0; a < 3; ++a) {
+            for (std::size_t a = 0; a < 3; ++a) {
                 top[a] = std::max(top[a], g[a]);
             }
         }
@@ -709,15 +717,16 @@ Result<SetupReport> AmgHierarchy::build(const CsrMatrix& K, sparse::KernelPool& 
             report.seconds = secondsSince(t0);
             return report;
         }
-        for (int a = 0; a < 3; ++a) {
+        for (std::size_t a = 0; a < 3; ++a) {
             lines[a].assign(toSize(top[a]) + 1, std::numeric_limits<double>::quiet_NaN());
         }
         for (std::size_t v = 0; v < levelGrid.size(); ++v) {
-            for (int a = 0; a < 3; ++a) {
+            for (std::size_t a = 0; a < 3; ++a) {
                 lines[a][toSize(levelGrid[v][a])] = (*hint.xyz)[v][a];
             }
         }
-        for (int a = 0; a < 3; ++a) { // a line without nodes: index-linear fill (not expected)
+        for (std::size_t a = 0; a < 3;
+             ++a) { // a line without nodes: index-linear fill (not expected)
             auto& x = lines[a];
             for (std::size_t i = 0; i < x.size(); ++i) {
                 if (std::isnan(x[i])) {

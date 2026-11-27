@@ -28,7 +28,7 @@ namespace uniforge::solvers {
 
 namespace {
 using Clock = std::chrono::steady_clock;
-double secondsSince(Clock::time_point t0) {
+[[maybe_unused]] double secondsSince(Clock::time_point t0) {
     return std::chrono::duration<double>(Clock::now() - t0).count();
 }
 } // namespace
