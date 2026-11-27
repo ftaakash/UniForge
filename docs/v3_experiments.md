@@ -275,3 +275,90 @@ setup dominates:
 The best solver from 0.3 M unknowns up stays AMG-PCG-CH-SP on threads (V3C). Two things could
 change the GMG result: semi-coarsening or line smoothing across the thin layers (the usual cure
 for anisotropy in GMG), and a matrix-free fine level. Both are larger than this step.
+
+## V3E: several load cases, and pinned threads
+
+**Machine state (checked 2026-11-27 before this batch).** Intel Core i5-14600K: 6 performance
+cores (12 threads) and 8 efficiency cores, 20 logical CPUs. 2 × 16 GB DDR5 sold as 6000 MT/s
+CL30 (AX5U6000C30) but running at 4800 MT/s (XMP off). Windows power plan Balanced with core
+parking. Background load from other programs (Discord, a browser, Defender) was 4–6 % on
+average during the V3 runs (column `cpu_load_pct`). Decisions (the user's): keep the RAM at
+4800 MT/s so every V3 timing stays comparable; use the High performance plan during this batch
+only; pin threads. Two notes on the power plan. The batch command meant to switch it back
+afterwards did not run from the Bash tool, and this was caught and restored by hand. The plan
+was active for V3E only, so V3A–V3D ran on Balanced.
+
+**Pinning (harness change, commit `07b86c4`).** Multi-threaded runs left threads unpinned
+until now, so serial work could land on an efficiency core. Now the caller is pinned to the
+same CPU as the one-thread runs (CPU 11), helpers go first to one CPU on each other performance
+core, then to the SMT siblings, then to the efficiency cores. Column `core` holds the caller's
+CPU (11 in every V3E run).
+
+**Implementation.** `LinearOperatorSolver::solveMany`: by default one solve per load after the
+one setup (direct: one factorisation, L forward/back substitutions; PCG: one hierarchy, L
+solves). `AmgBatchPcg` (AMG-PCG-CH-SP-B) runs L CG recurrences in lockstep. Block matrix
+products and a block single-precision Chebyshev V-cycle store the L values of a row next to
+each other, so K and every hierarchy level are read once per iteration for all L loads. Each
+load keeps its own α, β and stopping test. Load 0 is the design load, so it is checked against
+the reference. Loads 1…L−1 redistribute the same heat and convection loads with a smooth
+factor 1 + 0.5·sin(2πj·x/Lx + 0.7j)·cos(πj·y/Ly), and the prescribed temperatures stay fixed.
+Test `BatchPcg.LoadCasesInLockstepMatchSeparateSolves`: 6 loads, same iterations (16) as
+separate solves, same answers to 1e-7, identical on 1 and 4 threads. 432 tests pass.
+
+### Pinning check: AMG-PCG-CH-SP, one load, pinned (total = setup + solve, s)
+
+| DOF | 6 threads | 8 threads | 12 threads | 20 threads | V3C (unpinned) 8 / 20 |
+|---|---|---|---|---|---|
+| 568,152 | **0.833** | 0.891 | 1.104 | 0.864 | 0.765 / 0.736 |
+| 3,759,720 | 5.365 | 5.676 | **5.175** | 5.618 | 5.374 / 5.825 |
+
+Pinned, 8 threads at 3.76 M solve in 3.57 s, close to V3C's 3.38 s. That makes V3B's 4.85 s
+the outlier, consistent with (but not proof of) a bad thread placement there. The thread
+counts differ by less than 10 % at 3.76 M. At 0.57 M the unpinned V3C runs were faster than any
+pinned one, and 12 threads were the slowest. Pinning removed the outlier, but it did not make
+the runs faster, and the best thread count is not stable between sizes. Six threads (one per
+performance core) are within 4 % of the best pinned run at both sizes.
+
+### Load cases (total = setup + all L solves, s; 12 pinned threads for CH-SP)
+
+| DOF | L | V2 AMG-PCG, 1 core | DIRECT-ND, 1 core | CH-SP one by one | CH-SP-B lockstep | lockstep vs one by one | lockstep vs V2 |
+|---|---|---|---|---|---|---|---|
+| 93,921 | 1 | 0.343 | 10.616 | **0.159** | 0.209 | 0.76 | 1.64 |
+| 93,921 | 5 | 1.371 | 10.590 | 0.484 | **0.378** | 1.28 | 3.63 |
+| 93,921 | 20 | 5.189 | 11.174 | 1.804 | **0.937** | 1.93 | 5.54 |
+| 285,532 | 1 | 0.880 | 72.878 | **0.364** | 0.461 | 0.79 | 1.91 |
+| 285,532 | 5 | 3.421 | 75.017 | 1.176 | **0.851** | 1.38 | 4.02 |
+| 285,532 | 20 | 12.837 | 76.838 | 4.360 | **2.099** | 2.08 | 6.12 |
+| 1,022,979 | 1 | 2.786 | – | **1.337** | 1.525 | 0.88 | 1.83 |
+| 1,022,979 | 5 | 10.866 | – | 4.706 | **2.930** | 1.61 | 3.71 |
+| 1,022,979 | 20 | 40.933 | – | 16.959 | **7.121** | 2.38 | 5.75 |
+| 3,759,720 | 1 | 9.739 | – | **5.175** | 5.670 | 0.91 | 1.72 |
+| 3,759,720 | 5 | 37.234 | – | 18.103 | **11.003** | 1.65 | 3.38 |
+| 3,759,720 | 20 | 141.444 | – | 65.606 | **25.976** | 2.53 | 5.45 |
+
+(DIRECT-ND only up to 0.29 M: the factor of the larger meshes exceeds the 8 GB budget, as in V2.)
+
+Every run converged. Iterations do not change with L (23 for AMG-PCG and 26 for CH-SP at
+3.76 M). The error of load 0 against the reference is identical in lockstep and one by one. The
+largest final relative residual over all loads is 9.6e-11.
+
+**Memory is the price.** Lockstep at L = 20 holds 6,046 MB of solver memory at 3.76 M, against
+991 MB one by one (6.1×). Each extra load adds about 6 double and 5 float vectors (about 260 MB
+at 3.76 M). L = 32 is the coded upper limit, and the 8 GB budget would refuse it at 3.76 M.
+
+**Direct solver.** With one factorisation reused, ND's extra cost per load at 94 k is 0.043 s
+(0.871 s for 20 loads). That is about what lockstep CH-SP-B adds per load (0.038 s). But the
+factorisation costs 10.3 s here and 73 s at 0.29 M, so ND never wins in this range.
+
+### Verdict
+
+- **For several loads, run them in lockstep.** AMG-PCG-CH-SP-B is 1.28–2.53× faster than the
+  same solver one load at a time, the gain growing with L and with mesh size. It is 3.4–6.1×
+  faster than V2's best solver (one-core AMG-PCG) for 5 and 20 loads, at the cost of up to 6×
+  the solver memory at 20 loads.
+- **For one load, use the plain AMG-PCG-CH-SP.** The block path costs 10–31 % more at L = 1.
+- **Direct solvers do not pay off for many loads on HS-7 (as V2 found, H5); lockstep widens the gap.** The
+  factorisation alone (10.3 s at 94 k, 73 s at 0.29 M) costs as much as about 220 and 700
+  lockstep loads (0.047 and 0.105 s per load at L = 20).
+- **Pinning removed the one outlier.** Six to twenty threads stay within 10 % of each other at
+  3.76 M.

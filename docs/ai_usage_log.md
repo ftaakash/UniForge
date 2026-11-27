@@ -1438,6 +1438,34 @@ a persistent kernel pool instead.
 - **Scope stated plainly:** this GMG is matrix-based, so the literature's matrix-free advantage
   was not tested, and the write-up says so.
 
+## 2026-11-27: Machine check and V3e (load cases in lockstep, pinned threads)
+### Prompts (representative)
+- "next is multi-load reuse and is my pc at optimal state of the test runs … do we need to make
+  any changes for it?"
+### Outputs (files, functions)
+- Machine check (CPU, power plan, RAM part number and speed, background load). Three
+  decisions put to the user.
+- `solveMany`, `AmgBatchPcg`, block kernels and `vcycleBlock` in `Amg.cpp`;
+  `performanceFirstCpus` and `pinThreadToCpu`; runner load cases; experiment `V3E`; one test;
+  V3E section of `docs/v3_experiments.md`.
+### My edits
+- Decided: keep the RAM at 4800 MT/s (XMP off) for comparability; High performance power plan
+  during batches only; pin threads and add 6- and 12-thread runs.
+### Verification (tests run, numbers checked, manual checks)
+- 432 tests pass. Smoke runs on HS-7 before the batch (pinned CPU recorded, lockstep faster at
+  94 k). The binary embedded `07b86c4`. 54 V3E runs converged. Ratios computed by hand from
+  `results/v3/csv/V3E.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Power plan not restored:** the batch command switched back to Balanced through the Bash
+  tool, which did not take effect; the plan stayed on High performance. A check after the
+  batch caught it, and Balanced was restored with PowerShell.
+- **Shell heredoc failed to parse** (a quote inside the C++ text); nothing was written. The code
+  went through a scratch file instead.
+- **Draft verdict errors fixed before committing:** the L = 1 overhead was given as 9–31 %
+  (measured 10–31 %). The direct-solver break-even was given as 240–300 loads (measured about
+  220 and 700). The draft also called "direct pays off for many loads" a V2 result, but V2's H5
+  had refuted it.
+
 ## Entry template
 
 ```markdown

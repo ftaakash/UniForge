@@ -8,6 +8,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
 experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
 
+### Phase V3e: several load cases, pinned threads
+- `LinearOperatorSolver::solveMany` (one setup, then every load case) and `AmgBatchPcg`
+  (`AMG-PCG-CH-SP-B`): L PCG recurrences in lockstep with block matrix products and a block
+  single-precision Chebyshev V-cycle.
+- Harness: `RunSpec::loadCases` (id tag `-L<k>`, column `load_cases`); load cases with load 0 =
+  the design load. Multi-threaded runs now pin the caller and every helper, performance cores
+  first (`platform::performanceFirstCpus`, `pinThreadToCpu`).
+- Experiment `V3E`: 54 runs, all converged, on the High performance power plan. Lockstep is
+  1.28–2.53× faster than one load at a time for 5 and 20 loads, and 3.4–6.1× faster than V2's
+  AMG-PCG, at up to 6× the solver memory. For one load the plain solver stays faster. Direct ND
+  never pays off. Pinning removed the V3B outlier.
+- Tests: 1 new; 432 pass on Windows Release.
+
 ### Phase V3d: geometric multigrid
 - `Coarsening::Geometric` and `geometricProlongator`: coarsening on the mesh's tensor-grid
   indices, linear interpolation along the graded grid lines, renormalised at holes in the cell
