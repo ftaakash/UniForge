@@ -3,7 +3,24 @@
 All notable changes are recorded here, one section per development phase.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] - V2 (branch `v2`)
+## [Unreleased] - V3 (branch `v3`)
+
+V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
+experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
+
+### Phase V3a: single-precision AMG hierarchy
+- `SolverOptions::amgSinglePrecision` and solver kind `AMG-PCG-SP`: AMG operators, transfers
+  and V-cycle vectors in float, outer CG and coarsest Cholesky in double. Stand-alone AMG
+  ignores the option.
+- Experiment `V3A` (run only when named): AMG-PCG vs AMG-PCG-SP on the HS-7 ladder (1 core)
+  and on the three largest meshes with 8 and 20 threads. 36 runs, all converged.
+- Result: at most 5.7 % faster on one core, slower below 0.1 M unknowns, 28 % more solver
+  memory; 10–19 % faster with threads. Not made the default. The serial Gauss–Seidel smoother
+  is the bottleneck, so the next step is a parallel smoother.
+- Tests: 2 new (single-precision accuracy and bytes per cycle; stand-alone AMG stays double);
+  426 pass on Windows Release.
+
+## [Released] - V2 (branch `v2`, tag `v2.0.0`)
 
 V2 answers the Assignment Extension Notice: three solver types on a 3D thermal analysis of a
 more complex object, reported in one PDF. Specification:

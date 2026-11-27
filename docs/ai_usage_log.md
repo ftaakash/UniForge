@@ -1350,6 +1350,30 @@ a persistent kernel pool instead.
   only 0.6 % isolated nodes on HS-7 at 1 mm (stretched cells keep some strong couplings). The
   note now says this holds for cubic cells, and the candidate table states what was measured.
 
+## 2026-11-27: Literature survey and V3a (single-precision AMG)
+### Prompts (representative)
+- After the interview: survey all solvers, explain why V2 used three, find competitors that may
+  beat AMG-PCG, survey aerospace CFD and datasets (with four links supplied by me).
+- "Yes, start V3a": implement and measure the first candidate.
+### Outputs (files, functions)
+- Survey page (outside the repo), with sources and unverified items marked.
+- `AmgHierarchy::buildSinglePrecision`, `cycleSingle`, float kernels in `Amg.cpp`; option
+  `amgSinglePrecision`; kind `AMG-PCG-SP`; experiment `V3A` in `Plan.cpp`; two tests;
+  `docs/v3_experiments.md`.
+### My edits
+- Chose to run the mixed-precision test first, from the proposed test order.
+### Verification (tests run, numbers checked, manual checks)
+- 426 tests pass (Windows Release). 36 V3A runs converged on commit `6abcfe9`. Every
+  percentage in `docs/v3_experiments.md` was recomputed from `results/v3/csv/V3A.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Stale build hash again:** the first V3A pass ran a binary configured before the commit and
+  recorded `4874d37`. Caught in the result table, then the build was reconfigured and all runs
+  were repeated. The discarded rows are not in the repository.
+- **Expected speed-up not reached:** the survey's 1.1–1.6× did not carry over (≤ 5.7 % on one
+  core); recorded as a negative result instead of tuning until it looked better.
+- **Placeholder in the changelog draft** ("428 → 426?") was replaced with the measured count
+  before committing.
+
 ## Entry template
 
 ```markdown
