@@ -6,7 +6,7 @@
 #include <vector>
 #include <wrl/client.h>
 
-#include "app/render/PngWriter.hpp"
+#include "core/viz/PngWriter.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -106,7 +106,7 @@ void runCapture(ID3D11Device* device, ID3D11DeviceContext* ctx, const CaptureReq
     }
     ctx->Unmap(staging.Get(), 0);
 
-    const auto saved = render::savePng(req.file, rgba.data(), w, h);
+    const auto saved = viz::savePng(req.file, rgba.data(), w, h);
     if (!saved) {
         fail(req, saved.error().message);
         return;

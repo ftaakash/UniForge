@@ -3,6 +3,286 @@
 All notable changes are recorded here, one section per development phase.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] - V3 (branch `v3`)
+
+V3 tests solvers from the post-V2 literature survey against AMG-PCG on HS-7. Each step is an
+experiment with the V2 harness; results in `results/v3`, write-up in `docs/v3_experiments.md`.
+
+### V3 report (draft for review)
+- `docs/report_v3/UniForge_V3_Report.pdf` (9 pages after the review fixes): V3A–V3H with a verdict each, the pinned
+  V3H numbers as headlines, the hypre/PETSc comparison with its caveats, memory costs,
+  limitations, effort and AI-use note, and a provenance appendix for all 217 numbers.
+- Same pipeline as V2: `tools/report_v3/fill_numbers.py` (placeholders → CSV row and column),
+  `build_report_v3.ps1` (headless Edge), `check_pdf.py`.
+- `study figures --only V1,...,V5`: speed-up vs DOF (V3H), timing scatter (V3G), hypre/PETSc
+  (V3F), load cases (V3E), GMG vs AMG (V3D/V3H). The V2 figure set is unchanged.
+
+### Phase V3h: V3B–V3D thread runs re-timed pinned
+- Experiment `V3H` (56 runs, all converged, Balanced plan): every multi-threaded row of V3B, V3C
+  and V3D with P-core-first pinning, plus V2's AMG-PCG on one core in the same batch.
+- No verdict changes. The V3C headline is now 1.75–2.40× setup + solve (was 1.79–2.56×); 20
+  threads win at 3.76 M too; GMG still loses from 0.29 M up on 20 threads (by 6–12 %).
+- 4 of 28 pinned runs from 0.57 M up still had outlier solves; marked in the tables.
+
+### Phase V3g: sanitizer check and timing repeat
+- V3 did not compile with GCC `-Werror` (sign conversions, a `-Warray-bounds` false positive on
+  `std::sort`, an unused helper); fixed with no change in behaviour (`63b62a8`).
+- ASan + UBSan and TSan (full suite, WSL Ubuntu, CI flags): 409/409 pass, no reports.
+- `UNIFORGE_NO_PIN=1` leaves multi-threaded study runs unpinned; `tools/timing_repeat_v3g.sh`.
+- Timing repeat (`results/v3/csv/V3G_timing.csv`): the V3B/V3C solve gap at 3.76 M on 8 threads
+  is unpinned thread placement (3.3–5.6 s with any code version or power plan); pinned runs are
+  3.54–3.61 s.
+
+### Phase V3f: external references (hypre, PETSc)
+- Optional `HyprePcg` (`HYPRE-PCG`, `HYPRE-PCG-T05`): hypre 3.2.1 PCG + BoomerAMG, linked only
+  with `UNIFORGE_WITH_HYPRE=ON`. Without it the solver returns InvalidInput and its test is
+  skipped.
+- `uniforge_cli study export --id … [--to DIR]`: K, f and the reference in PETSc binary format.
+  `tools/petsc_ref/`: PETSc 3.26.1 CG + GAMG driver, makefile and run script (WSL).
+- Experiment `V3F` (56 runs, all converged) plus 16 PETSc runs. Our AMG-PCG is 1.27–2.30×
+  faster in total time than the best external result per size on one core, and AMG-PCG-CH-SP
+  is 1.31–3.43× faster than hypre on 6 threads. Solve times are on a par (PETSc GAMG at large
+  sizes, hypre below 0.1 M); the difference is the setup. Neither library was tuned.
+- Tests: 2 new (hypre agreement or clean absence, export format); 434 pass (409 in the hypre
+  build without the GUI tests).
+
+### Phase V3e: several load cases, pinned threads
+- `LinearOperatorSolver::solveMany` (one setup, then every load case) and `AmgBatchPcg`
+  (`AMG-PCG-CH-SP-B`): L PCG recurrences in lockstep with block matrix products and a block
+  single-precision Chebyshev V-cycle.
+- Harness: `RunSpec::loadCases` (id tag `-L<k>`, column `load_cases`); load cases with load 0 =
+  the design load. Multi-threaded runs now pin the caller and every helper, performance cores
+  first (`platform::performanceFirstCpus`, `pinThreadToCpu`).
+- Experiment `V3E`: 54 runs, all converged, on the High performance power plan. Lockstep is
+  1.28–2.53× faster than one load at a time for 5 and 20 loads, and 3.4–6.1× faster than V2's
+  AMG-PCG, at up to 6× the solver memory. For one load the plain solver stays faster. Direct ND
+  never pays off. Pinning removed the V3B outlier.
+- Tests: 1 new; 432 pass on Windows Release.
+
+### Phase V3d: geometric multigrid
+- `Coarsening::Geometric` and `geometricProlongator`: coarsening on the mesh's tensor-grid
+  indices, linear interpolation along the graded grid lines, renormalised at holes in the cell
+  mask. Kinds `GMG-PCG` and `GMG-PCG-CH-SP`. `Preconditioner::setHint`; PCG and the study runner
+  pass the node coordinates and grid indices.
+- Experiment `V3D`: 40 runs, all converged. GMG's setup is 1.7–1.9× cheaper on one core, but
+  its iterations stay at 31–37 while AMG's fall to 23. GMG-PCG wins on one core up to 0.29 M
+  unknowns (1.11–1.54×). On 20 threads AMG-PCG-CH-SP stays best at most sizes (up to 17 %
+  faster). Matrix-free GMG and semi-coarsening were not tested.
+- Tests: 2 new; 431 pass on Windows Release.
+
+### Phase V3c: parallel AMG setup
+- `sparse::multiply(pool, A, B)` and parallel strength, filtered matrix, prolongator smoothing,
+  power iteration and float copy. Each row is computed as in the serial code, so the hierarchy
+  is bit-identical for any thread count. Per-step coarsening times are in the setup report.
+- Option `amgChebyshevPowerIterations` (20). 10 was tried, under-estimated λ_max, and CG broke
+  down at 3.76 M.
+- Experiment `V3C`: 32 runs, all converged. AMG-PCG-CH-SP on 8 or 20 threads is 1.79–2.56×
+  faster in setup plus solve than one-core AMG-PCG at every HS-7 size (56 k to 3.76 M), with
+  the same accuracy and +33 % solver memory. Setup itself is 1.3–1.7× faster.
+- Tests: 2 new; 429 pass on Windows Release.
+
+### Phase V3b: Chebyshev–Jacobi smoother
+- `SolverOptions::amgSmoother` (Gauss–Seidel or Chebyshev), `amgChebyshevDegree` (2),
+  `amgChebyshevRatio` (30); kinds `AMG-PCG-CH` and `AMG-PCG-CH-SP`. Fully parallel smoothing,
+  bit-identical for any thread count.
+- Experiment `V3B`: 40 runs, all converged. On one core Chebyshev is up to 1.64× slower than
+  Gauss–Seidel. With 20 threads, AMG-PCG-CH-SP solves 1.8–2.4× faster than one-core AMG-PCG
+  from 0.57 M to 3.76 M unknowns (setup plus solve 1.2–1.5× faster; solver memory +33 %). It
+  is the first V3 candidate to beat the V2 best. The serial setup is now the bottleneck.
+- Tests: 1 new; 427 pass on Windows Release.
+
+### Phase V3a: single-precision AMG hierarchy
+- `SolverOptions::amgSinglePrecision` and solver kind `AMG-PCG-SP`: AMG operators, transfers
+  and V-cycle vectors in float, outer CG and coarsest Cholesky in double. Stand-alone AMG
+  ignores the option.
+- Experiment `V3A` (run only when named): AMG-PCG vs AMG-PCG-SP on the HS-7 ladder (1 core)
+  and on the three largest meshes with 8 and 20 threads. 36 runs, all converged.
+- Result: at most 5.7 % faster on one core, slower below 0.1 M unknowns, 29 % more solver
+  memory; 10–19 % faster with threads. Not made the default. The serial Gauss–Seidel smoother
+  is the bottleneck, so the next step is a parallel smoother.
+- Tests: 2 new (single-precision accuracy and bytes per cycle; stand-alone AMG stays double);
+  426 pass on Windows Release.
+
+## [Released] - V2 (branch `v2`, tag `v2.0.0`)
+
+V2 answers the Assignment Extension Notice: three solver types on a 3D thermal analysis of a
+more complex object, reported in one PDF. Specification:
+`docs/design/v2/UniForge_V2_Build_Spec.md`. `main` and `v1.0.0` are unchanged.
+
+### Phase V2-10: Report
+- `docs/report_v2/UniForge_V2_Report.pdf` (22 pages, no source code): summary and answer, the
+  move from the cube to HS-7, the thermal problem, FEA and verification, thermal results along
+  the design ladder, how each solver was built, the comparison E0–E8 (with cross-solver
+  accuracy, measured scaling exponents and work, time to an engineering answer, orderings),
+  the hypotheses before and after, the decision chart and scenario table, limitations, and
+  appendices (machine and protocol, AI use, IEEE references, full result tables, provenance).
+- `tools/report_v2/fill_numbers.py`: every number in the report is a placeholder naming its CSV
+  row and column (or a fit or ratio of them); the script fills `report.html`, inlines the figures
+  and writes `docs/report_v2/provenance.csv` and the provenance appendix. 188 numbers.
+- `tools/report_v2/check_pdf.py` (pypdf): page count, size, placeholders, estimate/verify
+  markers, code-like text, e-mail addresses, absolute paths. `build_report_v2.ps1` runs fill,
+  headless Edge print and check.
+- References verified against Crossref (DOIs) and Open Library; Okabe–Ito colours verified at the
+  source. Every estimate and verify marker in the Build Spec, code comments and README resolved in
+  place; the three historical design inputs carry a note pointing to the resolutions.
+- Figures: failure labels in P11–P13 drawn once per reason beside the first cross (no overlaps);
+  the fin-theory note cites Bergman et al. 2011.
+- Review fixes (user review of `a466125`): corrected the AI-use statement, the CI claim (now
+  tied to the tagged release commit), the PCG-IC0 breakdown wording, the E3 direct-cost
+  evidence (Appendix D table instead of figures that do not show it), the design count in E4,
+  the DOF growth per step and the note on the 3.76 M DOF reference. New figures P23 (E6 thread
+  scaling) and P24 (AMG threshold before/after from `results/v2_superseded`). P22 on a log
+  axis with the setup/solve split visible (`BarChartSpec::logY`); all plots full width at
+  820 × 430 so their text prints at about 7.5 pt; colliding annotations pushed apart and a
+  label gutter before the legend (`PlotSpec::labelGutter`); P21 narrower, wrapped and cropped.
+  Forced page breaks removed; provenance in two columns. 22 pages, 192 numbers, 2 new tests.
+
+### Phase V2-9.1: Fixes after the V2-9 CI run (`v2-phase-9.1`)
+- **AMG strength threshold 0.08 → 0.02.** The V2-7 value was tuned on a 7-point Laplacian; on
+  trilinear hexahedra of aspect ratio 1 every coupling is at most 1/16 of the diagonal, so 0.08
+  aggregated no node of a cubic cell and AMG stagnated (23 of 72 AMG runs in the official batch).
+  The 72 AMG and AMG-PCG rows were re-run officially on the fixed commit: all 70 solvable runs
+  converge, AMG-PCG at 3.76 M DOF takes 23 iterations / 9.5 s instead of 872 / 237 s. The old
+  rows are kept in `results/v2_superseded/amg_theta008/`; hypotheses H1–H7 re-read in
+  `docs/v2_experiments.md`. New test on a Q1 Laplacian.
+- **Figure renders as separate PNG files** next to each SVG (`<figure>-<k>.png`, relative
+  href) instead of base64 text, which the packaging hygiene scan flagged as possible secrets;
+  the scanner is unchanged.
+- PNG test inflater: explicit unsigned conversions for GCC `-Wsign-conversion`.
+- Corrected H1 timing claim (direct RCM, not ND, was fastest on the 1.8 k and 10 k DOF bars).
+
+### Phase V2-9: Figures (`v2-phase-9`)
+- `src/core/viz/` (depends on `common` only): `Image`, inferno and categorical colormaps, a
+  CPU rasteriser (`Raster3D`: orthographic camera fitted to a box, z-buffered triangles,
+  two-sided Lambert shading, depth-tested edge segments, supersampling), `Spy` (sparsity
+  density rasters) and `SvgCanvas` (embedded PNG renders with vector labels, arrows, colour
+  bars).
+- `PngWriter` moved from `app/render` to `core/viz` (build spec D-15) and now compresses:
+  adaptive PNG row filters and a fixed-Huffman deflate block with LZ77 matches (stored blocks
+  remain as an option). All 28 figure files together are 2.7 MB.
+- `SvgPlot`: hollow and cross markers, annotations, a corner note, 10ⁿ tick labels, stacked
+  bar charts.
+- `uniforge_cli study figures` (`study/Figures`): P1–P22 from `results/v2` into
+  `docs/report_v2/fig` with an index (`figures.md`) mapping every figure to its data.
+- Candidate check (not official, not in `results/v2`): AMG with θ₀ = 0.02 instead of 0.08 on
+  all 72 AMG runs; see `docs/v2_experiments.md`.
+- 16 new tests (viz units with an independent inflater, bar charts, figures smoke test).
+
+- Official batch on commit `5e9bea7` (2 h 46 min): 241/241 runs left a result (205 converged,
+  23 stand-alone AMG stagnations, 7 direct runs over the memory budget, 6 singular runs
+  detected). Results in `results/v2/` (references not committed); first reading of the
+  hypotheses in `docs/v2_experiments.md`, including a suspected AMG strength-threshold
+  weakness on trilinear hexahedra.
+- Fixed after the batch: `batch.log` kept only its first line on Windows (old log still open
+  during the atomic rename) and the final `progress.json` update was missing; the smoke test
+  now checks both.
+- `src/core/study/`: code-defined plan of E0–E8 (241 runs; dry run 85) with ids a child process
+  resolves on its own; one run (mesh, assembly, solver setup and timed solves with 5/3/1
+  repetitions by run time, error observer on the first, iteration history, energy audit) and
+  references (direct ND within 8 GB, else AMG-PCG to 1e-12); collect into experiment CSVs, E5
+  load cases (setup + k·solve) and E2 time-to-accuracy.
+- `uniforge_cli study plan | run | batch | collect`: one process per run, Windows Job Object
+  memory cap and timeout kill, single-thread runs pinned to a performance core, keep-awake, CPU
+  load before each run, resume after a crash, refuses a dirty tree for official runs.
+- Dry run (85 runs, all left a result) found that the direct solvers returned a 2e13 °C
+  "solution" on the singular all-insulated case; `DirectCholesky` now reports Breakdown for a
+  pivot below 1e-13 of its diagonal and for a solve whose relative residual exceeds 1e-6.
+- `docs/v2_experiments.md` (harness and runbook); 8 study tests, a batch smoke test with
+  resume, 1 direct-solver test.
+
+### Phase V2-7: Smoothed-aggregation AMG (`v2-phase-7`)
+- `src/core/solvers/amg/Amg`: strength of connection with a threshold halving per level,
+  three-phase greedy aggregation (isolated nodes left out), piecewise-constant tentative
+  prolongator, prolongator smoothing with the filtered matrix and a Gershgorin ω, Galerkin
+  coarse operators (symmetrised exactly), direct solve on the coarsest level, symmetric V(ν,ν)
+  cycle with forward/backward Gauss–Seidel. `AmgSolver` (stand-alone, AMG) and
+  `AmgPreconditioner` (AMG-PCG); `makeSolver` now builds all six variants.
+- Setup report gains rows and nnz per level and operator/grid complexity; the PCG setup report
+  carries the full preconditioner report.
+- Measured: h-independent stand-alone convergence on the 3D Laplacian (15–19 cycles from 10³ to
+  32³); on HS-7 at 2 mm AMG-PCG needs 84 iterations (PCG-IC0 117, PCG-J 800), while stand-alone
+  AMG needs 673 cycles because of the thin TIM.
+- 7 AMG tests (aggregation, constants preserved, Galerkin symmetry and definiteness, V-cycle
+  symmetry, size independence, AMG-PCG vs IC(0) and Jacobi, statuses) and 1 verification test.
+
+### Phase V2-6: IC(0) preconditioner (`v2-phase-6`)
+- `src/core/solvers/krylov/Ic0`: incomplete Cholesky with zero fill on the lower-triangle
+  pattern; shift ladder K + α·diag(K), α = 0, 1e-3, 1e-2, 1e-1, 1, with the α used and the
+  failed attempts reported; Breakdown when the ladder is exhausted. `makeSolver` builds PCG-IC0.
+- The PCG setup report now passes on the preconditioner's timing, detail, shift and retries.
+- Measured: on HS-7 at 2 mm PCG-IC0 needs 117 iterations against 800 for PCG-J (κ_est 2.0e3 vs
+  1.37e5) and no shift, although K has 68 872 positive off-diagonal entries; Kershaw's 4 × 4
+  matrix breaks unshifted IC(0) and is recovered with α = 1.
+- Spec correction: positive off-diagonals of trilinear boxes appear as soon as an edge is longer
+  than the other two, not above an aspect ratio of √2 (a 2D result).
+- Fix: GCC 13 ASan/UBSan false positive (-Warray-bounds) that failed the Linux build of
+  `v2-phase-5`.
+- 5 IC(0) tests, 1 element test, 1 verification test.
+
+### Phase V2-5: Sparse direct Cholesky (`v2-phase-5`)
+- `src/core/solvers/direct/Ordering`: natural, reverse Cuthill–McKee (pseudo-peripheral start,
+  per component) and graph nested dissection (middle-level separators of breadth-first level
+  structures, RCM on leaves); disconnected graphs handled.
+- `src/core/solvers/direct/Cholesky`: `DirectCholesky` with timed ordering, symbolic (elimination
+  tree, exact column counts, memory-budget check before allocating L) and numeric (up-looking)
+  phases; triangular solves; Breakdown on a non-positive pivot; `makeSolver` builds DIRECT-ND
+  and DIRECT-RCM.
+- Preliminary HS-7 measurements (spec §5.2): nnz(L) predicted exactly; ND gives the smaller
+  factor at every size and is faster from 285 k DOF; RCM exceeds 8 GB at 568 k DOF, ND factors
+  568 k DOF in 327 s.
+- Verification: both orderings reproduce PCG-J on the v1 bar and HS-7 to 3.8e-10 K.
+- 10 unit tests and 1 verification test.
+
+### Phase V2-4: 3D finite elements and verification (`v2-phase-4`)
+- `src/core/fem3d/Element`: trilinear hexahedron stiffness and load as tensor products of 1D
+  matrices (exact on boxes), bilinear face convection matrix and loads, Gauss quadrature for
+  non-uniform sources and ambients.
+- `src/core/fem3d/Assembly`: pattern from grid connectivity, assembly straight into CSR,
+  convection, symmetric Dirichlet elimination with saved rows for reactions, assembly time and
+  matrix size. Measured on HS-7: 4.7 s and 1.16 GB for 3 759 720 DOF.
+- `src/core/fem3d/Post`: energy audit, reactions, peak temperature, trilinear sampling, L2 and
+  nodal error norms.
+- Verification (`tests/numerical/fem3d`, solved with PCG-J): harmonic trilinear patch test exact
+  with Dirichlet and with convection faces; the v1 bar in 3D reproduces 188.2 °C at 0.42 m and
+  0.42 / 0.58 W through the ends; a manufactured solution converges at order 2.00; a single fin
+  matches 1D fin theory (heat −0.005 %, tip within 0.03 K); HS-7 energy balance to 2e-12.
+- A deliberately broken Dirichlet elimination fails the patch, bar and fin tests.
+- 12 unit tests and 6 verification tests.
+
+### Phase V2-3: Solver interface and Jacobi-PCG (`v2-phase-3`)
+- `src/core/solvers/`: two-phase solver interface (setup once, solve per load case); a method
+  failure (breakdown, iteration or time cap, stagnation, over budget, cancelled) is a status,
+  misuse is an error. `makeSolver` builds PCG-J; the other kinds name the phase that adds them.
+- Solve report: solver time with observer time excluded, per-iteration timestamps, residual
+  history, SpMV count, bytes moved and SpMV-equivalents, κ estimate from the CG–Lanczos
+  tridiagonal, true residual and the masked residual sum (heat imbalance).
+- Observers `ErrorVsReference` (time-to-accuracy) and `Snapshot`.
+- PCG with identity (tests only) and Jacobi preconditioners; bit-identical for any thread count.
+- `tests/lint/module_rules.cmake`: CTest check that solvers, sparse and viz do not include fem3d.
+- 15 unit tests plus the lint check.
+
+### Phase V2-2: Geometry and mesher (`v2-phase-2`)
+- `src/core/fem3d/Design`: boxes with materials and per-face boundary conditions, validation,
+  and the ladder objects v1 bar (L0a), cube (L0b), plate (L1), finned plate (L2), HS-7 (L3) and
+  pin fin (L4).
+- `src/core/fem3d/HexMesh`: graded tensor-grid mesher (every box face is a grid line, neighbour
+  size ratio ≤ 1.5, fixed TIM layers), compact node numbering, boundary faces tagged with box
+  and side, outward surface triangles.
+- Measured HS-7 mesh sizes along the spacing ladder (56 015 … 3 759 720 nodes) recorded in the
+  build specification §3.4.
+- 19 unit tests, including exact volume and convective area, a watertight outward surface and
+  an STL round trip through the v1 importer.
+
+### Phase V2-1: Sparse kernels (`v2-phase-1`)
+- `src/core/sparse/`: CSR matrix and pattern (32-bit columns, 64-bit offsets) with validation;
+  persistent `KernelPool` whose fixed 4096-row chunks make reductions bit-identical for any
+  thread count; dot, norms, axpy, xpay, SpMV, residual; transpose and SpGEMM with exact allocation.
+- 29 unit tests.
+
+### Phase V2-0: Design (`v2-phase-0`)
+- `docs/design/v2/`: analysis and plan, design review (amendments A1–A15), system design
+  (Design A vs B) and the merged V2 build specification; `docs/report_v2/figure_tokens.md`.
+
 ## [1.0.0] - 2026-11-02
 
 ### Phase 9: Delivery

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="680" viewBox="0 0 1000 680" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>P21 failure modes</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Failure modes: what each solver reports instead of a wrong answer</text>
+<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Top: E8, HS-7 with every face insulated (K singular). Bottom: all 241 official runs by outcome.</text>
+<text x="24.00" y="96.00" font-size="14.00" text-anchor="start" fill="#59616E" font-weight="600">solver</text>
+<text x="170.00" y="96.00" font-size="14.00" text-anchor="start" fill="#59616E" font-weight="600">setup</text>
+<text x="290.00" y="96.00" font-size="14.00" text-anchor="start" fill="#59616E" font-weight="600">solve</text>
+<text x="410.00" y="96.00" font-size="14.00" text-anchor="start" fill="#59616E" font-weight="600">what it reported</text>
+<rect x="18.00" y="110.00" width="2.00" height="38.00" fill="#0072B2" stroke="none" stroke-width="1.00"/>
+<text x="24.00" y="126.00" font-size="15.00" text-anchor="start" fill="#0072B2" font-weight="600">DIRECT-ND</text>
+<text x="170.00" y="126.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="290.00" y="126.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="410.00" y="126.00" font-size="13.50" text-anchor="start" fill="#59616E">The direct solution leaves a relative residual of 2.081: K</text>
+<text x="410.00" y="145.00" font-size="13.50" text-anchor="start" fill="#59616E">is numerically singular or the factor is inaccurate.</text>
+<rect x="18.00" y="160.00" width="2.00" height="38.00" fill="#0072B2" stroke="none" stroke-width="1.00"/>
+<text x="24.00" y="176.00" font-size="15.00" text-anchor="start" fill="#0072B2" font-weight="600">DIRECT-RCM</text>
+<text x="170.00" y="176.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="290.00" y="176.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="410.00" y="176.00" font-size="13.50" text-anchor="start" fill="#59616E">The direct solution leaves a relative residual of 2.624: K</text>
+<text x="410.00" y="195.00" font-size="13.50" text-anchor="start" fill="#59616E">is numerically singular or the factor is inaccurate.</text>
+<rect x="18.00" y="210.00" width="2.00" height="38.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
+<text x="24.00" y="226.00" font-size="15.00" text-anchor="start" fill="#E69F00" font-weight="600">PCG-J</text>
+<text x="170.00" y="226.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="290.00" y="226.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="410.00" y="226.00" font-size="13.50" text-anchor="start" fill="#59616E">pᵀKp = -5.18e+22 at iteration 503: K is not symmetric</text>
+<text x="410.00" y="245.00" font-size="13.50" text-anchor="start" fill="#59616E">positive definite.</text>
+<rect x="18.00" y="260.00" width="2.00" height="38.00" fill="#E69F00" stroke="none" stroke-width="1.00"/>
+<text x="24.00" y="276.00" font-size="15.00" text-anchor="start" fill="#E69F00" font-weight="600">PCG-IC0</text>
+<text x="170.00" y="276.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Converged</text>
+<text x="290.00" y="276.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="410.00" y="276.00" font-size="13.50" text-anchor="start" fill="#59616E">pᵀKp = -3.95e+15 at iteration 76: K is not symmetric</text>
+<text x="410.00" y="295.00" font-size="13.50" text-anchor="start" fill="#59616E">positive definite.</text>
+<rect x="18.00" y="310.00" width="2.00" height="76.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="24.00" y="326.00" font-size="15.00" text-anchor="start" fill="#009E73" font-weight="600">AMG</text>
+<text x="170.00" y="326.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="290.00" y="326.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">not run</text>
+<text x="410.00" y="326.00" font-size="13.50" text-anchor="start" fill="#59616E">Coarsest-level factorisation failed: Cholesky pivot</text>
+<text x="410.00" y="345.00" font-size="13.50" text-anchor="start" fill="#59616E">-2.174e-13 at row 64 (matrix row 51) is not positive</text>
+<text x="410.00" y="364.00" font-size="13.50" text-anchor="start" fill="#59616E">relative to its diagonal 1.533: K is singular or not</text>
+<text x="410.00" y="383.00" font-size="13.50" text-anchor="start" fill="#59616E">symmetric positive definite.</text>
+<rect x="18.00" y="398.00" width="2.00" height="76.00" fill="#009E73" stroke="none" stroke-width="1.00"/>
+<text x="24.00" y="414.00" font-size="15.00" text-anchor="start" fill="#009E73" font-weight="600">AMG-PCG</text>
+<text x="170.00" y="414.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">Breakdown</text>
+<text x="290.00" y="414.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">not run</text>
+<text x="410.00" y="414.00" font-size="13.50" text-anchor="start" fill="#59616E">Coarsest-level factorisation failed: Cholesky pivot</text>
+<text x="410.00" y="433.00" font-size="13.50" text-anchor="start" fill="#59616E">-2.174e-13 at row 64 (matrix row 51) is not positive</text>
+<text x="410.00" y="452.00" font-size="13.50" text-anchor="start" fill="#59616E">relative to its diagonal 1.533: K is singular or not</text>
+<text x="410.00" y="471.00" font-size="13.50" text-anchor="start" fill="#59616E">symmetric positive definite.</text>
+<line x1="18.00" y1="496.00" x2="982.00" y2="496.00" stroke="#D3D9E1" stroke-width="1.00"/>
+<text x="24.00" y="520.00" font-size="14.00" text-anchor="start" fill="#59616E" font-weight="600">outcome (all runs)</text>
+<text x="360.00" y="520.00" font-size="14.00" text-anchor="end" fill="#59616E" font-weight="600">runs</text>
+<text x="24.00" y="546.00" font-size="15.00" text-anchor="start" fill="#1A1E24">Breakdown</text>
+<text x="360.00" y="546.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">4</text>
+<text x="24.00" y="572.00" font-size="15.00" text-anchor="start" fill="#1A1E24">Converged</text>
+<text x="360.00" y="572.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">228</text>
+<text x="24.00" y="598.00" font-size="15.00" text-anchor="start" fill="#1A1E24">setup Breakdown</text>
+<text x="360.00" y="598.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">2</text>
+<text x="24.00" y="624.00" font-size="15.00" text-anchor="start" fill="#1A1E24">setup OverBudget</text>
+<text x="360.00" y="624.00" font-size="15.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">7</text>
+<text x="410.00" y="526.00" font-size="14.00" text-anchor="start" fill="#59616E">No run crashed, hit a time cap or was killed by the memory cap.</text>
+<text x="410.00" y="546.30" font-size="14.00" text-anchor="start" fill="#59616E">Breakdowns: the singular E8 cases only.</text>
+<text x="410.00" y="566.60" font-size="14.00" text-anchor="start" fill="#59616E">Over budget: the direct solvers on the largest meshes, refused</text>
+<text x="410.00" y="586.90" font-size="14.00" text-anchor="start" fill="#59616E">by the symbolic size check before any memory was allocated.</text>
+</svg>

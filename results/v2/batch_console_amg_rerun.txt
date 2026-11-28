@@ -1,0 +1,150 @@
+[12/241] E0-bar-s10.000-AMG ... E0-bar-s10.000-AMG: Converged
+Converged (0.5 s)
+[13/241] E0-bar-s10.000-AMG-PCG ... E0-bar-s10.000-AMG-PCG: Converged
+Converged (0.5 s)
+[19/241] E0-bar-s5.000-AMG ... E0-bar-s5.000-AMG: Converged
+Converged (0.5 s)
+[20/241] E0-bar-s5.000-AMG-PCG ... E0-bar-s5.000-AMG-PCG: Converged
+Converged (0.5 s)
+[26/241] E0-bar-s2.500-AMG ... E0-bar-s2.500-AMG: Converged
+Converged (0.6 s)
+[27/241] E0-bar-s2.500-AMG-PCG ... E0-bar-s2.500-AMG-PCG: Converged
+Converged (0.6 s)
+[33/241] E0-cube-s5.802-AMG ... E0-cube-s5.802-AMG: Converged
+Converged (0.5 s)
+[34/241] E0-cube-s5.802-AMG-PCG ... E0-cube-s5.802-AMG-PCG: Converged
+Converged (0.5 s)
+[40/241] E0-cube-s2.901-AMG ... E0-cube-s2.901-AMG: Converged
+Converged (0.6 s)
+[41/241] E0-cube-s2.901-AMG-PCG ... E0-cube-s2.901-AMG-PCG: Converged
+Converged (0.6 s)
+[47/241] E0-cube-s1.934-AMG ... E0-cube-s1.934-AMG: Converged
+Converged (0.7 s)
+[48/241] E0-cube-s1.934-AMG-PCG ... E0-cube-s1.934-AMG-PCG: Converged
+Converged (0.6 s)
+[55/241] E8-HS7-singular-s2.000-AMG-noobs ... E8-HS7-singular-s2.000-AMG-noobs: setup Breakdown
+setup Breakdown (0.5 s)
+[56/241] E8-HS7-singular-s2.000-AMG-PCG-noobs ... E8-HS7-singular-s2.000-AMG-PCG-noobs: setup Breakdown
+setup Breakdown (0.5 s)
+[62/241] E3-HS7-h5-s0.500-AMG ... E3-HS7-h5-s0.500-AMG: Converged
+Converged (16.1 s)
+[63/241] E3-HS7-h5-s0.500-AMG-PCG ... E3-HS7-h5-s0.500-AMG-PCG: Converged
+Converged (5.5 s)
+[68/241] E3-HS7-s0.500-AMG ... E3-HS7-s0.500-AMG: Converged
+Converged (15.2 s)
+[69/241] E3-HS7-s0.500-AMG-PCG ... E3-HS7-s0.500-AMG-PCG: Converged
+Converged (5.3 s)
+[74/241] E3-HS7-h100-s0.500-AMG ... E3-HS7-h100-s0.500-AMG: Converged
+Converged (15.1 s)
+[75/241] E3-HS7-h100-s0.500-AMG-PCG ... E3-HS7-h100-s0.500-AMG-PCG: Converged
+Converged (5.4 s)
+[80/241] E3-HS7-h500-s0.500-AMG ... E3-HS7-h500-s0.500-AMG: Converged
+Converged (14.9 s)
+[81/241] E3-HS7-h500-s0.500-AMG-PCG ... E3-HS7-h500-s0.500-AMG-PCG: Converged
+Converged (5.2 s)
+[86/241] E3-HS7-kTim0.5-s0.500-AMG ... E3-HS7-kTim0.5-s0.500-AMG: Converged
+Converged (19.4 s)
+[87/241] E3-HS7-kTim0.5-s0.500-AMG-PCG ... E3-HS7-kTim0.5-s0.500-AMG-PCG: Converged
+Converged (5.6 s)
+[92/241] E3-HS7-kTim20-s0.500-AMG ... E3-HS7-kTim20-s0.500-AMG: Converged
+Converged (13.5 s)
+[93/241] E3-HS7-kTim20-s0.500-AMG-PCG ... E3-HS7-kTim20-s0.500-AMG-PCG: Converged
+Converged (5.1 s)
+[98/241] E3-HS7-kTim200-s0.500-AMG ... E3-HS7-kTim200-s0.500-AMG: Converged
+Converged (13.5 s)
+[99/241] E3-HS7-kTim200-s0.500-AMG-PCG ... E3-HS7-kTim200-s0.500-AMG-PCG: Converged
+Converged (5 s)
+[104/241] E3-HS7-c2-s0.500-AMG ... E3-HS7-c2-s0.500-AMG: Converged
+Converged (23.2 s)
+[105/241] E3-HS7-c2-s0.500-AMG-PCG ... E3-HS7-c2-s0.500-AMG-PCG: Converged
+Converged (6.6 s)
+[110/241] E3-HS7-tim0.2mm-s0.500-AMG ... E3-HS7-tim0.2mm-s0.500-AMG: Converged
+Converged (10.7 s)
+[111/241] E3-HS7-tim0.2mm-s0.500-AMG-PCG ... E3-HS7-tim0.2mm-s0.500-AMG-PCG: Converged
+Converged (4.5 s)
+[116/241] E3-HS7-tim0.2mm-c2-s0.500-AMG ... E3-HS7-tim0.2mm-c2-s0.500-AMG: Converged
+Converged (15.8 s)
+[117/241] E3-HS7-tim0.2mm-c2-s0.500-AMG-PCG ... E3-HS7-tim0.2mm-c2-s0.500-AMG-PCG: Converged
+Converged (5.4 s)
+[122/241] E3-HS7-tim0.5mm-s0.500-AMG ... E3-HS7-tim0.5mm-s0.500-AMG: Converged
+Converged (8.3 s)
+[123/241] E3-HS7-tim0.5mm-s0.500-AMG-PCG ... E3-HS7-tim0.5mm-s0.500-AMG-PCG: Converged
+Converged (4 s)
+[128/241] E3-HS7-tim0.5mm-c2-s0.500-AMG ... E3-HS7-tim0.5mm-c2-s0.500-AMG: Converged
+Converged (25.4 s)
+[129/241] E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG ... E3-HS7-tim0.5mm-c2-s0.500-AMG-PCG: Converged
+Converged (5.9 s)
+[136/241] E4-bar-s1.000-AMG ... E4-bar-s1.000-AMG: Converged
+Converged (1.8 s)
+[137/241] E4-bar-s1.000-AMG-PCG ... E4-bar-s1.000-AMG-PCG: Converged
+Converged (1.4 s)
+[143/241] E4-cube-s1.000-AMG ... E4-cube-s1.000-AMG: Converged
+Converged (1.8 s)
+[144/241] E4-cube-s1.000-AMG-PCG ... E4-cube-s1.000-AMG-PCG: Converged
+Converged (1.6 s)
+[150/241] E4-plate-s1.000-AMG ... E4-plate-s1.000-AMG: Converged
+Converged (0.8 s)
+[151/241] E4-plate-s1.000-AMG-PCG ... E4-plate-s1.000-AMG-PCG: Converged
+Converged (0.7 s)
+[157/241] E4-fins-s1.000-AMG ... E4-fins-s1.000-AMG: Converged
+Converged (1.5 s)
+[158/241] E4-fins-s1.000-AMG-PCG ... E4-fins-s1.000-AMG-PCG: Converged
+Converged (1 s)
+[164/241] E4-HS7-s1.000-AMG ... E4-HS7-s1.000-AMG: Converged
+Converged (6.1 s)
+[165/241] E4-HS7-s1.000-AMG-PCG ... E4-HS7-s1.000-AMG-PCG: Converged
+Converged (1.6 s)
+[171/241] E4-pinfin-s1.000-AMG ... E4-pinfin-s1.000-AMG: Converged
+Converged (4.2 s)
+[172/241] E4-pinfin-s1.000-AMG-PCG ... E4-pinfin-s1.000-AMG-PCG: Converged
+Converged (1.4 s)
+[174/241] E6-HS7-s0.397-AMG-PCG-noobs ... E6-HS7-s0.397-AMG-PCG-noobs: Converged
+Converged (9.1 s)
+[176/241] E6-HS7-s0.397-AMG-PCG-noobs-p2 ... E6-HS7-s0.397-AMG-PCG-noobs-p2: Converged
+Converged (8.9 s)
+[178/241] E6-HS7-s0.397-AMG-PCG-noobs-p4 ... E6-HS7-s0.397-AMG-PCG-noobs-p4: Converged
+Converged (8.2 s)
+[180/241] E6-HS7-s0.397-AMG-PCG-noobs-p8 ... E6-HS7-s0.397-AMG-PCG-noobs-p8: Converged
+Converged (10.4 s)
+[182/241] E6-HS7-s0.397-AMG-PCG-noobs-p14 ... E6-HS7-s0.397-AMG-PCG-noobs-p14: Converged
+Converged (10.6 s)
+[184/241] E6-HS7-s0.397-AMG-PCG-noobs-p20 ... E6-HS7-s0.397-AMG-PCG-noobs-p20: Converged
+Converged (10.5 s)
+[190/241] E2-HS7-s1.000-AMG ... E2-HS7-s1.000-AMG: Converged
+Converged (6 s)
+[191/241] E2-HS7-s1.000-AMG-PCG ... E2-HS7-s1.000-AMG-PCG: Converged
+Converged (1.5 s)
+[197/241] E2-HS7-s0.794-AMG ... E2-HS7-s0.794-AMG: Converged
+Converged (7.8 s)
+[198/241] E2-HS7-s0.794-AMG-PCG ... E2-HS7-s0.794-AMG-PCG: Converged
+Converged (2.2 s)
+[204/241] E2-HS7-s0.630-AMG ... E2-HS7-s0.630-AMG: Converged
+Converged (10.8 s)
+[205/241] E2-HS7-s0.630-AMG-PCG ... E2-HS7-s0.630-AMG-PCG: Converged
+Converged (3.4 s)
+[212/241] E2-HS7-s0.500-AMG ... E2-HS7-s0.500-AMG: Converged
+Converged (14.7 s)
+[213/241] E2-HS7-s0.500-AMG-PCG ... E2-HS7-s0.500-AMG-PCG: Converged
+Converged (5.2 s)
+[219/241] E2-HS7-s0.397-AMG ... E2-HS7-s0.397-AMG: Converged
+Converged (25 s)
+[220/241] E2-HS7-s0.397-AMG-PCG ... E2-HS7-s0.397-AMG-PCG: Converged
+Converged (9.3 s)
+[226/241] E2-HS7-s0.315-AMG ... E2-HS7-s0.315-AMG: Converged
+Converged (39.5 s)
+[227/241] E2-HS7-s0.315-AMG-PCG ... E2-HS7-s0.315-AMG-PCG: Converged
+Converged (15.7 s)
+[233/241] E2-HS7-s0.250-AMG ... E2-HS7-s0.250-AMG: Converged
+Converged (45.8 s)
+[234/241] E2-HS7-s0.250-AMG-PCG ... E2-HS7-s0.250-AMG-PCG: Converged
+Converged (29.4 s)
+[240/241] E2-HS7-s0.198-AMG ... E2-HS7-s0.198-AMG: Converged
+Converged (76 s)
+[241/241] E2-HS7-s0.198-AMG-PCG ... E2-HS7-s0.198-AMG-PCG: Converged
+Converged (52.9 s)
+72 runs executed, 169 already done.
+241 results collected into results/v2\csv
+  Breakdown: 4
+  Converged: 228
+  setup Breakdown: 2
+  setup OverBudget: 7

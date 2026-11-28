@@ -1,0 +1,75 @@
+[1/36] V3A-HS7-s1.000-REF ... V3A-HS7-s1.000-REF: Converged
+Converged (0.6 s)
+[2/36] V3A-HS7-s1.000-AMG-PCG ... V3A-HS7-s1.000-AMG-PCG: Converged
+Converged (1.6 s)
+[3/36] V3A-HS7-s1.000-AMG-PCG-SP ... V3A-HS7-s1.000-AMG-PCG-SP: Converged
+Converged (1.7 s)
+[4/36] V3A-HS7-s0.794-REF ... V3A-HS7-s0.794-REF: Converged
+Converged (0.6 s)
+[5/36] V3A-HS7-s0.794-AMG-PCG ... V3A-HS7-s0.794-AMG-PCG: Converged
+Converged (3.2 s)
+[6/36] V3A-HS7-s0.794-AMG-PCG-SP ... V3A-HS7-s0.794-AMG-PCG-SP: Converged
+Converged (2.4 s)
+[7/36] V3A-HS7-s0.630-REF ... V3A-HS7-s0.630-REF: Converged
+Converged (0.7 s)
+[8/36] V3A-HS7-s0.630-AMG-PCG ... V3A-HS7-s0.630-AMG-PCG: Converged
+Converged (3.4 s)
+[9/36] V3A-HS7-s0.630-AMG-PCG-SP ... V3A-HS7-s0.630-AMG-PCG-SP: Converged
+Converged (3.4 s)
+[10/36] V3A-HS7-s0.500-REF ... V3A-HS7-s0.500-REF: Converged
+Converged (0.8 s)
+[11/36] V3A-HS7-s0.500-AMG-PCG ... V3A-HS7-s0.500-AMG-PCG: Converged
+Converged (5.2 s)
+[12/36] V3A-HS7-s0.500-AMG-PCG-SP ... V3A-HS7-s0.500-AMG-PCG-SP: Converged
+Converged (5.2 s)
+[13/36] V3A-HS7-s0.397-REF ... V3A-HS7-s0.397-REF: Converged
+Converged (1.1 s)
+[14/36] V3A-HS7-s0.397-AMG-PCG ... V3A-HS7-s0.397-AMG-PCG: Converged
+Converged (9.3 s)
+[15/36] V3A-HS7-s0.397-AMG-PCG-SP ... V3A-HS7-s0.397-AMG-PCG-SP: Converged
+Converged (9.2 s)
+[16/36] V3A-HS7-s0.315-REF ... V3A-HS7-s0.315-REF: Converged
+Converged (1.5 s)
+[17/36] V3A-HS7-s0.315-AMG-PCG ... V3A-HS7-s0.315-AMG-PCG: Converged
+Converged (15.7 s)
+[18/36] V3A-HS7-s0.315-AMG-PCG-SP ... V3A-HS7-s0.315-AMG-PCG-SP: Converged
+Converged (15.4 s)
+[19/36] V3A-HS7-s0.250-REF ... V3A-HS7-s0.250-REF: Converged
+Converged (2.4 s)
+[20/36] V3A-HS7-s0.250-AMG-PCG ... V3A-HS7-s0.250-AMG-PCG: Converged
+Converged (29.2 s)
+[21/36] V3A-HS7-s0.250-AMG-PCG-SP ... V3A-HS7-s0.250-AMG-PCG-SP: Converged
+Converged (29 s)
+[22/36] V3A-HS7-s0.198-REF ... V3A-HS7-s0.198-REF: Converged
+Converged (4.3 s)
+[23/36] V3A-HS7-s0.198-AMG-PCG ... V3A-HS7-s0.198-AMG-PCG: Converged
+Converged (52.8 s)
+[24/36] V3A-HS7-s0.198-AMG-PCG-SP ... V3A-HS7-s0.198-AMG-PCG-SP: Converged
+Converged (52.4 s)
+[25/36] V3A-HS7-s0.315-AMG-PCG-noobs-p8 ... V3A-HS7-s0.315-AMG-PCG-noobs-p8: Converged
+Converged (18.6 s)
+[26/36] V3A-HS7-s0.315-AMG-PCG-SP-noobs-p8 ... V3A-HS7-s0.315-AMG-PCG-SP-noobs-p8: Converged
+Converged (16.4 s)
+[27/36] V3A-HS7-s0.315-AMG-PCG-noobs-p20 ... V3A-HS7-s0.315-AMG-PCG-noobs-p20: Converged
+Converged (18.1 s)
+[28/36] V3A-HS7-s0.315-AMG-PCG-SP-noobs-p20 ... V3A-HS7-s0.315-AMG-PCG-SP-noobs-p20: Converged
+Converged (15.4 s)
+[29/36] V3A-HS7-s0.250-AMG-PCG-noobs-p8 ... V3A-HS7-s0.250-AMG-PCG-noobs-p8: Converged
+Converged (34.8 s)
+[30/36] V3A-HS7-s0.250-AMG-PCG-SP-noobs-p8 ... V3A-HS7-s0.250-AMG-PCG-SP-noobs-p8: Converged
+Converged (31 s)
+[31/36] V3A-HS7-s0.250-AMG-PCG-noobs-p20 ... V3A-HS7-s0.250-AMG-PCG-noobs-p20: Converged
+Converged (33.3 s)
+[32/36] V3A-HS7-s0.250-AMG-PCG-SP-noobs-p20 ... V3A-HS7-s0.250-AMG-PCG-SP-noobs-p20: Converged
+Converged (31.2 s)
+[33/36] V3A-HS7-s0.198-AMG-PCG-noobs-p8 ... V3A-HS7-s0.198-AMG-PCG-noobs-p8: Converged
+Converged (36.2 s)
+[34/36] V3A-HS7-s0.198-AMG-PCG-SP-noobs-p8 ... V3A-HS7-s0.198-AMG-PCG-SP-noobs-p8: Converged
+Converged (53.8 s)
+[35/36] V3A-HS7-s0.198-AMG-PCG-noobs-p20 ... V3A-HS7-s0.198-AMG-PCG-noobs-p20: Converged
+Converged (55 s)
+[36/36] V3A-HS7-s0.198-AMG-PCG-SP-noobs-p20 ... V3A-HS7-s0.198-AMG-PCG-SP-noobs-p20: Converged
+Converged (53.3 s)
+36 runs executed, 0 already done.
+36 results collected into results/v3\csv
+  Converged: 36

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>All cores: time vs threads (HS-7, 568 k DOF, E6)</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
+<line x1="183.19" y1="48.00" x2="183.19" y2="368.00"/>
+<line x1="319.61" y1="48.00" x2="319.61" y2="368.00"/>
+<line x1="422.81" y1="48.00" x2="422.81" y2="368.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="368.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="307.87" x2="526.00" y2="307.87"/>
+<line x1="80.00" y1="247.74" x2="526.00" y2="247.74"/>
+<line x1="80.00" y1="168.26" x2="526.00" y2="168.26"/>
+<line x1="80.00" y1="108.13" x2="526.00" y2="108.13"/>
+<line x1="80.00" y1="48.00" x2="526.00" y2="48.00"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="80.00" y="386.00" text-anchor="middle">1</text>
+<text x="183.19" y="386.00" text-anchor="middle">2</text>
+<text x="319.61" y="386.00" text-anchor="middle">5</text>
+<text x="422.81" y="386.00" text-anchor="middle">10</text>
+<text x="526.00" y="386.00" text-anchor="middle">20</text>
+<text x="72.00" y="372.00" text-anchor="end">0.5</text>
+<text x="72.00" y="311.87" text-anchor="end">1</text>
+<text x="72.00" y="251.74" text-anchor="end">2</text>
+<text x="72.00" y="172.26" text-anchor="end">5</text>
+<text x="72.00" y="112.13" text-anchor="end">10</text>
+<text x="72.00" y="52.00" text-anchor="end">20</text>
+</g>
+<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">All cores: time vs threads (HS-7, 568 k DOF, E6)</text>
+<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">threads</text>
+<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">setup + solve (s)</text>
+<g clip-path="url(#plot-area)">
+<polyline fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" points="80.00,75.01 183.19,115.34 286.39,157.66 389.58,158.22 472.90,157.69 526.00,159.23"/>
+<circle cx="80.00" cy="75.01" r="3.5" fill="#E69F00"/>
+<circle cx="183.19" cy="115.34" r="3.5" fill="#E69F00"/>
+<circle cx="286.39" cy="157.66" r="3.5" fill="#E69F00"/>
+<circle cx="389.58" cy="158.22" r="3.5" fill="#E69F00"/>
+<circle cx="472.90" cy="157.69" r="3.5" fill="#E69F00"/>
+<circle cx="526.00" cy="159.23" r="3.5" fill="#E69F00"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,268.94 183.19,272.85 286.39,279.83 389.58,252.83 472.90,245.61 526.00,244.73"/>
+<polygon points="80.00,264.74 84.00,271.94 76.00,271.94" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="183.19,268.65 187.19,275.85 179.19,275.85" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="286.39,275.63 290.39,282.83 282.39,282.83" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="389.58,248.63 393.58,255.83 385.58,255.83" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="472.90,241.41 476.90,248.61 468.90,248.61" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="526.00,240.53 530.00,247.73 522.00,247.73" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polyline fill="none" stroke="#7A828E" stroke-width="1.00" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,75.01 526.00,334.88"/>
+</g>
+<text x="534.00" y="163.23" font-size="11.5" text-anchor="start" fill="#E69F00">speed-up 2.64× at 20 threads</text>
+<text x="534.00" y="248.73" font-size="11.5" text-anchor="start" fill="#009E73">speed-up 0.76× at 20 threads</text>
+<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2/csv/E6.csv (one process per run, medians)</text>
+<g font-size="12" fill="#1A1E24">
+<line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round"/>
+<circle cx="622.00" cy="62.00" r="3.5" fill="#E69F00"/>
+<text x="644.00" y="66.00">PCG-J</text>
+<line x1="608.00" y1="84.00" x2="636.00" y2="84.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,79.80 626.00,87.00 618.00,87.00" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<text x="644.00" y="88.00">AMG-PCG</text>
+<line x1="608.00" y1="106.00" x2="636.00" y2="106.00" fill="none" stroke="#7A828E" stroke-width="1.00" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<text x="644.00" y="110.00">ideal speed-up from serial PCG-J</text>
+</g>
+</svg>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>Setup time vs problem size</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
+<line x1="147.13" y1="48.00" x2="147.13" y2="368.00"/>
+<line x1="214.26" y1="48.00" x2="214.26" y2="368.00"/>
+<line x1="303.00" y1="48.00" x2="303.00" y2="368.00"/>
+<line x1="370.13" y1="48.00" x2="370.13" y2="368.00"/>
+<line x1="437.26" y1="48.00" x2="437.26" y2="368.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="351.95" x2="526.00" y2="351.95"/>
+<line x1="80.00" y1="298.61" x2="526.00" y2="298.61"/>
+<line x1="80.00" y1="245.28" x2="526.00" y2="245.28"/>
+<line x1="80.00" y1="191.95" x2="526.00" y2="191.95"/>
+<line x1="80.00" y1="138.61" x2="526.00" y2="138.61"/>
+<line x1="80.00" y1="85.28" x2="526.00" y2="85.28"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="80.00" y="386.00" text-anchor="middle">5×10⁴</text>
+<text x="147.13" y="386.00" text-anchor="middle">10⁵</text>
+<text x="214.26" y="386.00" text-anchor="middle">2×10⁵</text>
+<text x="303.00" y="386.00" text-anchor="middle">5×10⁵</text>
+<text x="370.13" y="386.00" text-anchor="middle">10⁶</text>
+<text x="437.26" y="386.00" text-anchor="middle">2×10⁶</text>
+<text x="526.00" y="386.00" text-anchor="middle">5×10⁶</text>
+<text x="72.00" y="355.95" text-anchor="end">10⁻³</text>
+<text x="72.00" y="302.61" text-anchor="end">0.01</text>
+<text x="72.00" y="249.28" text-anchor="end">0.1</text>
+<text x="72.00" y="195.95" text-anchor="end">1</text>
+<text x="72.00" y="142.61" text-anchor="end">10</text>
+<text x="72.00" y="89.28" text-anchor="end">100</text>
+</g>
+<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">Setup time vs problem size</text>
+<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">DOF</text>
+<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">setup time (s)</text>
+<g clip-path="url(#plot-area)">
+<polyline fill="none" stroke="#0072B2" stroke-width="1.50" stroke-linejoin="round" points="91.00,161.59 141.06,139.53 198.88,112.90 248.74,93.55 315.38,61.87"/>
+<circle cx="91.00" cy="161.59" r="3.5" fill="#0072B2"/>
+<circle cx="141.06" cy="139.53" r="3.5" fill="#0072B2"/>
+<circle cx="198.88" cy="112.90" r="3.5" fill="#0072B2"/>
+<circle cx="248.74" cy="93.55" r="3.5" fill="#0072B2"/>
+<circle cx="315.38" cy="61.87" r="3.5" fill="#0072B2"/>
+<polyline fill="none" stroke="#0072B2" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,168.11 141.06,146.00 198.88,117.91 248.74,87.84"/>
+<circle cx="91.00" cy="168.11" r="3.5" fill="#FFFFFF" stroke="#0072B2" stroke-width="1.5"/>
+<circle cx="141.06" cy="146.00" r="3.5" fill="#FFFFFF" stroke="#0072B2" stroke-width="1.5"/>
+<circle cx="198.88" cy="117.91" r="3.5" fill="#FFFFFF" stroke="#0072B2" stroke-width="1.5"/>
+<circle cx="248.74" cy="87.84" r="3.5" fill="#FFFFFF" stroke="#0072B2" stroke-width="1.5"/>
+<polyline fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" points="91.00,360.45 141.06,340.61 198.88,324.42 248.74,312.08 315.38,296.28 372.33,282.61 430.63,268.29 498.39,251.23"/>
+<circle cx="91.00" cy="360.45" r="3.5" fill="#E69F00"/>
+<circle cx="141.06" cy="340.61" r="3.5" fill="#E69F00"/>
+<circle cx="198.88" cy="324.42" r="3.5" fill="#E69F00"/>
+<circle cx="248.74" cy="312.08" r="3.5" fill="#E69F00"/>
+<circle cx="315.38" cy="296.28" r="3.5" fill="#E69F00"/>
+<circle cx="372.33" cy="282.61" r="3.5" fill="#E69F00"/>
+<circle cx="430.63" cy="268.29" r="3.5" fill="#E69F00"/>
+<circle cx="498.39" cy="251.23" r="3.5" fill="#E69F00"/>
+<polyline fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,301.18 141.06,288.77 198.88,274.11 248.74,261.47 315.38,244.72 372.33,230.83 430.63,216.33 498.39,199.51"/>
+<rect x="87.80" y="297.98" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="137.86" y="285.57" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="195.68" y="270.91" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="245.54" y="258.27" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="312.18" y="241.52" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="369.13" y="227.63" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="427.43" y="213.13" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="495.19" y="196.31" width="6.4" height="6.4" fill="#E69F00"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" points="91.00,266.58 141.06,254.36 198.88,240.92 248.74,226.16 315.38,212.19 372.33,199.33 430.63,183.23 498.39,168.74"/>
+<polygon points="91.00,262.38 95.00,269.58 87.00,269.58" fill="#009E73"/>
+<polygon points="141.06,250.16 145.06,257.36 137.06,257.36" fill="#009E73"/>
+<polygon points="198.88,236.72 202.88,243.92 194.88,243.92" fill="#009E73"/>
+<polygon points="248.74,221.96 252.74,229.16 244.74,229.16" fill="#009E73"/>
+<polygon points="315.38,207.99 319.38,215.19 311.38,215.19" fill="#009E73"/>
+<polygon points="372.33,195.13 376.33,202.33 368.33,202.33" fill="#009E73"/>
+<polygon points="430.63,179.03 434.63,186.23 426.63,186.23" fill="#009E73"/>
+<polygon points="498.39,164.54 502.39,171.74 494.39,171.74" fill="#009E73"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="91.00,265.78 141.06,253.91 198.88,240.47 248.74,225.54 315.38,211.68 372.33,198.67 430.63,182.49 498.39,168.10"/>
+<polygon points="91.00,261.58 95.00,268.78 87.00,268.78" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="141.06,249.71 145.06,256.91 137.06,256.91" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="198.88,236.27 202.88,243.47 194.88,243.47" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="248.74,221.34 252.74,228.54 244.74,228.54" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="315.38,207.48 319.38,214.68 311.38,214.68" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="372.33,194.47 376.33,201.67 368.33,201.67" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="430.63,178.29 434.63,185.49 426.63,185.49" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="498.39,163.90 502.39,171.10 494.39,171.10" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+</g>
+<text x="322.38" y="55.87" font-size="11.5" text-anchor="start" fill="#0072B2">slope 1.85</text>
+<text x="255.74" y="94.84" font-size="11.5" text-anchor="start" fill="#0072B2">slope 2.12</text>
+<text x="505.39" y="175.74" font-size="11.5" text-anchor="start" fill="#009E73">slope 1.01</text>
+<text x="505.39" y="188.74" font-size="11.5" text-anchor="start" fill="#009E73">slope 1.01</text>
+<text x="505.39" y="201.74" font-size="11.5" text-anchor="start" fill="#E69F00">slope 1.04</text>
+<text x="505.39" y="271.23" font-size="11.5" text-anchor="start" fill="#E69F00">slope 1.08</text>
+<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2/csv/E2.csv (setup_s: ordering + factorisation, IC(0), AMG hierarchy)</text>
+<g font-size="12" fill="#1A1E24">
+<line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#0072B2" stroke-width="1.50" stroke-linejoin="round"/>
+<circle cx="622.00" cy="62.00" r="3.5" fill="#0072B2"/>
+<text x="644.00" y="66.00">DIRECT-ND</text>
+<line x1="608.00" y1="84.00" x2="636.00" y2="84.00" fill="none" stroke="#0072B2" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<circle cx="622.00" cy="84.00" r="3.5" fill="#FFFFFF" stroke="#0072B2" stroke-width="1.5"/>
+<text x="644.00" y="88.00">DIRECT-RCM</text>
+<line x1="608.00" y1="106.00" x2="636.00" y2="106.00" fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round"/>
+<circle cx="622.00" cy="106.00" r="3.5" fill="#E69F00"/>
+<text x="644.00" y="110.00">PCG-J</text>
+<line x1="608.00" y1="128.00" x2="636.00" y2="128.00" fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<rect x="618.80" y="124.80" width="6.4" height="6.4" fill="#E69F00"/>
+<text x="644.00" y="132.00">PCG-IC0</text>
+<line x1="608.00" y1="150.00" x2="636.00" y2="150.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round"/>
+<polygon points="622.00,145.80 626.00,153.00 618.00,153.00" fill="#009E73"/>
+<text x="644.00" y="154.00">AMG</text>
+<line x1="608.00" y1="172.00" x2="636.00" y2="172.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,167.80 626.00,175.00 618.00,175.00" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<text x="644.00" y="176.00">AMG-PCG</text>
+</g>
+</svg>

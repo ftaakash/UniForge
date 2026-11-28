@@ -9,6 +9,7 @@
 //                                                    Task D multicore benchmark report
 //   uniforge_cli backprop [--out DIR]                Task F gradient check + loss curve
 //   uniforge_cli all [--out DIR] [--data DIR]        fea + backprop + gen-samples + quick bench
+//   uniforge_cli study plan|run|batch|collect ...   V2 experiment harness (StudyCommand.hpp)
 //
 // DIR defaults to "results" (--out) and "data" (--data) relative to the current folder.
 
@@ -26,6 +27,7 @@
 #include "cli/commands/FeaCommand.hpp"
 #include "cli/commands/ImportBenchCommand.hpp"
 #include "cli/commands/SamplesCommand.hpp"
+#include "cli/commands/StudyCommand.hpp"
 
 namespace {
 
@@ -44,8 +46,11 @@ void printUsage(std::ostream& os) {
           "                 reps per p, report in DIR/benchmarks/bench_<date>.{json,csv,md}\n"
           "  backprop       One-neuron backprop (Task F): gradients vs central differences,\n"
           "                 one update and the 100-step loss curve\n"
-          "  all            fea + backprop + gen-samples + a quick bench into DIR/benchmarks/quick\n"
+          "  all            fea + backprop + gen-samples + a quick bench into "
+          "DIR/benchmarks/quick\n"
           "                 (import-bench and bench --report are machine-specific, run alone)\n"
+          "  study ...      V2 experiment harness: plan | run | batch | collect\n"
+          "                 (run `uniforge_cli study` for its options)\n"
           "\n"
           "Options:\n"
           "  --out DIR      Evidence folder (default: results). CSVs go to DIR/csv,\n"
@@ -79,6 +84,10 @@ int run(const std::vector<std::string>& args) {
     }
 
     const std::string& command = args[0];
+    if (command == "study") { // V2 experiment harness, with its own options
+        return runStudy(std::vector<std::string>(args.begin() + 1, args.end()), UNIFORGE_GIT_COMMIT,
+                        std::cout, std::cerr);
+    }
     std::filesystem::path outDir = "results";
     std::filesystem::path dataDir = "data";
     std::string sizes;

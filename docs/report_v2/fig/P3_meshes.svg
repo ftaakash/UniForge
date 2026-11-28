@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>P3 meshes</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Graded hexahedral meshes of HS-7</text>
+<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Tensor grid with a cell mask, neighbour size ratio ≤ 1.5; one cell across the TIM.</text>
+<image x="20.00" y="70.00" width="650.00" height="380.00" href="P3_meshes-1.png"/>
+<text x="345.00" y="465.00" font-size="12.50" text-anchor="middle" fill="#59616E">s = 1.0 mm: 56015 nodes, 44080 cells, max aspect ratio 10.0</text>
+<image x="20.00" y="490.00" width="650.00" height="380.00" href="P3_meshes-2.png"/>
+<text x="345.00" y="885.00" font-size="12.50" text-anchor="middle" fill="#59616E">s = 0.5 mm: 285532 nodes, 241600 cells, max aspect ratio 5.0</text>
+<image x="860.00" y="110.00" width="500.00" height="500.00" href="P3_meshes-3.png"/>
+<rect x="860.00" y="110.00" width="500.00" height="500.00" fill="none" stroke="#59616E" stroke-width="0.60"/>
+<text x="1110.00" y="635.00" font-size="12.00" text-anchor="middle" fill="#59616E">Detail at s = 0.5 mm: a corner of the die seen from below</text>
+<text x="1110.00" y="651.00" font-size="12.00" text-anchor="middle" fill="#59616E">(die dark, TIM orange: one cell across 0.1 mm)</text>
+</svg>

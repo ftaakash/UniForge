@@ -5,61 +5,98 @@ thermal results, solves a 1D thermal finite-element problem, benchmarks serial v
 batch solves, and demonstrates simulated embedded-hardware adapters. All backend logic,
 numerics, file processing and concurrency are written in C++17.
 
-> **Status (2026-11-24): v1.0.0 and V2 both submitted; V2 released as
-> [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0) and its report sent on 2026-11-24.** Candidate ID
-> RA2311042010060 (Aakash G S). v1: tasks A–F complete, 289 tests pass, and the package was tested
-> from Unicode, read-only and WARP paths; start with the [report](docs/report/report.pdf)
-> (5 pages), then the [screenshots](docs/demo/screenshots/), the
-> [ownership statement](docs/ownership.md) and the [AI-use log](docs/ai_usage_log.md). V2 (the
-> Assignment Extension): see the section below and the
-> [V2 report](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/report_v2/UniForge_V2_Report.pdf).
+> **Status (2026-11-28): v1.0.0 and V2 (`v2.0.0`) both submitted; V3, a solver follow-up after
+> the interview, is complete and merged here.** Candidate ID RA2311042010060 (Aakash G S). V2,
+> the Assignment Extension, was sent as the [V2 report](docs/report_v2/UniForge_V2_Report.pdf)
+> (22 pages) on 2026-11-24; V3 is summarised in the [V3 report](docs/report_v3/UniForge_V3_Report.pdf)
+> (9 pages). v1: tasks A–F complete, 289 tests pass, and the package was tested from Unicode,
+> read-only and WARP paths; start with the [report](docs/report/report.pdf) (5 pages), then the
+> [screenshots](docs/demo/screenshots/), the [ownership statement](docs/ownership.md) and the
+> [AI-use log](docs/ai_usage_log.md). The submitted versions stay available as the tags
+> [`v1.0.0`](https://github.com/ftaakash/UniForge/tree/v1.0.0) and
+> [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0).
 
 ![Overview](docs/demo/screenshots/a_overview.png)
 
-## V2: complete and submitted 2026-11-24 (release [`v2.0.0`](https://github.com/ftaakash/UniForge/releases/tag/v2.0.0), branch [`v2`](https://github.com/ftaakash/UniForge/tree/v2))
+## V3: can AMG-PCG be beaten? (complete, branch `v3`, merged into `main` on 2026-11-28)
 
-This branch (`main`) and the tag `v1.0.0` are the submitted v1 and stay unchanged apart from
-this note. V2 answers the Assignment Extension Notice: three different solver types applied to
-the same steady thermal analysis on a more complex 3D object, delivered as one PDF report.
+After the interview, a literature survey named the solvers most likely to beat V2's answer
+(AMG-PCG) on the HS-7 heat sink. V3 tested them one experiment at a time with the V2 harness.
 
-- **Report:** [UniForge_V2_Report.pdf](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/report_v2/UniForge_V2_Report.pdf)
-  (22 pages, no source code). Every number in it is filled in from the committed results and
-  listed with its source in [provenance.csv](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/report_v2/provenance.csv).
-- **Object:** HS-7, a finned heat sink on a heated die with a thin thermal interface layer, plus
-  a complexity ladder from the v1 bar and a cube to a pin-fin variant.
+- **Report:** [UniForge_V3_Report.pdf](docs/report_v3/UniForge_V3_Report.pdf) (9 pages); every
+  number is traced to `results/v3` in [provenance.csv](docs/report_v3/provenance.csv). Full
+  write-up per step: [docs/v3_experiments.md](docs/v3_experiments.md).
+- **Answer:** on 20 pinned threads, **AMG-PCG-CH-SP** (Chebyshev–Jacobi smoother,
+  single-precision hierarchy, parallel setup) is about 1.8–2.4× faster than V2's AMG-PCG in setup
+  plus solve, and 2.0–3.1× in the solve alone, at every HS-7 size. For several load cases,
+  lockstep solving (AMG-PCG-CH-SP-B) adds up to 2.5×. On one core V2's AMG-PCG stays best.
+  Against hypre BoomerAMG and PETSc GAMG (untuned) our AMG-PCG is 1.27–2.30× faster on one
+  core.
+- **Steps:** V3A single precision (not adopted alone), V3B Chebyshev smoother (adopted), V3C
+  parallel setup (adopted), V3D geometric multigrid (not adopted), V3E load cases in lockstep and
+  pinned threads (adopted for L > 1), V3F hypre and PETSc references, V3G sanitizer check and
+  timing repeat, V3H thread runs re-timed with pinned threads.
+- **Tests:** 434 pass on Windows; CI (Windows, Linux ASan + UBSan, TSan) passed on the `v3`
+  branch before the merge. hypre is optional (`-DUNIFORGE_WITH_HYPRE=ON`); the default build
+  needs no download.
+
+## V2: three solvers on a 3D thermal problem (complete, release `v2.0.0`, submitted 2026-11-24)
+
+PASS SCIENCE WORKS sent an Assignment Extension Notice: apply three different types of solver
+to the same thermal analysis, on a more complex 3D object than the v1 bar, and justify which
+works best in which scenario. The deliverable is a single PDF report. V2 was built on branch
+`v2` phase by phase and released as `v2.0.0`; the report was sent on 2026-11-24, and V2 was
+merged into `main` together with V3 on 2026-11-28. The submitted v1 stays at the tag `v1.0.0`.
+
+- **Report:** [UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf) (22 pages, no
+  source code); every number in it is filled in from `results/v2` and listed with its source in
+  [provenance.csv](docs/report_v2/provenance.csv).
+- **Answer:** all six solver variants give the same temperatures; AMG-PCG is the fastest at every
+  measured HS-7 size (56 k to 3.76 M unknowns) and for 1 to 20 load cases. The direct solver wins
+  only on small, slender problems and reaches its 8 GB memory wall at 0.57 M (RCM) and 1.02 M
+  (nested dissection) unknowns; Jacobi-PCG wins on the compact cube and uses the least memory.
+
+- **Object:** HS-7, a finned aluminium heat sink on a heated silicon die with a thin thermal
+  interface layer (dimensions from v1's `data/geometry/heatsink_fins.stl`), plus a complexity
+  ladder from the v1 bar and a cube up to a pin-fin variant.
 - **Solvers:** sparse direct Cholesky (RCM and nested-dissection orderings), preconditioned
-  conjugate gradients (Jacobi, IC(0)) and smoothed-aggregation algebraic multigrid, written from
-  scratch on shared, deterministic sparse kernels.
-- **Answer:** all six variants give the same temperatures; AMG-PCG is the fastest at every
-  measured HS-7 size (56 k to 3.76 M unknowns) and for 1 to 20 load cases. The direct solver
-  wins only on small, slender problems and reaches its 8 GB memory wall at 0.57 M (RCM) and
-  1.02 M (nested dissection) unknowns; Jacobi-PCG wins on the compact cube and uses the least
-  memory.
-- **Evidence:** one official batch of 241 runs (`results/v2` on the `v2` branch); the 72 AMG
-  rows were re-run after a strength-threshold fix found by the batch, with the earlier rows kept
-  for comparison.
-- **Specification and build notes:** [V2 build specification](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/design/v2/UniForge_V2_Build_Spec.md),
-  [`v2` README](https://github.com/ftaakash/UniForge/blob/v2.0.0/README.md).
-- **Effort and AI use:** 6.05 h of working sessions for V2 (19.8 h with v1), per phase in the
-  [effort log](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/effort_log.md), which also
-  lists the design decisions made by the author; the assistant's work and its caught mistakes are
-  in the [AI-use log](https://github.com/ftaakash/UniForge/blob/v2.0.0/docs/ai_usage_log.md).
-- **Tests:** 424 pass on Windows (Release and Debug); 136 of them are new in V2.
+  conjugate gradients (Jacobi, IC(0)) and smoothed-aggregation algebraic multigrid, all written
+  from scratch on shared, deterministic sparse kernels.
+- **Plan and specification:** [V2 build specification](docs/design/v2/UniForge_V2_Build_Spec.md)
+  (merged from the [analysis and plan](docs/design/v2/UniForge_V2_Analysis_and_Plan.md), the
+  [design review](docs/design/v2/UniForge_V2_Design_Review.md) and the
+  [system design](docs/design/v2/UniForge_V2_System_Design.md)).
 
-| Phase | Content | Status (2026-11-24) |
-|---|---|---|
-| V2-0 | Design documents and build specification | Done, tag `v2-phase-0` |
-| V2-1 | Sparse kernels (CSR, deterministic kernel pool, SpMV, SpGEMM) | Done, tag `v2-phase-1` |
-| V2-2 | Box designs and graded tensor-grid hex mesher | Done, tag `v2-phase-2` |
-| V2-3 | Solver interface, reports, Jacobi-PCG | Done, tag `v2-phase-3` |
-| V2-4 | 3D finite elements and verification (v1 bar reproduced in 3D, order-2 convergence, fin theory) | Done, tag `v2-phase-4` |
-| V2-5 | Sparse direct Cholesky (RCM and nested-dissection orderings) | Done, tag `v2-phase-5` |
-| V2-6 | IC(0) preconditioner with shift ladder (PCG-IC0) | Done, tag `v2-phase-6` |
-| V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG): all six solver variants built | Done, tag `v2-phase-7` |
-| V2-8 | Experiment harness and the official overnight batch (241 runs) | Done, tag `v2-phase-8` |
-| V2-9 | Figures: CPU rasteriser, sparsity plots, compressed PNG, `study figures` | Done, tag `v2-phase-9` |
-| V2-9.1 | Fixes: renders as separate PNG files; AMG strength threshold 0.08 → 0.02 and the AMG rows re-run | Done, tag `v2-phase-9.1` |
-| V2-10 | PDF report with numbers traced to the results | Done, tag `v2-phase-10` = release `v2.0.0` |
+| Phase | Content | Tag | Status |
+|---|---|---|---|
+| V2-0 | Design documents and build specification | `v2-phase-0` | Done |
+| V2-1 | Sparse kernels: CSR storage, persistent kernel pool with thread-count-independent reductions, SpMV, SpGEMM | `v2-phase-1` | Done |
+| V2-2 | Box designs (v1 bar, cube, plate, finned plate, HS-7, pin fin) and graded tensor-grid hex mesher | `v2-phase-2` | Done |
+| V2-3 | Solver interface and reports, observers, κ estimate, Jacobi-PCG, module-rule lint | `v2-phase-3` | Done |
+| V2-4 | Trilinear hex element, CSR assembly, boundary conditions, energy audit, verification (patch test, v1 bar in 3D, manufactured solution, fin theory) | `v2-phase-4` | Done |
+| V2-5 | Sparse direct Cholesky: RCM and nested-dissection orderings, exact symbolic prediction with a memory budget, up-looking factorisation | `v2-phase-5` | Done |
+| V2-6 | IC(0) preconditioner with shift-and-retry (PCG-IC0) | `v2-phase-6` | Done |
+| V2-7 | Smoothed-aggregation algebraic multigrid (AMG, AMG-PCG); all six solver variants built | `v2-phase-7` | Done |
+| V2-8 | Experiment harness (`uniforge_cli study`: plan, one process per run, memory cap, P-core pinning, resume, collect) and the official batch (241 runs, results in `results/v2/`) | `v2-phase-8` | Done |
+| V2-9 | Figures: CPU rasteriser, spy plots, PNG writer with deflate (`core/viz`), `uniforge_cli study figures` → P1–P22 in [docs/report_v2/fig](docs/report_v2/fig/figures.md) | `v2-phase-9` | Done |
+| V2-9.1 | Fixes: renders as separate PNG files (packaging hygiene scan); AMG strength threshold 0.08 → 0.02 for trilinear hexahedra and the 72 AMG rows re-run officially ([before/after](docs/v2_experiments.md)) | `v2-phase-9.1` | Done |
+| V2-10 | PDF report ([UniForge_V2_Report.pdf](docs/report_v2/UniForge_V2_Report.pdf), 22 pages): numbers filled from `results/v2` with provenance, figures inline, references verified, markers resolved; review fixes applied | `v2-phase-10` | Done |
+| Release | `v2.0.0`: CI green on Windows and Linux; actual effort 6.05 h of working sessions ([effort log](docs/effort_log.md)); report sent 2026-11-24 | `v2.0.0` | Submitted |
+
+So far 424 tests pass on Windows (Release and Debug); 136 of them are new in V2. How the
+experiments are run is described in [docs/v2_experiments.md](docs/v2_experiments.md). The 3D model
+reproduces v1's bar result (188.2 °C at x = 0.42 m, 0.42 / 0.58 W through the ends) and
+converges at second order on a manufactured solution. Every phase tag
+also runs the Linux ASan/TSan CI; the release tag passed all three jobs. The V2 code lives in `src/core/sparse/`, `src/core/fem3d/`
+and `src/core/solvers/`; build and test it exactly like v1 (see [Build from source](#build-from-source)).
+To run only the V2 tests:
+
+```bash
+ctest --preset windows-release -R "Csr|KernelPool|SparseOps|VectorOps|Design\.|MeshAxis|HexMesh|Element\.|Assembly\.|Verification\.|Lanczos|Pcg|Ic0|Amg\.|Ordering\.|DirectCholesky|SolverFactory|StudyPlan|StudyRecord|StudyRun|study_batch|study_figures|Viz\.|SvgPlotExtras|PngWriter\.(Compressed|Flat)|v2_module_rules"
+```
+
+To rebuild the report from the committed results (needs Python 3 with pypdf and Microsoft
+Edge): `uniforge_cli study figures`, then `tools/report_v2/build_report_v2.ps1`.
 
 Each phase tag runs the Windows and Linux (ASan/UBSan, TSan) CI. The release `v2.0.0` passed
 all three jobs. The tag was moved twice after the first release, without code or report changes:
@@ -220,6 +257,11 @@ src/core/       portable C++17 engineering core (standard library only): common/
                 CSV/SVG/JSON writers, Rng), thermal/ (1D FEA), io/ (line reader, STL and CSV
                 importers), perf/ (batch generator, worker pool, runners, benchmark, SystemInfo),
                 hw/ (simulated device adapters, retry policy), ml/ (one-neuron backprop)
+                V2: sparse/ (CSR, kernel pool, SpMV, SpGEMM), fem3d/ (box designs, graded hex
+                mesher, Q1 element, CSR assembly, energy audit), solvers/ (solver interface, reports, observers, PCG with
+                Jacobi / IC(0) / AMG, direct Cholesky with RCM / nested
+                dissection, smoothed-aggregation AMG)
+                study/ (V2 experiment plan, one run, collect)
 src/app/        UniForge.exe: platform/ (Win32, D3D11, crash handler), services/ (JobRunner,
                 LogSink, ResultStore, DeviceManager), render/ (3D viewport), ui/ (theme, fonts,
                 shell, widgets), views/, shaders/
@@ -229,15 +271,17 @@ src/cli/        uniforge_cli.exe (headless evidence generator on the same core; 
 tests/          unit, numerical, negative and integration tests (GoogleTest + CTest labels),
                 fixtures/ (one malformed STL/CSV file per failure mode), golden/ (expected CLI
                 output)
+                and lint/ (V2 module dependency rules as a CTest check)
 data/           sample STL and SYNTHETIC CSV files, PROVENANCE.md
 results/        committed evidence: csv/ (with .meta.json sidecars), plots/, benchmarks/,
                 edge_cases.md
 tools/          package.ps1, hygiene_scan.ps1, bench_report.ps1, edge_case_runs.ps1,
                 build_report.ps1, ZIP-specific VS Code config and regenerate_evidence.cmd
                 wrapper (no backend logic)
-docs/           report/, design/, task notes (thermal_fea, performance, embedded_design,
-                backprop), ownership, walkthrough, demo script, AI-use and effort logs,
-                demo/screenshots/, appendix_handwritten/
+docs/           report/, design/ (v1 and design/v2/), task notes (thermal_fea, performance,
+                embedded_design, backprop), ownership, walkthrough, demo script, AI-use and
+                effort logs, demo/screenshots/, appendix_handwritten/, report_v2/ (V2 figure
+                tokens; the V2 report later)
 ```
 
 ## Known limitations
@@ -258,6 +302,7 @@ docs/           report/, design/, task notes (thermal_fea, performance, embedded
 - [Screenshots of every view](docs/demo/screenshots/) and [edge-case runs](results/edge_cases.md)
 - Demo video: `RA2311042010060_Demo.mp4` (submitted alongside the ZIP; 57 MB, too large for the repository), recorded from the packaged app following the demo script
 - [Final build specification](docs/design/UniForge_Final_Build_Spec.md)
+- [V2 build specification](docs/design/v2/UniForge_V2_Build_Spec.md) and the [V2 design documents](docs/design/README.md#v2-assignment-extension-notice-2026-11-15)
 - [Thermal FEA: formulation, verification, debugging log](docs/thermal_fea.md)
 - [Multicore performance analysis](docs/performance.md) and [embedded integration design](docs/embedded_design.md)
 - [Backpropagation: derivation and measured loss curve](docs/backprop.md) and the [handwritten-appendix checklist](docs/appendix_handwritten/CHECKLIST.md)

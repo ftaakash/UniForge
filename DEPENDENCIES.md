@@ -62,3 +62,13 @@ against an allow-list. Result for Phase 2:
 | `Launch.exe` | `KERNEL32.dll`, `USER32.dll` |
 | `app/UniForge.exe` | `KERNEL32.dll`, `USER32.dll`, `GDI32.dll`, `ADVAPI32.dll`, `SHELL32.dll`, `ole32.dll`, `IMM32.dll`, `d3d11.dll`, `dwmapi.dll` |
 | `app/uniforge_cli.exe` | `KERNEL32.dll` |
+
+## Optional external reference solvers (V3f; not vendored, not in the default build)
+
+These are used only to measure our solvers against mature libraries (`docs/v3_experiments.md`,
+V3F). They are not in the repository, not built by default, and not shipped.
+
+| Name | Version | Source | Licence | How it is used |
+|---|---|---|---|---|
+| hypre | 3.2.1 (`v3.2.1.tar.gz`, SHA-256 `3083cf943e1dab54517acae36afad72a4ada2c72c9567e525fc9c6efedb14e0c`) | https://github.com/hypre-space/hypre | MIT or Apache-2.0 | Built locally with MSVC (static, `/MT`, OpenMP, no MPI); linked with `-DUNIFORGE_WITH_HYPRE=ON -DHYPRE_ROOT=<install>` for the `HYPRE-PCG` solver kinds |
+| PETSc | 3.26.1 (`petsc-3.26.1.tar.gz`, SHA-256 `a4dc46c1b4403545ac2274741ce10801366c4a9a7b2683b678d18f6663b93496`) | https://web.cels.anl.gov/projects/petsc/download/release-snapshots/ | BSD-2-Clause | Built in WSL2 Ubuntu 24.04 (GCC 13.3, no MPI); runs `tools/petsc_ref/petsc_ref.c` on matrices exported by `uniforge_cli study export` |

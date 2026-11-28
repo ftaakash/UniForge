@@ -134,7 +134,6 @@ if(UNIFORGE_BUILD_APP)
         SOURCES
             unit/render/CameraTest.cpp
             unit/render/PickingTest.cpp
-            unit/render/PngWriterTest.cpp
             unit/ui/FormatTest.cpp
         LIBS uniforge_viewcore)
 endif()
@@ -145,6 +144,82 @@ uniforge_add_test(unit_perf
         unit/perf/BatchGeneratorTest.cpp
         unit/perf/WorkerPoolTest.cpp
     LIBS uniforge_core)
+
+# V2 figures (build spec §4.1, §12): PNG writer with deflate, CPU rasteriser, spy, SVG canvas.
+uniforge_add_test(unit_viz
+    LABEL unit
+    SOURCES
+        unit/viz/PngWriterTest.cpp
+        unit/viz/VizTest.cpp
+    LIBS uniforge_core)
+
+# V2 sparse kernels (build spec §5.5): CSR storage, persistent kernel pool, SpGEMM.
+uniforge_add_test(unit_sparse
+    LABEL unit
+    SOURCES
+        unit/sparse/CsrMatrixTest.cpp
+        unit/sparse/KernelPoolTest.cpp
+        unit/sparse/SparseOpsTest.cpp
+        unit/sparse/VectorOpsTest.cpp
+    LIBS uniforge_core)
+
+# V2 geometry and mesher (build spec §3.4): designs, graded tensor grid, surface, STL round trip.
+uniforge_add_test(unit_fem3d
+    LABEL unit
+    SOURCES
+        unit/fem3d/AssemblyTest.cpp
+        unit/fem3d/DesignTest.cpp
+        unit/fem3d/ElementTest.cpp
+        unit/fem3d/HexMeshTest.cpp
+    LIBS uniforge_core)
+
+# V2 verification ladder (build spec §3.6): patch test, v1 bar in 3D, manufactured solution,
+# fin theory, HS-7 energy balance.
+uniforge_add_test(numerical_fem3d
+    LABEL numerical
+    SOURCES numerical/fem3d/VerificationTest.cpp
+    LIBS uniforge_core)
+
+# V2 solver interface and PCG (build spec §5.1, §5.3).
+uniforge_add_test(unit_solvers
+    LABEL unit
+    SOURCES
+        unit/solvers/AmgTest.cpp
+        unit/solvers/DirectTest.cpp
+        unit/solvers/Ic0Test.cpp
+        unit/solvers/LanczosTest.cpp
+        unit/solvers/PcgTest.cpp
+    LIBS uniforge_core)
+target_include_directories(unit_solvers PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}") # support/
+
+# V2 module dependency rules (build spec §4.2): e.g. solvers never include fem3d.
+add_test(NAME lint.v2_module_rules
+    COMMAND "${CMAKE_COMMAND}" "-DSRC=${PROJECT_SOURCE_DIR}/src/core"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/lint/module_rules.cmake")
+set_tests_properties(lint.v2_module_rules PROPERTIES LABELS unit)
+
+# V2 experiment harness (build spec §9): plan, records, references, one run, collect.
+uniforge_add_test(unit_study
+    LABEL unit
+    SOURCES unit/study/StudyTest.cpp
+    LIBS uniforge_core)
+
+# The batch end to end: child processes, result files, collection and resume (smoke plan T0).
+add_test(NAME integration.study_batch_smoke
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/study_smoke_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/study_smoke.cmake")
+set_tests_properties(integration.study_batch_smoke PROPERTIES LABELS integration)
+
+# V2-9: report figures from the committed official results (no large solves).
+add_test(NAME integration.study_figures
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:uniforge_cli>"
+        "-DRESULTS=${PROJECT_SOURCE_DIR}/results/v2"
+        "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/study_figures_$<CONFIG>"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/integration/study_figures.cmake")
+set_tests_properties(integration.study_figures PROPERTIES LABELS integration)
 
 uniforge_add_test(numerical_perf
     LABEL numerical

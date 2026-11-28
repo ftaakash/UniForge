@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>Iterations vs TIM conductivity (contrast to aluminium 200 W/(m·K))</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
+<line x1="131.60" y1="48.00" x2="131.60" y2="368.00"/>
+<line x1="183.19" y1="48.00" x2="183.19" y2="368.00"/>
+<line x1="251.40" y1="48.00" x2="251.40" y2="368.00"/>
+<line x1="303.00" y1="48.00" x2="303.00" y2="368.00"/>
+<line x1="354.60" y1="48.00" x2="354.60" y2="368.00"/>
+<line x1="422.81" y1="48.00" x2="422.81" y2="368.00"/>
+<line x1="474.40" y1="48.00" x2="474.40" y2="368.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="368.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="304.33" x2="526.00" y2="304.33"/>
+<line x1="80.00" y1="256.16" x2="526.00" y2="256.16"/>
+<line x1="80.00" y1="208.00" x2="526.00" y2="208.00"/>
+<line x1="80.00" y1="144.33" x2="526.00" y2="144.33"/>
+<line x1="80.00" y1="96.16" x2="526.00" y2="96.16"/>
+<line x1="80.00" y1="48.00" x2="526.00" y2="48.00"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="80.00" y="386.00" text-anchor="middle">0.5</text>
+<text x="131.60" y="386.00" text-anchor="middle">1</text>
+<text x="183.19" y="386.00" text-anchor="middle">2</text>
+<text x="251.40" y="386.00" text-anchor="middle">5</text>
+<text x="303.00" y="386.00" text-anchor="middle">10</text>
+<text x="354.60" y="386.00" text-anchor="middle">20</text>
+<text x="422.81" y="386.00" text-anchor="middle">50</text>
+<text x="474.40" y="386.00" text-anchor="middle">100</text>
+<text x="526.00" y="386.00" text-anchor="middle">200</text>
+<text x="72.00" y="372.00" text-anchor="end">20</text>
+<text x="72.00" y="308.33" text-anchor="end">50</text>
+<text x="72.00" y="260.16" text-anchor="end">100</text>
+<text x="72.00" y="212.00" text-anchor="end">200</text>
+<text x="72.00" y="148.33" text-anchor="end">500</text>
+<text x="72.00" y="100.16" text-anchor="end">10³</text>
+<text x="72.00" y="52.00" text-anchor="end">2×10³</text>
+</g>
+<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">Iterations vs TIM conductivity (contrast to aluminium 200 W/(m·K))</text>
+<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">k_TIM (W/(m·K))</text>
+<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">iterations to 1e-10</text>
+<g clip-path="url(#plot-area)">
+<polyline fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" points="80.00,78.96 213.38,79.45 354.60,79.83 526.00,78.42"/>
+<circle cx="80.00" cy="78.96" r="3.5" fill="#E69F00"/>
+<circle cx="213.38" cy="79.45" r="3.5" fill="#E69F00"/>
+<circle cx="354.60" cy="79.83" r="3.5" fill="#E69F00"/>
+<circle cx="526.00" cy="78.42" r="3.5" fill="#E69F00"/>
+<polyline fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,168.92 213.38,169.71 354.60,171.13 526.00,171.74"/>
+<rect x="76.80" y="165.72" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="210.18" y="166.51" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="351.40" y="167.93" width="6.4" height="6.4" fill="#E69F00"/>
+<rect x="522.80" y="168.54" width="6.4" height="6.4" fill="#E69F00"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" points="80.00,217.68 213.38,236.35 354.60,245.85 526.00,244.08"/>
+<polygon points="80.00,213.48 84.00,220.68 76.00,220.68" fill="#009E73"/>
+<polygon points="213.38,232.15 217.38,239.35 209.38,239.35" fill="#009E73"/>
+<polygon points="354.60,241.65 358.60,248.85 350.60,248.85" fill="#009E73"/>
+<polygon points="526.00,239.88 530.00,247.08 522.00,247.08" fill="#009E73"/>
+<polyline fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,329.11 213.38,337.55 354.60,339.83 526.00,342.18"/>
+<polygon points="80.00,324.91 84.00,332.11 76.00,332.11" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="213.38,333.35 217.38,340.55 209.38,340.55" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="354.60,335.63 358.60,342.83 350.60,342.83" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<polygon points="526.00,337.98 530.00,345.18 522.00,345.18" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+</g>
+<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2/csv/E3.csv; HS-7 at s = 0.5 mm</text>
+<g font-size="12" fill="#1A1E24">
+<line x1="608.00" y1="62.00" x2="636.00" y2="62.00" fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round"/>
+<circle cx="622.00" cy="62.00" r="3.5" fill="#E69F00"/>
+<text x="644.00" y="66.00">PCG-J</text>
+<line x1="608.00" y1="84.00" x2="636.00" y2="84.00" fill="none" stroke="#E69F00" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<rect x="618.80" y="80.80" width="6.4" height="6.4" fill="#E69F00"/>
+<text x="644.00" y="88.00">PCG-IC0</text>
+<line x1="608.00" y1="106.00" x2="636.00" y2="106.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round"/>
+<polygon points="622.00,101.80 626.00,109.00 618.00,109.00" fill="#009E73"/>
+<text x="644.00" y="110.00">AMG</text>
+<line x1="608.00" y1="128.00" x2="636.00" y2="128.00" fill="none" stroke="#009E73" stroke-width="1.50" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<polygon points="622.00,123.80 626.00,131.00 618.00,131.00" fill="#FFFFFF" stroke="#009E73" stroke-width="1.5"/>
+<text x="644.00" y="132.00">AMG-PCG</text>
+</g>
+</svg>

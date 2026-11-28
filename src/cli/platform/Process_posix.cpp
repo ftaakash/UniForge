@@ -1,13 +1,16 @@
-#include "cli/platform/Process.hpp"
-
+#include <chrono>
+#include <csignal>
+#include <fstream>
 #include <spawn.h>
+#include <string>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#include <unistd.h>
-
-#include <fstream>
-#include <string>
 #include <system_error>
+#include <thread>
+#include <unistd.h>
+#include <vector>
+
+#include "cli/platform/Process.hpp"
 
 extern char** environ;
 
@@ -51,6 +54,61 @@ int runProcess(const std::filesystem::path& exe, const std::vector<std::string>&
         return -1;
     }
     return WEXITSTATUS(status);
+}
+
+LimitedRun runProcessLimited(const std::filesystem::path& exe, const std::vector<std::string>& args,
+                             std::uint64_t /*memoryLimitBytes*/, double timeoutSeconds) {
+    LimitedRun out;
+    std::string program = exe.string();
+    std::vector<std::string> storage{program};
+    storage.insert(storage.end(), args.begin(), args.end());
+    std::vector<char*> argv;
+    for (std::string& s : storage) {
+        argv.push_back(s.data());
+    }
+    argv.push_back(nullptr);
+    pid_t pid = 0;
+    if (posix_spawn(&pid, program.c_str(), nullptr, nullptr, argv.data(), environ) != 0) {
+        return out;
+    }
+    out.started = true;
+    const auto t0 = std::chrono::steady_clock::now();
+    int status = 0;
+    for (;;) {
+        const pid_t r = waitpid(pid, &status, WNOHANG);
+        if (r == pid) {
+            break;
+        }
+        const double elapsed =
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        if (elapsed > timeoutSeconds) {
+            out.timedOut = true;
+            kill(pid, SIGKILL);
+            waitpid(pid, &status, 0);
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    out.exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    return out;
+}
+
+int pinToPerformanceCore() {
+    return -1;
+}
+
+std::vector<int> performanceFirstCpus(int /*threads*/) {
+    return {};
+}
+
+bool pinThreadToCpu(int /*cpu*/) {
+    return false;
+}
+
+void keepAwake(bool /*on*/) {}
+
+double cpuLoadPercent(double /*sampleSeconds*/) {
+    return -1.0;
 }
 
 std::string cpuName() {

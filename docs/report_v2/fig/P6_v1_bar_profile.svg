@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>Centre line of the 3D bar vs v1's exact parabola</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><clipPath id="plot-area"><rect x="80.00" y="48.00" width="446.00" height="320.00"/></clipPath></defs>
+<g stroke="#D3D9E1" stroke-width="1">
+<line x1="80.00" y1="48.00" x2="80.00" y2="368.00"/>
+<line x1="169.20" y1="48.00" x2="169.20" y2="368.00"/>
+<line x1="258.40" y1="48.00" x2="258.40" y2="368.00"/>
+<line x1="347.60" y1="48.00" x2="347.60" y2="368.00"/>
+<line x1="436.80" y1="48.00" x2="436.80" y2="368.00"/>
+<line x1="526.00" y1="48.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="368.00" x2="526.00" y2="368.00"/>
+<line x1="80.00" y1="288.00" x2="526.00" y2="288.00"/>
+<line x1="80.00" y1="208.00" x2="526.00" y2="208.00"/>
+<line x1="80.00" y1="128.00" x2="526.00" y2="128.00"/>
+<line x1="80.00" y1="48.00" x2="526.00" y2="48.00"/>
+</g>
+<g font-size="12" fill="#59616E">
+<text x="80.00" y="386.00" text-anchor="middle">0</text>
+<text x="169.20" y="386.00" text-anchor="middle">0.2</text>
+<text x="258.40" y="386.00" text-anchor="middle">0.4</text>
+<text x="347.60" y="386.00" text-anchor="middle">0.6</text>
+<text x="436.80" y="386.00" text-anchor="middle">0.8</text>
+<text x="526.00" y="386.00" text-anchor="middle">1</text>
+<text x="72.00" y="372.00" text-anchor="end">0</text>
+<text x="72.00" y="292.00" text-anchor="end">50</text>
+<text x="72.00" y="212.00" text-anchor="end">100</text>
+<text x="72.00" y="132.00" text-anchor="end">150</text>
+<text x="72.00" y="52.00" text-anchor="end">200</text>
+</g>
+<rect x="80.00" y="48.00" width="446.00" height="320.00" fill="none" stroke="#1A1E24" stroke-width="1"/>
+<text x="80.00" y="28" font-size="16" font-weight="600" fill="#1A1E24">Centre line of the 3D bar vs v1's exact parabola</text>
+<text x="303.00" y="414.00" font-size="13" text-anchor="middle" fill="#1A1E24">x (m)</text>
+<text transform="translate(20 208.00) rotate(-90)" font-size="13" text-anchor="middle" fill="#1A1E24">T (°C)</text>
+<g clip-path="url(#plot-area)">
+<circle cx="80.00" cy="208.00" r="3.5" fill="#009E73"/>
+<circle cx="84.46" cy="201.36" r="3.5" fill="#009E73"/>
+<circle cx="88.92" cy="194.88" r="3.5" fill="#009E73"/>
+<circle cx="93.38" cy="188.56" r="3.5" fill="#009E73"/>
+<circle cx="97.84" cy="182.40" r="3.5" fill="#009E73"/>
+<circle cx="102.30" cy="176.40" r="3.5" fill="#009E73"/>
+<circle cx="106.76" cy="170.56" r="3.5" fill="#009E73"/>
+<circle cx="111.22" cy="164.88" r="3.5" fill="#009E73"/>
+<circle cx="115.68" cy="159.36" r="3.5" fill="#009E73"/>
+<circle cx="120.14" cy="154.00" r="3.5" fill="#009E73"/>
+<circle cx="124.60" cy="148.80" r="3.5" fill="#009E73"/>
+<circle cx="129.06" cy="143.76" r="3.5" fill="#009E73"/>
+<circle cx="133.52" cy="138.88" r="3.5" fill="#009E73"/>
+<circle cx="137.98" cy="134.16" r="3.5" fill="#009E73"/>
+<circle cx="142.44" cy="129.60" r="3.5" fill="#009E73"/>
+<circle cx="146.90" cy="125.20" r="3.5" fill="#009E73"/>
+<circle cx="151.36" cy="120.96" r="3.5" fill="#009E73"/>
+<circle cx="155.82" cy="116.88" r="3.5" fill="#009E73"/>
+<circle cx="160.28" cy="112.96" r="3.5" fill="#009E73"/>
+<circle cx="164.74" cy="109.20" r="3.5" fill="#009E73"/>
+<circle cx="169.20" cy="105.60" r="3.5" fill="#009E73"/>
+<circle cx="173.66" cy="102.16" r="3.5" fill="#009E73"/>
+<circle cx="178.12" cy="98.88" r="3.5" fill="#009E73"/>
+<circle cx="182.58" cy="95.76" r="3.5" fill="#009E73"/>
+<circle cx="187.04" cy="92.80" r="3.5" fill="#009E73"/>
+<circle cx="191.50" cy="90.00" r="3.5" fill="#009E73"/>
+<circle cx="195.96" cy="87.36" r="3.5" fill="#009E73"/>
+<circle cx="200.42" cy="84.88" r="3.5" fill="#009E73"/>
+<circle cx="204.88" cy="82.56" r="3.5" fill="#009E73"/>
+<circle cx="209.34" cy="80.40" r="3.5" fill="#009E73"/>
+<circle cx="213.80" cy="78.40" r="3.5" fill="#009E73"/>
+<circle cx="218.26" cy="76.56" r="3.5" fill="#009E73"/>
+<circle cx="222.72" cy="74.88" r="3.5" fill="#009E73"/>
+<circle cx="227.18" cy="73.36" r="3.5" fill="#009E73"/>
+<circle cx="231.64" cy="72.00" r="3.5" fill="#009E73"/>
+<circle cx="236.10" cy="70.80" r="3.5" fill="#009E73"/>
+<circle cx="240.56" cy="69.76" r="3.5" fill="#009E73"/>
+<circle cx="245.02" cy="68.88" r="3.5" fill="#009E73"/>
+<circle cx="249.48" cy="68.16" r="3.5" fill="#009E73"/>
+<circle cx="253.94" cy="67.60" r="3.5" fill="#009E73"/>
+<circle cx="258.40" cy="67.20" r="3.5" fill="#009E73"/>
+<circle cx="262.86" cy="66.96" r="3.5" fill="#009E73"/>
+<circle cx="267.32" cy="66.88" r="3.5" fill="#009E73"/>
+<circle cx="271.78" cy="66.96" r="3.5" fill="#009E73"/>
+<circle cx="276.24" cy="67.20" r="3.5" fill="#009E73"/>
+<circle cx="280.70" cy="67.60" r="3.5" fill="#009E73"/>
+<circle cx="285.16" cy="68.16" r="3.5" fill="#009E73"/>
+<circle cx="289.62" cy="68.88" r="3.5" fill="#009E73"/>
+<circle cx="294.08" cy="69.76" r="3.5" fill="#009E73"/>
+<circle cx="298.54" cy="70.80" r="3.5" fill="#009E73"/>
+<circle cx="303.00" cy="72.00" r="3.5" fill="#009E73"/>
+<circle cx="307.46" cy="73.36" r="3.5" fill="#009E73"/>
+<circle cx="311.92" cy="74.88" r="3.5" fill="#009E73"/>
+<circle cx="316.38" cy="76.56" r="3.5" fill="#009E73"/>
+<circle cx="320.84" cy="78.40" r="3.5" fill="#009E73"/>
+<circle cx="325.30" cy="80.40" r="3.5" fill="#009E73"/>
+<circle cx="329.76" cy="82.56" r="3.5" fill="#009E73"/>
+<circle cx="334.22" cy="84.88" r="3.5" fill="#009E73"/>
+<circle cx="338.68" cy="87.36" r="3.5" fill="#009E73"/>
+<circle cx="343.14" cy="90.00" r="3.5" fill="#009E73"/>
+<circle cx="347.60" cy="92.80" r="3.5" fill="#009E73"/>
+<circle cx="352.06" cy="95.76" r="3.5" fill="#009E73"/>
+<circle cx="356.52" cy="98.88" r="3.5" fill="#009E73"/>
+<circle cx="360.98" cy="102.16" r="3.5" fill="#009E73"/>
+<circle cx="365.44" cy="105.60" r="3.5" fill="#009E73"/>
+<circle cx="369.90" cy="109.20" r="3.5" fill="#009E73"/>
+<circle cx="374.36" cy="112.96" r="3.5" fill="#009E73"/>
+<circle cx="378.82" cy="116.88" r="3.5" fill="#009E73"/>
+<circle cx="383.28" cy="120.96" r="3.5" fill="#009E73"/>
+<circle cx="387.74" cy="125.20" r="3.5" fill="#009E73"/>
+<circle cx="392.20" cy="129.60" r="3.5" fill="#009E73"/>
+<circle cx="396.66" cy="134.16" r="3.5" fill="#009E73"/>
+<circle cx="401.12" cy="138.88" r="3.5" fill="#009E73"/>
+<circle cx="405.58" cy="143.76" r="3.5" fill="#009E73"/>
+<circle cx="410.04" cy="148.80" r="3.5" fill="#009E73"/>
+<circle cx="414.50" cy="154.00" r="3.5" fill="#009E73"/>
+<circle cx="418.96" cy="159.36" r="3.5" fill="#009E73"/>
+<circle cx="423.42" cy="164.88" r="3.5" fill="#009E73"/>
+<circle cx="427.88" cy="170.56" r="3.5" fill="#009E73"/>
+<circle cx="432.34" cy="176.40" r="3.5" fill="#009E73"/>
+<circle cx="436.80" cy="182.40" r="3.5" fill="#009E73"/>
+<circle cx="441.26" cy="188.56" r="3.5" fill="#009E73"/>
+<circle cx="445.72" cy="194.88" r="3.5" fill="#009E73"/>
+<circle cx="450.18" cy="201.36" r="3.5" fill="#009E73"/>
+<circle cx="454.64" cy="208.00" r="3.5" fill="#009E73"/>
+<circle cx="459.10" cy="214.80" r="3.5" fill="#009E73"/>
+<circle cx="463.56" cy="221.76" r="3.5" fill="#009E73"/>
+<circle cx="468.02" cy="228.88" r="3.5" fill="#009E73"/>
+<circle cx="472.48" cy="236.16" r="3.5" fill="#009E73"/>
+<circle cx="476.94" cy="243.60" r="3.5" fill="#009E73"/>
+<circle cx="481.40" cy="251.20" r="3.5" fill="#009E73"/>
+<circle cx="485.86" cy="258.96" r="3.5" fill="#009E73"/>
+<circle cx="490.32" cy="266.88" r="3.5" fill="#009E73"/>
+<circle cx="494.78" cy="274.96" r="3.5" fill="#009E73"/>
+<circle cx="499.24" cy="283.20" r="3.5" fill="#009E73"/>
+<circle cx="503.70" cy="291.60" r="3.5" fill="#009E73"/>
+<circle cx="508.16" cy="300.16" r="3.5" fill="#009E73"/>
+<circle cx="512.62" cy="308.88" r="3.5" fill="#009E73"/>
+<circle cx="517.08" cy="317.76" r="3.5" fill="#009E73"/>
+<circle cx="521.54" cy="326.80" r="3.5" fill="#009E73"/>
+<circle cx="526.00" cy="336.00" r="3.5" fill="#009E73"/>
+<polyline fill="none" stroke="#7A828E" stroke-width="1.00" stroke-linejoin="round" stroke-dasharray="7 4" points="80.00,208.00 84.46,201.36 88.92,194.88 93.38,188.56 97.84,182.40 102.30,176.40 106.76,170.56 111.22,164.88 115.68,159.36 120.14,154.00 124.60,148.80 129.06,143.76 133.52,138.88 137.98,134.16 142.44,129.60 146.90,125.20 151.36,120.96 155.82,116.88 160.28,112.96 164.74,109.20 169.20,105.60 173.66,102.16 178.12,98.88 182.58,95.76 187.04,92.80 191.50,90.00 195.96,87.36 200.42,84.88 204.88,82.56 209.34,80.40 213.80,78.40 218.26,76.56 222.72,74.88 227.18,73.36 231.64,72.00 236.10,70.80 240.56,69.76 245.02,68.88 249.48,68.16 253.94,67.60 258.40,67.20 262.86,66.96 267.32,66.88 271.78,66.96 276.24,67.20 280.70,67.60 285.16,68.16 289.62,68.88 294.08,69.76 298.54,70.80 303.00,72.00 307.46,73.36 311.92,74.88 316.38,76.56 320.84,78.40 325.30,80.40 329.76,82.56 334.22,84.88 338.68,87.36 343.14,90.00 347.60,92.80 352.06,95.76 356.52,98.88 360.98,102.16 365.44,105.60 369.90,109.20 374.36,112.96 378.82,116.88 383.28,120.96 387.74,125.20 392.20,129.60 396.66,134.16 401.12,138.88 405.58,143.76 410.04,148.80 414.50,154.00 418.96,159.36 423.42,164.88 427.88,170.56 432.34,176.40 436.80,182.40 441.26,188.56 445.72,194.88 450.18,201.36 454.64,208.00 459.10,214.80 463.56,221.76 468.02,228.88 472.48,236.16 476.94,243.60 481.40,251.20 485.86,258.96 490.32,266.88 494.78,274.96 499.24,283.20 503.70,291.60 508.16,300.16 512.62,308.88 517.08,317.76 521.54,326.80 526.00,336.00"/>
+</g>
+<text x="275.32" y="82.88" font-size="11.5" text-anchor="start" fill="#1A1E24">peak 188.2 °C at x = 0.42 m; max nodal error 6.6e-11 K</text>
+<text x="812.00" y="426.00" font-size="10" text-anchor="end" fill="#59616E">data: results/v2/csv/E1.csv (E1-verify-bar)</text>
+<g font-size="12" fill="#1A1E24">
+<circle cx="622.00" cy="62.00" r="3.5" fill="#009E73"/>
+<text x="644.00" y="66.00">3D FE (centre line)</text>
+<line x1="608.00" y1="84.00" x2="636.00" y2="84.00" fill="none" stroke="#7A828E" stroke-width="1.00" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<text x="644.00" y="88.00">exact: 100 + 420x − 500x²</text>
+</g>
+</svg>

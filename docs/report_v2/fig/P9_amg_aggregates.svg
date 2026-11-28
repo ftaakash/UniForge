@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="640" viewBox="0 0 1400 640" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>P9 AMG aggregates</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Smoothed-aggregation AMG: level-0 aggregates on the surface (HS-7, s = 1 mm)</text>
+<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Each colour is one aggregate (one coarse unknown). White: nodes with no strong connection, left out of the coarse space.</text>
+<image x="20.00" y="70.00" width="660.00" height="540.00" href="P9_amg_aggregates-1.png"/>
+<text x="720.00" y="110.00" font-size="14.00" text-anchor="start" fill="#1A1E24" font-weight="600">Hierarchy</text>
+<text x="720.00" y="136.00" font-size="12.00" text-anchor="start" fill="#59616E">level</text>
+<text x="800.00" y="136.00" font-size="12.00" text-anchor="end" fill="#59616E">rows</text>
+<text x="900.00" y="136.00" font-size="12.00" text-anchor="end" fill="#59616E">entries</text>
+<text x="1000.00" y="136.00" font-size="12.00" text-anchor="end" fill="#59616E">rows/row₀</text>
+<text x="720.00" y="156.00" font-size="12.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">0</text>
+<text x="800.00" y="156.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">56015</text>
+<text x="900.00" y="156.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">1295743</text>
+<text x="1000.00" y="156.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">1.0000</text>
+<text x="720.00" y="176.00" font-size="12.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">1</text>
+<text x="800.00" y="176.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">2496</text>
+<text x="900.00" y="176.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">50712</text>
+<text x="1000.00" y="176.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">0.0446</text>
+<text x="720.00" y="196.00" font-size="12.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">2</text>
+<text x="800.00" y="196.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">177</text>
+<text x="900.00" y="196.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">3805</text>
+<text x="1000.00" y="196.00" font-size="12.00" text-anchor="end" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">0.0032</text>
+<text x="720.00" y="228.00" font-size="12.50" text-anchor="start" fill="#1A1E24">operator complexity 1.042, grid complexity 1.048</text>
+<text x="720.00" y="248.00" font-size="12.50" text-anchor="start" fill="#1A1E24">strength threshold θ₀ = 0.02, halved per level</text>
+<text x="720.00" y="268.00" font-size="12.50" text-anchor="start" fill="#1A1E24">level 0: 0 of 56015 nodes isolated (0.0 %)</text>
+</svg>

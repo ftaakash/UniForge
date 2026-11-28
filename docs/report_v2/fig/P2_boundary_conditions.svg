@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="590" viewBox="0 0 1400 590" font-family="Inter, 'Segoe UI', Arial, sans-serif">
+<title>P2 boundary conditions</title>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="24.00" y="34.00" font-size="18.00" text-anchor="start" fill="#1A1E24" font-weight="600">Boundary conditions and load</text>
+<text x="24.00" y="56.00" font-size="12.50" text-anchor="start" fill="#59616E">Every exposed aluminium face convects to air; the board side (base bottom, die and TIM) is insulated, so all 30 W leave through the fins and the base.</text>
+<image x="10.00" y="80.00" width="550.00" height="450.00" href="P2_boundary_conditions-1.png"/>
+<image x="570.00" y="80.00" width="550.00" height="450.00" href="P2_boundary_conditions-2.png"/>
+<text x="285.00" y="560.00" font-size="12.50" text-anchor="middle" fill="#59616E">seen from above</text>
+<text x="845.00" y="560.00" font-size="12.50" text-anchor="middle" fill="#59616E">seen from below (board side)</text>
+<rect x="1150.00" y="150.00" width="22.00" height="16.00" fill="#9AD2F2" stroke="none" stroke-width="1.00"/>
+<text x="1180.00" y="163.00" font-size="13.00" text-anchor="start" fill="#1A1E24">convection</text>
+<text x="1180.00" y="181.00" font-size="12.00" text-anchor="start" fill="#59616E">h = 25 W/(m²·K), T∞ = 25 °C</text>
+<rect x="1150.00" y="210.00" width="22.00" height="16.00" fill="#B0B4BA" stroke="none" stroke-width="1.00"/>
+<text x="1180.00" y="223.00" font-size="13.00" text-anchor="start" fill="#1A1E24">insulated</text>
+<text x="1180.00" y="241.00" font-size="12.00" text-anchor="start" fill="#59616E">board side of base and TIM</text>
+<rect x="1150.00" y="270.00" width="22.00" height="16.00" fill="#3A3F4A" stroke="none" stroke-width="1.00"/>
+<text x="1180.00" y="283.00" font-size="13.00" text-anchor="start" fill="#1A1E24">heat source (die)</text>
+<text x="1180.00" y="301.00" font-size="12.00" text-anchor="start" fill="#59616E">P = 30 W, faces insulated</text>
+<text x="1150.00" y="350.00" font-size="12.50" text-anchor="start" fill="#1A1E24" font-weight="600">Steady conduction:</text>
+<text x="1150.00" y="372.00" font-size="12.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">−∇·(k∇T) = q</text>
+<text x="1150.00" y="388.00" font-size="11.50" text-anchor="start" fill="#59616E">   in each material</text>
+<text x="1150.00" y="410.00" font-size="12.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">−k ∂T/∂n = h(T − T∞)</text>
+<text x="1150.00" y="426.00" font-size="11.50" text-anchor="start" fill="#59616E">   on faces in air</text>
+<text x="1150.00" y="448.00" font-size="12.00" text-anchor="start" fill="#1A1E24" font-family="'JetBrains Mono', Consolas, monospace">−k ∂T/∂n = 0</text>
+<text x="1150.00" y="464.00" font-size="11.50" text-anchor="start" fill="#59616E">   on the board side</text>
+</svg>

@@ -693,6 +693,898 @@ Tool: Claude Code (Claude Opus 5.5).
 
 ---
 
+## 2026-11-15: V2 analysis, design review, system design and build spec (Phase V2-0)
+
+The company sent an Assignment Extension Notice asking for a V2: three different solver types on
+a thermal analysis of a more complex 3D object, delivered as one PDF report without source code.
+
+### Prompts (representative)
+1. Plan V2 from the notice and the v1 repository; write an analysis and plan; do not build anything.
+2. `/design:design-system`: "analyse the V2 plan, suggest amendments if necessary, evaluate its
+   effectiveness on cost and robustness: time, memory, iteration count, and how each one copes
+   with mesh size and with hard-to-solve (badly conditioned) setups."
+3. "Fold them in" (apply the review's amendments to the plan).
+4. `/engineering:system-design` on the revised plan: module boundaries, interfaces, data models,
+   harness and report pipeline, with an alternative design to compare.
+5. "Merge into build spec", then "Start V2-0".
+
+### Outputs (files)
+- `docs/design/v2/UniForge_V2_Analysis_and_Plan.md` (revision 2, amendments A1–A15 marked inline)
+- `docs/design/v2/UniForge_V2_Design_Review.md` (16 issues, amendments A1–A15, figure tokens)
+- `docs/design/v2/UniForge_V2_System_Design.md` (Design A vs Design B)
+- `docs/design/v2/UniForge_V2_Build_Spec.md` (merged specification the V2 build follows)
+- `docs/report_v2/figure_tokens.md` (shared figure style, amendment A13)
+
+### My edits
+- Chose to fold in all review amendments, to run the system-design pass, and to merge the three
+  documents into one build spec. The choices among the adopted defaults (spec §0.2) and the
+  deadline are still open.
+
+### Verification (tests run, numbers checked, manual checks)
+- No code yet, so nothing was run. Every number in the V2 documents is either copied from v1
+  files (e.g. 13.7 h actual vs 46 h planned, heat-sink volume 2.416e-5 m³, peak 188.2 °C) or
+  tagged [EST] (estimate, to be measured). Every unchecked fact or citation is tagged [VERIFY].
+  Neither tag may reach the PDF.
+- Checked mechanically that the merged spec contains every requirement, amendment, hypothesis,
+  experiment and figure ID from the three source documents, and no e-mail address.
+
+### Incorrect / unsuitable suggestions and how they were caught
+The review pass (`/design:design-system`) found 16 issues in the AI-written plan. The five rated high:
+
+| # | Unsuitable suggestion | Why it was wrong | Resolution |
+|---|---|---|---|
+| I1 | Refine the mesh by integer factors r = 1, 2, 3 | DOF grows ×8, ×27, so the direct solver would get only two data points before its memory wall; no slope or crossover could be fitted | Geometric ladder s_k = s₀·2^(−k/3), DOF doubles per step (A1) |
+| I2 | Stop iterative solvers on a relative residual of 1e-10 | The convection-only heat sink is near-singular; a small residual does not bound the error, and the mean temperature converges last | Time-to-accuracy against a reference, energy imbalance and condition estimate per solve (A2, A3) |
+| I3 | Assemble through COO triplets | ~3 GB plus a sort buffer at 3 × 10⁶ cells [EST]: assembly, not the solvers, would set peak memory | Assemble straight into CSR from the grid's known pattern (A4) |
+| I5 | No machine-time budget | The experiment campaign would probably take longer than the coding | Caps, repetition policy, dry run, one overnight batch (A6) |
+| I11 | Verify the 3D FEA before any sparse solver exists | Verification would be limited to meshes the dense oracle can handle | Build Jacobi-PCG first (A10) |
+
+Also: the plan's hypothesis that "on the cube all solvers look alike" is probably false for the
+slender v1 bar (quasi-1D, where the direct solver should win clearly); E0 now compares the bar with
+a true cube (A11). The system-design pass found that v1's `perf::WorkerPool` starts and joins new
+threads on every `run()` call, which suits the v1 batch but would distort solver timings; V2 uses
+a persistent kernel pool instead.
+
+---
+
+## 2026-11-18: Sparse kernels (Phase V2-1)
+
+### Prompts (representative)
+1. (Relayed from the planning session) "continue building v2": start Phase V2-1 without waiting
+   for the deadline, take the recommended defaults for the open decisions and record them in the
+   plan, one commit per phase on branch `v2`, stop for review at the end of each phase.
+
+### Outputs (files, functions)
+- `src/core/sparse/CsrMatrix.*`: `CsrPattern`, `CsrMatrix` (32-bit columns, 64-bit row
+  offsets), `fromTriplets`, `buildPattern`, `validate`, `isSymmetric`, `toDense`.
+- `src/core/sparse/KernelPool.*`: persistent thread pool; fixed 4096-row chunks independent of
+  the thread count; per-chunk partial results combined in chunk order.
+- `src/core/sparse/VectorOps.*`: `dot`, `sum`, `norm2`, `normInf`, `maxAbsDiff`, `axpy`,
+  `xpay`, `multiplyPointwise`, `spmv`, `residual`, `diagonal`.
+- `src/core/sparse/SparseOps.*`: `transpose` (counting sort), `multiply` (Gustavson SpGEMM with a
+  symbolic pass for exact allocation).
+- `tests/unit/sparse/*`: 29 tests (CTest target `unit_sparse`, label `unit`).
+- Spec §0.2a and plan §9: the adopted defaults and the one-commit-per-phase rule.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC 19.44, warnings as errors: Release and Debug builds clean; **318/318 tests pass in
+  both** (289 from v1 + 29 new).
+- Determinism: reductions and every kernel give bit-identical results for 1, 2, 3, 7 and 20
+  threads. The test data mixes magnitudes 1e-8 … 1e8 and the test first asserts that a plain
+  left-to-right sum differs from the chunked sum, so the check cannot pass by luck.
+- SpMV, residual, transpose and SpGEMM agree with dense references; a Galerkin product PᵀKP of a
+  symmetric K is symmetric; SpGEMM allocates exactly nnz(C).
+- 20 000 back-to-back pool calls without deadlock; an exception in one chunk is rethrown after
+  the other chunks finish and the pool stays usable.
+- clang-format 19 check passes on the new files.
+- **Not run:** the Linux GCC 13 ASan/TSan jobs (they run in CI after a push). GCC's stricter
+  warnings (-Wconversion, -Wsign-conversion, -Wshadow) were checked by reading, not by compiling.
+- Not measured yet: the pool's per-call overhead (planned for V2-8 with the other timing checks).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first draft of `KernelPool::reduceMax` combined partial maxima with `std::max`, which
+  silently drops a NaN (`max(x, NaN)` returns `x`). A NaN temperature would then hide behind a
+  finite maximum. Caught while writing the kernels; `reduceMax` and `normInf` now propagate NaN,
+  and `VectorOps.NormInfPropagatesNaN` tests it.
+- The first draft of the Galerkin test called a dense-multiply helper with a vector where it
+  takes a matrix (it would not have compiled); caught on review before the first build and
+  replaced by two separate dense checks (K·P, then Pᵀ(K·P)).
+- The build logs of the first build were written into the worktree root, where `.gitignore`
+  does not cover `*.log`; deleted before staging, later logs go to `build/`.
+
+---
+
+## 2026-11-18: Geometry and mesher (Phase V2-2)
+
+### Prompts (representative)
+1. "Start V2-2" (after approving and pushing V2-1, whose CI run passed on Windows and Linux
+   ASan/TSan).
+
+### Outputs (files, functions)
+- `src/core/fem3d/Design.*`: `Box`, `Material`, `FaceBc`, `Design`, `validate`; factories
+  `makeV1Bar` (L0a), `makeCube` (L0b), `makePlate` (L1), `makeFinnedPlate` (L2), `makeHS7` (L3),
+  `makePinFin` (L4) with `HeatSinkParams` / `PinFinParams`.
+- `src/core/fem3d/HexMesh.*`: `buildAxis` (mandatory lines, fixed layers, graded gaps),
+  `buildMesh` (cell ownership, compact node numbering, boundary faces with box/side, statistics),
+  `extractSurface` (outward triangles), cell/face helpers.
+- `tests/unit/fem3d/*`: 19 tests (CTest target `unit_fem3d`).
+- Spec §3.1 (ladder clarified: the die is the heat source at L1–L3, the TIM only at L3) and
+  §3.4 (measured mesh sizes replace the estimate).
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **337/337 tests pass in both**.
+- Hand-checked numbers used by the tests: v1 bar at s = 10 mm has 100 cells, 404 nodes and
+  402 boundary faces; HS-7 aluminium volume 2.416e-5 m³ (equal to v1's heat-sink STL); HS-7
+  convective area 1840 + 800 + 7 × 2264 = 18 488 mm², reproduced by the mesh at two spacings.
+- Mesh volume equals the design volume to 1e-10 relative for all six ladder objects; the
+  surface is watertight (every boundary edge in exactly two faces) with outward normals; the
+  divergence-theorem volume of the exported surface equals the design volume; the STL parses
+  with the v1 importer (no degenerate facets, expected bounding box).
+- Grading: no cell larger than s and no neighbour ratio above 1.5 on every HS-7 axis, with 1
+  and 2 TIM cells, at two spacings.
+- Measured mesh sizes along the ladder s = 1.0 … 0.198 mm: 56 015 … 3 759 720 nodes, meshing in
+  ≤ 0.3 s (recorded in spec §3.4; measured with a temporary test that was then removed).
+- **Not run:** Linux CI (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The spec's DOF table (an AI estimate, tagged [EST]) was 16–60 % low: it ignored the extra
+  cells that grading next to the 0.1 mm TIM and the fins adds. Replaced by measured values.
+- The spec described ladder level L2 as "single material", which contradicts the die being the
+  heat source; clarified in the spec.
+- First draft of the axis builder found the cell count of a gap by increasing n one at a time,
+  each step O(n): an absurd spacing (1 µm on the 1 m bar) would have hung for hours before the
+  size limit was checked. Caught on review: the count is now found by doubling and bisection,
+  and `buildMesh` refuses an oversized grid before generating any line
+  (`HexMesh.RefusesAbsurdSpacings`).
+- First draft of the design test indexed the HS-7 boxes as if the fins came right after the base;
+  the factory adds TIM and die first. Caught on review; the test now asserts the box name.
+- Two first-run test failures were tolerances tighter than floating-point rounding (cube volume
+  off by 1.2e-12 relative, a grade ratio of 1 + 7e-14 on equal cells); loosened to 1e-10 and
+  1e-9, not a mesher change.
+
+---
+
+## 2026-11-21: Solver interface and Jacobi-PCG (Phase V2-3)
+
+### Prompts (representative)
+1. "Start V2-3" (after approving and pushing V2-2, whose CI run passed on Windows and Linux).
+
+### Outputs (files, functions)
+- `src/core/solvers/SolverTypes.hpp`: `SolverKind` and `SolveStatus` with their labels,
+  `MemoryFootprint`, `CoordinateHint`, `SolverOptions`, `SolveControl`, `SetupReport`,
+  `SolveReport` (status, iterations, solver time with observer time excluded, SpMV count, bytes
+  moved and SpMV-equivalents, residual history, per-iteration timestamps, κ estimate, true
+  residual, masked residual sum).
+- `src/core/solvers/LinearSolver.hpp` + `SolverFactory.cpp`: the two-phase interface
+  (`setup` once, `solve` per load case) and `makeSolver` (PCG-J now; other kinds return an
+  error naming the phase that adds them).
+- `src/core/solvers/Observers.*`: `IterationObserver`, `ErrorVsReference`, `Snapshot`.
+- `src/core/solvers/krylov/Lanczos.*`: Sturm-bisection extreme eigenvalues of a symmetric
+  tridiagonal matrix; κ estimate from the CG coefficients.
+- `src/core/solvers/krylov/Preconditioner.*`, `Pcg.*`: preconditioner interface, identity
+  (plain CG, tests only) and Jacobi; PCG with Breakdown, MaxIterations, Stagnated, TimeCap,
+  Cancelled and OverBudget statuses.
+- `tests/unit/solvers/*`: 15 tests; `tests/lint/module_rules.cmake`: CTest check of the module
+  dependency rules (spec §4.2).
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **353/353 tests pass in both**.
+- PCG-J reproduces the dense solution of a 400-unknown 2D Laplacian to 1e-9 (relative); the
+  true residual after the solve is below 1e-11.
+- κ estimate on the 1D Laplacian (n = 200), where the closed form is known: between 0.9× and
+  1× of the exact value, as expected for a Lanczos lower bound.
+- Bit-identical iterates, iteration counts, residual histories and κ estimates for 1, 2, 3 and
+  8 threads (8100 unknowns, two kernel chunks).
+- Jacobi takes fewer than a third of plain CG's iterations on a badly scaled Laplacian
+  (scaling 1e-3 … 1e3).
+- Every failure status is produced by a constructed case (iteration cap, time cap 0, cancel,
+  stagnation window 2, 1-byte memory budget, indefinite matrix); misuse returns errors.
+- Module-rule lint: a deliberately added `#include "core/fem3d/..."` under `solvers/` made the
+  check fail (exit 1); removed, it passes.
+- **Not run:** Linux CI (after the push). Not measured: observer overhead and kernel-pool
+  overhead (V2-8).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first PCG test file named its helper struct `Run`. Inside a googletest `TEST` body that
+  name resolves to the fixture's inherited `testing::Test::Run()` member, so the build failed
+  with "undeclared identifier"; renamed to `Outcome` / `runSolver`.
+- The first observer test solved a 900-unknown system with the O(n³) dense oracle (~7e8
+  operations), which would be slow in Debug; reduced to 400 unknowns before the first build.
+
+---
+
+## 2026-11-21: 3D finite elements and verification (Phase V2-4)
+
+### Prompts (representative)
+1. "update the repo" (clarified by a question: update the README/CHANGELOG on `v2`), then
+   "Push it" and "Start V2-4".
+
+### Outputs (files, functions)
+- `src/core/fem3d/Element.*`: Q1 hexahedron stiffness and loads as tensor products of the 1D
+  linear-element matrices; bilinear face convection matrix and loads; Gauss quadrature for
+  non-uniform source and ambient fields (used by the manufactured solution).
+- `src/core/fem3d/Assembly.*`: `LinearSystem`, `assemble` (pattern from grid connectivity, CSR
+  scatter, convection, symmetric Dirichlet elimination with saved rows for reactions, cost).
+- `src/core/fem3d/Post.*`: `energyAudit`, `reactions`, `peakTemperature`, `sampleTemperature`,
+  `errorNorms`.
+- Tests: `tests/unit/fem3d/ElementTest.cpp`, `AssemblyTest.cpp` (12), and
+  `tests/numerical/fem3d/VerificationTest.cpp` (6, label `numerical`).
+- Spec §3.5: measured assembly cost; README and CHANGELOG updated for V2-4.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **371/371 tests pass in both**.
+- Hand-checked element values: unit-conductivity cube stiffness diagonal h/3, edge 0, face and
+  body diagonals −h/12; ∫x·N over the unit cube 1/12 and 1/24; face mass h·A/9 and h·A/36.
+- Verification results (all from the test output, PCG-J at relative residual 1e-13):
+
+  | Check | Result |
+  |---|---|
+  | Patch test, harmonic trilinear field, Dirichlet / convection faces | nodal error < 1e-9 / < 1e-8 |
+  | v1 bar in 3D (s = 10 and 5 mm) | max nodal error 1.1e-11 / 6.6e-11 K; ends 0.4200000000 / 0.5800000000 W |
+  | Manufactured solution, 4 → 32 cells | RMS error 0.156 → 0.00248 K; observed order 1.999 (L2), 2.001 (nodal) |
+  | Single fin vs 1D fin theory | heat 3.01756 vs 3.01770 W (−0.005 %); tip 77.504 vs 77.481 °C |
+  | HS-7, s = 2 mm (13 200 DOF) | relative energy imbalance 1.9e-12; T_max 99.03 °C in the die; PCG-J 768 iterations, κ_est 1.37e5 |
+
+  (HS-7's T_max follows from the chosen inputs P = 30 W, h = 25 W/(m²·K); it is not a
+  validated prediction.)
+- Fault injection, as in v1 (deliberate, code restored afterwards): removing the column move
+  `f_j −= K_jd·T_d` from the Dirichlet elimination failed the patch, bar and fin tests; the bar's
+  energy audit showed an imbalance of 104–109 % and the ends carried −9.5 / −1.5 W. The two
+  convection-only tests (manufactured solution, HS-7) correctly still passed.
+- Assembly cost on HS-7 measured with a temporary test (removed): 4.67 s and 1.16 GB for
+  3 759 720 DOF, ~25.7 entries per row.
+- **Not run:** Linux CI (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- The first README test filter used `Element` as a pattern, which would also have matched v1's
+  `ElementMatrices.*` tests; changed to `Element\.` and checked that the filter selects exactly
+  the 82 V2 tests.
+- The first fin tolerances (1 % heat, 0.2 K tip) were much looser than the measured agreement;
+  tightened to 0.2 % and 0.1 K so the test can catch a real regression.
+
+---
+
+## 2026-11-21: Sparse direct Cholesky (Phase V2-5) and the main README note
+
+### Prompts (representative)
+1. "Start V2-5".
+2. "Approve and push, also the update the status of v2 in the readme of the main branch"
+   (sent while V2-5 was still being measured; V2-5 was finished, fully tested, then pushed).
+
+### Outputs (files, functions)
+- `src/core/solvers/direct/Ordering.*`: `naturalOrdering`, `rcmOrdering`,
+  `nestedDissectionOrdering`, `makeOrdering`, `isValid`.
+- `src/core/solvers/direct/Cholesky.*`: `DirectCholesky` (ordering, symbolic with exact column
+  counts and budget check, up-looking numeric factorisation, triangular solves, factor access).
+- `SolverTypes.hpp`: setup report gains timed phases, predicted/actual nnz(L) and flops;
+  options gain the dissection leaf size. `makeSolver` builds DIRECT-ND and DIRECT-RCM.
+- Tests: `tests/unit/solvers/DirectTest.cpp` (10), one verification test (direct vs PCG-J on
+  the FE systems); 3D Laplacian and shuffle helpers.
+- Spec §5.2: preliminary measured fill and setup times; README and CHANGELOG on `v2`.
+- On `main`: a V2 status section in the README (commit `885d091`); v1 content unchanged.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **382/382 tests pass in both**.
+- L·Lᵀ equals P·K·Pᵀ to 1e-12 for all three orderings; the symbolic prediction of nnz(L) equals
+  the actual count in every test and in every measured HS-7 run.
+- Same solution as the dense oracle (1e-12 relative) for every ordering; on a 16³ grid nnz(L)
+  natural 990 991, RCM 596 204, ND 316 268.
+- On the FE systems both orderings match PCG-J to 3.8e-10 K (v1 bar, HS-7 at 2 mm) with
+  relative energy imbalance ≤ 3.5e-12.
+- Preliminary HS-7 ladder (single run, not the official protocol): table in spec §5.2. RCM is
+  refused as over budget at 568 152 DOF (≥ 707 M entries predicted, after 2.4 s); ND factors it
+  in 327.5 s.
+- **Not run:** Linux CI (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- My first threshold for the direct solve's true relative residual (1e-12) failed on HS-7:
+  measured 9.5e-12. Cholesky is backward stable, but the convection-only system is badly
+  conditioned (κ_est ~1e5), so this is the expected size, not a bug; threshold set to 1e-10
+  with the reason in a comment. This is the conditioning effect on direct accuracy predicted by
+  hypothesis H4.
+- A Python edit inserted `\n` into a C++ string literal as a real line break; the build failed
+  and the literal was fixed by hand.
+- Ordering expectation not borne out at small sizes: I expected nested dissection to be faster
+  as well as smaller; measured, its numeric phase is slower up to 170 k DOF (fewer flop/s on its
+  more scattered columns). Recorded as measured, not as the expectation.
+
+---
+
+## 2026-11-22: IC(0) preconditioner (Phase V2-6) and the V2-5 Linux CI fix
+
+### Prompts (representative)
+1. "Start V2-6".
+
+### Outputs (files, functions)
+- `src/core/solvers/krylov/Ic0.*`: `Ic0Preconditioner` (zero-fill incomplete Cholesky, shift
+  ladder, triangular-solve apply, factor access).
+- `SolverTypes.hpp`: setup report gains the shift used and the retries; `Pcg::setup` passes the
+  preconditioner's timing, detail, shift and retries on; `makeSolver` builds PCG-IC0.
+- Tests: `tests/unit/solvers/Ic0Test.cpp` (5), an element test on positive edge couplings, and a
+  verification test (PCG-IC0 vs PCG-J on the bar and HS-7).
+- Commit `c0b2565`: fix for the failed Linux build of `v2-phase-5`.
+- Spec §5.3, H8 and K3 corrected/updated; README and CHANGELOG.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **389/389 tests pass in both**.
+- IC(0) equals the exact Cholesky factor on a tridiagonal matrix (PCG converges in 1 iteration).
+- Iterations to 1e-10 / 1e-13: 2D Laplacian 1600 unknowns Jacobi 143 vs IC(0) 49; 3D 4096
+  unknowns 74 vs 28; v1 bar 200 vs 87; HS-7 at 2 mm 800 vs 117 (κ_est 1.37e5 vs 2.0e3). Same
+  temperatures as PCG-J to 1.4e-12 K on HS-7.
+- Kershaw's 4 × 4 SPD matrix (checked SPD by the exact factorisation): unshifted IC(0) fails at
+  row 3; the ladder recovers with α = 1 after four failed shifts; a ladder {0, 1e-6} ends in
+  Breakdown.
+- **Not run:** Linux CI for this phase and for the V2-5 fix (both after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **V2-5 broke the Linux build** (CI of tag `v2-phase-5`): GCC 13 with ASan/UBSan reported
+  `-Warray-bounds`, an error under `-Werror`, on `rep.residualHistory = {value};`. Windows was
+  unaffected and I had pushed after a Windows-only check. Fixed with `assign()` in commit
+  `c0b2565`; the published tag `v2-phase-5` was left as it is (not rewritten). Lesson: GCC-only
+  diagnostics are checked only by CI, so the Linux job result has to be confirmed before a phase
+  counts as green.
+- **The design documents' claim "Q1 hexes with aspect ratio > √2 give positive off-diagonals"
+  (an AI statement tagged [VERIFY]) is wrong for 3D.** √2 is the 2D bilinear threshold; for a
+  trilinear box the edge coupling is −dy·dz/(9dx) + dx·dz/(18dy) + dx·dy/(18dz), positive as soon
+  as the edge is the longest. Caught while writing the IC(0) tests; corrected in the spec and
+  pinned by a test.
+- **Hypothesis H8 not confirmed at the tested size:** IC(0) did not break down on HS-7 at 2 mm
+  despite 68 872 positive off-diagonals. Recorded as measured; the full E3 sweep decides.
+
+---
+
+## 2026-11-22: Smoothed-aggregation AMG (Phase V2-7)
+
+### Prompts (representative)
+1. "Start V2-7".
+
+### Outputs (files, functions)
+- `src/core/solvers/amg/Amg.*`: `strongConnections`, `aggregate`, `tentativeProlongator`,
+  `smoothedProlongator`, `AmgHierarchy` (build, symmetric V-cycle, statistics, footprint),
+  `AmgPreconditioner` (AMG-PCG), `AmgSolver` (stand-alone AMG).
+- `SolverTypes.hpp`: AMG options (threshold, per-level decay, coarse size, levels, sweeps) and
+  hierarchy statistics in the setup report; `Pcg::setup` keeps the preconditioner's full report;
+  `makeSolver` builds all six variants.
+- Tests: `tests/unit/solvers/AmgTest.cpp` (7), a verification test (AMG and AMG-PCG vs PCG-J on
+  the bar and HS-7); the factory test now expects every kind.
+- Spec §5.4 (measured) and K2; README and CHANGELOG.
+
+### My edits
+- None to the code yet; this phase is for your review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **397/397 tests pass in both**.
+- V2-6's CI run passed on all jobs, so the V2-5 Linux fix (`c0b2565`) is confirmed.
+- P·1 = 1 on a zero-row-sum matrix; coarse operators symmetric and factorisable; the V-cycle
+  preconditioner satisfies yᵀM⁻¹x = xᵀM⁻¹y and xᵀM⁻¹x > 0 on random vectors.
+- 3D Laplacian, stand-alone AMG to 1e-8: 15 / 16 / 16 / 19 cycles for 10³ / 16³ / 24³ / 32³
+  (mean factor 0.28–0.36). PCG on 24³ to 1e-10: Jacobi 109, IC(0) 39, AMG 11 iterations.
+- HS-7 at 2 mm: AMG-PCG 84 iterations to 1e-13 (PCG-IC0 117, PCG-J 800); stand-alone AMG
+  673 cycles to 1e-11; temperatures equal to PCG-J's within 3.4e-11 K, energy balanced to 2e-12.
+- **Not run:** Linux CI for this phase (after the push).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **Constant strength threshold.** My first version used θ = 0.08 on every level. The
+  mesh-independence test failed: cycles grew 16 → 30 → 56 → 89 from 10³ to 32³. A temporary
+  diagnostic showed the second-level aggregation discarding most coarse couplings; halving θ per
+  level (the schedule usually described for smoothed aggregation, [VERIFY] against Vaněk et al.)
+  restored 15–19 cycles. The decay is now an option with default 0.5.
+- **Isolated nodes pulled into aggregates.** The first aggregation added every strong neighbour
+  of a root, including isolated nodes (identity rows such as Dirichlet nodes); caught by the
+  aggregation test and fixed.
+- **Rounding asymmetry of the Galerkin product.** Pᵀ(A·P) failed an exact symmetry check on
+  entries that cancel; coarse operators are now averaged with their transpose, which keeps the
+  V-cycle exactly symmetric for CG.
+- **Divergence rule too eager.** "Residual grew three cycles in a row" fired on rounding noise
+  at ~3e-12 on HS-7; now it also requires the residual to be 10× above its best.
+- **The plan's expectation (H4) that AMG is robust to the TIM did not hold for stand-alone AMG:**
+  673 cycles on HS-7 against 56–62 on the same mesh without the TIM, not cured by θ or a second
+  sweep. Recorded as a finding (risk K2) instead of being tuned away; AMG-PCG remains the
+  fastest-converging Krylov variant.
+
+---
+
+## 2026-11-22: Experiment harness and dry run (Phase V2-8, part 1)
+
+### Prompts (representative)
+1. "Start V2-8".
+
+### Outputs (files, functions)
+- `src/core/study/Plan.*`: `RunSpec`, `planExperiments` (E0–E8 and the CI smoke plan T0; 241
+  runs, dry run 85), `findRun`, `makeDesign`, `systemKey`, `ladderSpacing`.
+- `src/core/study/Runner.*`: `RunRecord` (CSV row with a fixed column list), `executeRun`
+  (assembly, references, repetitions by run time, observer, history, energy audit,
+  verification checks of E1), reference files.
+- `src/core/study/Collect.*`: experiment CSVs, E5 load cases, E2 time-to-accuracy,
+  `numbers.json`.
+- `src/cli/commands/StudyCommand.*` and `src/cli/platform/Process*`: `study plan | run | batch |
+  collect`; Job Object memory cap and timeout kill, performance-core pinning, keep-awake, CPU
+  load, resume, dirty-tree refusal.
+- `src/core/solvers/direct/Cholesky.cpp`: singularity detection (pivot ratio, solve residual).
+- Tests: `tests/unit/study/StudyTest.cpp` (8), `tests/integration/study_smoke.cmake` (batch +
+  resume), a direct-solver test. `docs/v2_experiments.md` (harness and runbook).
+
+### My edits
+- None to the code yet; this phase is for your review. The official overnight batch is not run.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **406/406 tests pass in both**.
+- The smoke batch (T0) runs 4 child processes, writes 4 converged rows, collects them, and a
+  second batch executes nothing (resume).
+- Dry run of the whole dry plan (85 runs, `build/study_dry`, not committed): every run left a
+  result; 79 converged; the singular case E8 is detected by all six solvers after the fix below;
+  stand-alone AMG stagnates on HS-7 at 0.794 mm and at h = 5 (the TIM weakness of V2-7).
+- **Not run:** the official batch (needs the machine idle overnight, D12) and Linux CI.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **Direct solver silently accepted a singular system.** In the dry run, both direct solvers
+  reported `Converged` on the all-insulated HS-7 (K singular) with peak temperatures of 2e13 °C,
+  a relative residual of 2.1 and a 100 % energy imbalance: rounding left the last pivot slightly
+  positive, so the V2-5 test `pivot ≤ 0` did not fire. Fixed with a relative pivot test
+  (pivot < 1e-13 of its diagonal) and a residual check after the solve (> 1e-6 → Breakdown);
+  pinned by `DirectCholesky.NumericallySingularMatrixIsABreakdownNotAnAnswer`. H9 now holds for
+  all six solvers. This is exactly what the dry run was for.
+- **Observer-overhead check inconclusive.** The pair with and without the error observer differed
+  by 9.5 %, which is process-to-process noise (only one of five repetitions carries the observer),
+  not a measured observer cost; N4 is left for the idle official batch.
+- **One commit per phase is not possible for V2-8:** the official batch refuses a dirty tree and
+  records the commit it measured, so the harness must be committed before the runs; the results
+  become a second commit, which gets the `v2-phase-8` tag.
+- Smaller slips caught by tests or builds: the dry plan's first run (E1) lacked the dry-run cap;
+  the T0 test compared a 5-character prefix of 188.199999… ; a shell command with nested quoting
+  failed to parse and was split into separate steps; the README test filter `Study` also matched
+  v1 tests and was narrowed to the 117 V2 tests.
+
+---
+
+## 2026-11-23: Official batch (Phase V2-8, part 2)
+
+### Prompts (representative)
+1. "push v2-8 harness and start the overnight batch, ill be off to sleep, so once the run is
+   done, make necessary changes and start the next phase and push that also".
+
+### Outputs (files, functions)
+- `results/v2/` from the unattended batch on commit `5e9bea7` (241 runs).
+- `docs/v2_experiments.md`: official-batch section, first reading of H1–H9 and N4.
+- `src/cli/commands/StudyCommand.cpp`: `batch.log` and final `progress.json` fix;
+  `tests/integration/study_smoke.cmake` checks both.
+
+### My edits
+- None yet; the user was asleep and reviews this phase afterwards.
+
+### Verification (tests run, numbers checked, manual checks)
+- Every row records commit `5e9bea7`; 241 rows, no crash, time cap or memory-cap kill.
+- Hypothesis table checked against the CSVs by a script (slopes by least squares on log–log).
+- Full Windows test suite in Release and Debug before the commit.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **AMG strength threshold unsuitable for trilinear hexahedra (suspected).** The V2-7 θ₀ = 0.08
+  was tuned on a 7-point finite-difference Laplacian. On Q1 hexahedra of aspect ratio 1 every
+  coupling is below 0.08 of the diagonal, so nodes are left out of the coarse space; the
+  official batch shows stand-alone AMG stagnating even on the cube and AMG-PCG iterations
+  growing with refinement. Caught by reading the official results, not by a test. Official
+  results kept as measured; the fix is checked as a candidate and needs the user's decision.
+- **Harness log bug.** `batch.log` kept one line because the old file was open during the
+  atomic rename on Windows; the dry run did not show it because nobody read the log. Fixed and
+  pinned by the smoke test.
+
+## 2026-11-23: Report (Phase V2-10)
+
+### Prompts (representative)
+1. Relayed by the planning session: "continue to V2-10 after CI is green", with the rules: a
+   single PDF with no source code and with pictures; every number traceable to a CSV; resolve
+   all estimate and verify markers; leave the effort-log hours to the user; stop for review
+   before tagging the final release or pushing to `main`.
+2. The user, in this session: "start V2-10 once CI is green".
+3. After the first draft (17 pages, below the user's D-16 range of 18–25): "Add content".
+
+### Outputs (files, functions)
+- `docs/report_v2/report.src.html` (template), `report.html` (filled), `UniForge_V2_Report.pdf`,
+  `provenance.csv`.
+- `tools/report_v2/fill_numbers.py` (placeholders `run`, `sup`, `e5`, `tta`, `ratio`, `diff`,
+  `slope`, `status`, `numbers`, `fig`, `table`, `provenance`), `check_pdf.py`, `build_report_v2.ps1`.
+- `Figures.cpp`: failure labels once per reason; fin-theory note cites Bergman et al. 2011.
+- Marker resolution in the Build Spec, `figure_tokens.md`, README, code comments and two test
+  comments; notes on the three historical design documents.
+
+### My edits
+- None yet; the report is for the user's review.
+
+### Verification (tests run, numbers checked, manual checks)
+- `check_pdf.py` passes: 22 pages, 2.1 MB, no placeholder, marker, code-like text, e-mail
+  address or absolute path in the extracted text.
+- Every number comes from `fill_numbers.py`; it fails on a missing row, column or non-number.
+  Spot checks of the prose against the CSVs (E0 winners, E2 times and slopes, E3 ratios, E5 load
+  cases, E6 threads).
+- References: nine checked on Crossref (title, authors, journal, volume, pages, year, DOI), the
+  heat-transfer textbook on Open Library (7th ed., Wiley 2011), the Okabe–Ito RGB values on the
+  source's Fig. 16.
+- The report was rendered and read page by page; P11 and P12 re-rendered after the label fix.
+- Windows MSVC: 422/422 tests pass in Release and Debug.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **Citations for numbers they were not checked against:** the first draft attributed the
+  material conductivities and h = 25 W/(m²·K) to the heat-transfer textbook without checking its
+  tables. Caught while resolving the verify markers; the report now calls them chosen design
+  inputs and cites the book only for fin theory.
+- **Wrong figure reference:** the summary pointed to "Figure 16" for the decision chart (it is
+  Figure 25). Caught when reading the rendered report.
+- **Overlapping failure labels** in P11 and P12 (one label per refused size); two fixes were
+  needed before the labels cleared the curves. Caught by eye on the rendered figures.
+- **Section and table numbers in citations** (Saad §6.7.3, Davis ch. 4) could not be checked
+  without the books; they were removed and only the verified bibliographic data kept. The
+  attribution of the 4 × 4 IC(0) counter-example to Kershaw is marked as not checked against
+  the paper.
+- **Page count:** the first draft had 17 pages and I proposed lowering the limit rather than
+  padding; the user chose to add content. Added from existing results only: thermal results
+  along the design ladder, cross-solver accuracy, measured scaling exponents and work units,
+  time to an engineering answer, the ordering comparison (E7) and a hypotheses section.
+- **Two overstatements in the added prose,** caught by checking the filled values: "the direct
+  solver's solve grows slowest" (its solve exponent is 1.27–1.48, above multigrid's; only its
+  absolute solve time is small) and "four hypotheses confirmed" (three, counting H6 as
+  supported). Both corrected before the commit.
+
+### Review fixes (same phase, after the user's review of `a466125`)
+- **Prompt:** the user reviewed the report and said "Send all fixes"; the planning session relayed
+  nine items (five factual, four presentation).
+- **Wrong or overstated statements I had written,** caught by the user's review, not by me:
+  1. Appendix B said every phase was "reviewed and approved before it was committed" and that the
+     author "chose" the problem and decisions. In fact I committed each phase and the user reviewed
+     it before the push; the design defaults were proposed and then approved. Reworded.
+  2. Appendix A said "Linux CI green" although V2-10 changed figure code and had no CI run. Now
+     worded for the tagged release commit; it is true only once that tag passes CI.
+  3. The scenario table said PCG-IC0 had "no breakdown seen anywhere", contradicting Figure 24
+     (PCG-IC0 reports a breakdown on the singular E8 case). Now "no IC(0) pivot breakdown".
+  4. E3 cited Figures 20 and 21 for the direct solver's cost, which neither figure shows. Now
+     cites the Appendix D table with the measured range and notes that the TIM variants change
+     the DOF.
+  5. E4 said five designs; Figure 22 shows six.
+- **Presentation:** half-empty pages came from forced page breaks and side-by-side plots whose
+  text printed at about 3.6 pt; plots are now full width, page breaks only where needed, and the
+  provenance table is two columns. Page fill was measured from the PDF's content streams
+  (text and image positions) because no PDF renderer is installed. A `pip download pymupdf`
+  probe I ran while looking for one failed and installed nothing; I did not pursue an install
+  without asking.
+- **Number without a source** caught on rereading: the first caption of the new Figure 13b said
+  "grew 17×"; it now uses the two placeholders from the superseded rows.
+- Verification: `check_pdf.py` passes (22 pages, 2.1 MB); 424/424 tests pass in Release and
+  Debug; P11, P12, P21, P22, P23, P24 re-rendered and inspected.
+
+## 2026-11-23: Fixes after V2-9 (Phase V2-9.1)
+
+### Prompts (representative)
+1. The user's decision, relayed by the planning session: "PNGs + adopt 0.02": write renders as
+   separate PNG files and leave the scanner unchanged; adopt θ₀ = 0.02, re-run the 72 AMG rows
+   officially, regenerate the figures, and document the flaw, how it was found and how it was
+   fixed with before/after numbers. Commit phase by phase, new tag, CI green.
+
+### Outputs (files, functions)
+- `SvgCanvas::image/str/save`: renders saved as `<stem>-<k>.png` and linked by relative href.
+- `SolverOptions::amgStrengthThreshold` = 0.02; `tests/unit/solvers/ModelProblems.hpp`
+  `q1Laplacian3d`; `Amg.DefaultThresholdHandlesTrilinearHexahedra`.
+- 72 rows of `results/v2/runs` and `history` re-run; `results/v2_superseded/amg_theta008/`
+  with the old rows and a before/after CSV; `docs/v2_experiments.md` rewritten from "Official
+  batch" on; figure text in P13, P16 and P21 updated.
+
+### My edits
+- None yet; for the user's review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: 422/422 tests pass in Release and Debug.
+- Every number in the new hypothesis table and the before/after table was recomputed from
+  `results/v2/csv/*.csv` and the compare CSV by a script, not copied from the candidate run.
+- All 72 re-run rows record commit `9be2090`; figures re-rendered and inspected (P1, P9, P11,
+  P13a, P16, P21); no SVG contains base64.
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **θ₀ = 0.08 itself (V2-7):** tuned on a 7-point Laplacian, wrong for the Q1 matrices of the
+  study; caught by the official batch (AMG stagnating on the plain cube), see the experiments doc.
+- **Re-run without reconfiguring:** my first re-run skipped the runbook's reconfigure step, so
+  the rows recorded the stale configure-time commit `68a4041`. Caught by checking the
+  `git_commit` column; the rows were discarded and the runs repeated.
+- **Wrong H1 timing claim in V2-8:** I wrote that direct wins only the 10 k DOF bar with ND
+  (0.029 s); direct RCM was faster there (6.5 ms) and also won the 1.8 k bar. Caught when
+  recomputing H1 from E0.csv.
+- **Tight test bound:** the old mesh-independence test failed at the new default on the 7-point
+  Laplacian (15 → 20 cycles, bound +4); it now runs at the θ₀ it was tuned for, and the default
+  is tested on the Q1 matrix instead of loosening the bound.
+
+## 2026-11-23: Figures (Phase V2-9)
+
+### Prompts (representative)
+1. Same session as the official batch: "... once the run is done, make necessary changes and
+   start the next phase and push that also" (the user was asleep; no review between phases).
+
+### Outputs (files, functions)
+- `src/core/viz/`: `Image`, `Colormap` (inferno fit as in v1, categorical), `Raster3D`
+  (`Camera::fit`, `render`), `Spy` (`renderSpy`), `SvgCanvas` (`base64`, `colorbar`, `arrow`),
+  `PngWriter` (moved from `app/render`; `zlibCompress` with fixed-Huffman deflate).
+- `src/core/common/SvgPlot.*`: hollow/cross markers, annotations, note, `powerOfTenLabel`,
+  `renderSvgBars`.
+- `src/core/study/Figures.*` and `uniforge_cli study figures`; `docs/report_v2/fig/` (28 files
+  and `figures.md`).
+- Tests: `tests/unit/viz/VizTest.cpp` (13), `tests/unit/viz/PngWriterTest.cpp` (moved, now
+  with an independent inflater), `tests/integration/study_figures.cmake`.
+- Candidate AMG check (θ₀ = 0.02) on 72 runs in `build/amg_cand`, summarised in
+  `docs/v2_experiments.md`; not committed as results.
+
+### My edits
+- None yet; the phase was built while the user slept and is for their review.
+
+### Verification (tests run, numbers checked, manual checks)
+- Windows MSVC, warnings as errors: Release and Debug clean, **421/421 tests pass in both**.
+- Every figure rasterised with headless Edge and inspected by eye; layout fixes made for P1, P2,
+  P3, P5, P11, P12, P14, P16, P17 and P21 after the first look.
+- PNG output checked by an inflater written in the test (stored and fixed-Huffman blocks) and by
+  undoing the row filters back to the exact pixels.
+- Linux CI not run yet (runs on push of the tag).
+
+### Incorrect / unsuitable suggestions and how they were caught
+- **A placeholder line that allocated memory** (`*new Vec3[1]{}`) was written into the
+  rasteriser's segment pass while drafting; replaced by the real depth-tested brush before the
+  first build.
+- **Changed aggregate initialisation order:** adding `hollow` before `strokeWidth` in
+  `PlotSeries` broke v1's brace-initialised series (MSVC narrowing errors in
+  `BenchmarkReportIO.cpp`); the field was moved to the end.
+- **Figure details read from ASCII result rows:** the CSV sanitiser had turned `pᵀKp` into
+  `p?Kp`; P21 restores it for display.
+- **AMG explanation refined by P9:** the first wording said every coupling is weak; P9 showed
+  only 0.6 % isolated nodes on HS-7 at 1 mm (stretched cells keep some strong couplings). The
+  note now says this holds for cubic cells, and the candidate table states what was measured.
+
+## 2026-11-27: Literature survey and V3a (single-precision AMG)
+### Prompts (representative)
+- After the interview: survey all solvers, explain why V2 used three, find competitors that may
+  beat AMG-PCG, survey aerospace CFD and datasets (with four links supplied by me).
+- "Yes, start V3a": implement and measure the first candidate.
+### Outputs (files, functions)
+- Survey page (outside the repo), with sources and unverified items marked.
+- `AmgHierarchy::buildSinglePrecision`, `cycleSingle`, float kernels in `Amg.cpp`; option
+  `amgSinglePrecision`; kind `AMG-PCG-SP`; experiment `V3A` in `Plan.cpp`; two tests;
+  `docs/v3_experiments.md`.
+### My edits
+- Chose to run the mixed-precision test first, from the proposed test order.
+### Verification (tests run, numbers checked, manual checks)
+- 426 tests pass (Windows Release). 36 V3A runs converged on commit `6abcfe9`. Every
+  percentage in `docs/v3_experiments.md` was recomputed from `results/v3/csv/V3A.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Stale build hash again:** the first V3A pass ran a binary configured before the commit and
+  recorded `4874d37`. Caught in the result table, then the build was reconfigured and all runs
+  were repeated. The discarded rows are not in the repository.
+- **Expected speed-up not reached:** the survey's 1.1–1.6× did not carry over (≤ 5.7 % on one
+  core); recorded as a negative result instead of tuning until it looked better.
+- **Placeholder in the changelog draft** ("428 → 426?") was replaced with the measured count
+  before committing.
+
+## 2026-11-27: V3b (Chebyshev–Jacobi smoother)
+### Prompts (representative)
+- "Yes, start V3b": the parallel-smoother test proposed after V3a.
+### Outputs (files, functions)
+- `chebyshev<T>`, `chebyshevBytes`, `AmgHierarchy::buildChebyshev` in `Amg.cpp`; options
+  `amgSmoother`, `amgChebyshevDegree`, `amgChebyshevRatio`; kinds `AMG-PCG-CH`,
+  `AMG-PCG-CH-SP`; experiment `V3B`; one test; V3B section of `docs/v3_experiments.md`.
+### My edits
+- Approved the step; the smoother choice (Chebyshev over multicolour Gauss–Seidel) followed the
+  proposal.
+### Verification (tests run, numbers checked, manual checks)
+- 427 tests pass. The binary was checked to embed the commit hash `ecbf093` before the batch.
+  40 V3B runs converged. Every ratio in the write-up was recomputed by hand from
+  `results/v3/csv/V3B.csv` (a scripted ratio attempt failed on a key mismatch and was not used).
+### Incorrect / unsuitable suggestions and how they were caught
+- None found in the results. The write-up states that Chebyshev is slower on one core and that
+  the total-time gain is smaller than the solve-time gain.
+
+## 2026-11-27: V3c (parallel AMG setup)
+### Prompts (representative)
+- "Yes, parallel setup".
+### Outputs (files, functions)
+- `sparse::multiply(KernelPool&, …)`; pool versions of `strongConnections`,
+  `smoothedProlongator`, `buildChebyshev` and the float copy; per-step setup timers;
+  option `amgChebyshevPowerIterations`; experiment `V3C`; two tests; V3C section of
+  `docs/v3_experiments.md`.
+### My edits
+- Approved the step.
+### Verification (tests run, numbers checked, manual checks)
+- 429 tests pass in Release; the AMG and sparse tests also pass in Debug. The binary embedded
+  `93f65d6` before the batch. 32 V3C runs converged. The speed-ups were computed by script from
+  `results/v3/csv/V3C.csv` and spot-checked by hand.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Fewer power iterations (10)** looked like a free 0.26 s. A trial run converged in an
+  impossible 4 iterations, and the run file showed Breakdown with true residual 3.1, so the
+  change was reverted. The first glance at the trial output missed the status column. Caught
+  because 4 iterations was implausible.
+- **Unspecified argument order in a new test:** `tentativeProlongator(aggregate(A, s, count),
+  count)` let MSVC read `count` before `aggregate` set it (access violation). Found with the Debug
+  build's bounds assertion and fixed by splitting the statement.
+- **Unexplained timing difference** (3.76 M, 8 threads: 3.38 s vs 4.85 s in V3B) is reported as
+  open, not explained away.
+
+## 2026-11-27: V3d (geometric multigrid)
+### Prompts (representative)
+- "Geometric multigrid".
+### Outputs (files, functions)
+- `geometricProlongator`, the geometric branch of `AmgHierarchy::build`, `Coarsening`,
+  `Preconditioner::setHint`, hint plumbing in `Pcg::setup` and the study runner, kinds
+  `GMG-PCG` and `GMG-PCG-CH-SP`, experiment `V3D`, two tests, V3D section of
+  `docs/v3_experiments.md`.
+### My edits
+- Approved the step.
+### Verification (tests run, numbers checked, manual checks)
+- 431 tests pass. Smoke runs on HS-7 at 1 mm and 0.5 mm before the batch. The binary embedded
+  `cea14c0`. 40 V3D runs converged. Ratios computed by script from `results/v3/csv/V3D.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **First draft of the verdict** called the 20-thread result "a tie within ±7 % up to 0.17 M".
+  The table shows AMG 15 % faster at 56 k, so the sentence was corrected. The draft also said
+  memory was "within 3 %" when the largest difference is 5.8 % (0.29 M), and its error
+  sentence was muddled; both were rewritten from the CSV.
+- **Scope stated plainly:** this GMG is matrix-based, so the literature's matrix-free advantage
+  was not tested, and the write-up says so.
+
+## 2026-11-27: Machine check and V3e (load cases in lockstep, pinned threads)
+### Prompts (representative)
+- "next is multi-load reuse and is my pc at optimal state of the test runs … do we need to make
+  any changes for it?"
+### Outputs (files, functions)
+- Machine check (CPU, power plan, RAM part number and speed, background load). Three
+  decisions put to the user.
+- `solveMany`, `AmgBatchPcg`, block kernels and `vcycleBlock` in `Amg.cpp`;
+  `performanceFirstCpus` and `pinThreadToCpu`; runner load cases; experiment `V3E`; one test;
+  V3E section of `docs/v3_experiments.md`.
+### My edits
+- Decided: keep the RAM at 4800 MT/s (XMP off) for comparability; High performance power plan
+  during batches only; pin threads and add 6- and 12-thread runs.
+### Verification (tests run, numbers checked, manual checks)
+- 432 tests pass. Smoke runs on HS-7 before the batch (pinned CPU recorded, lockstep faster at
+  94 k). The binary embedded `07b86c4`. 54 V3E runs converged. Ratios computed by hand from
+  `results/v3/csv/V3E.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Power plan not restored:** the batch command switched back to Balanced through the Bash
+  tool, which did not take effect; the plan stayed on High performance. A check after the
+  batch caught it, and Balanced was restored with PowerShell.
+- **Shell heredoc failed to parse** (a quote inside the C++ text); nothing was written. The code
+  went through a scratch file instead.
+- **Draft verdict errors fixed before committing:** the L = 1 overhead was given as 9–31 %
+  (measured 10–31 %). The direct-solver break-even was given as 240–300 loads (measured about
+  220 and 700). The draft also called "direct pays off for many loads" a V2 result, but V2's H5
+  had refuted it.
+
+## 2026-11-27/28: V3f (hypre and PETSc references)
+### Prompts (representative)
+- "hypre/PETSc reference"; separately approved: download hypre, install WSL Ubuntu and PETSc.
+### Outputs (files, functions)
+- `HyprePcg` (`src/core/solvers/external/`), CMake option `UNIFORGE_WITH_HYPRE`, `exportPetsc`
+  and `study export`, `tools/petsc_ref/` (driver, makefile, script), experiment `V3F`, two
+  tests, the V3F section of `docs/v3_experiments.md`, DEPENDENCIES.md entries.
+### My edits
+- Approved the hypre download and the WSL Ubuntu + PETSc install (no MPI, root without a user
+  account).
+### Verification (tests run, numbers checked, manual checks)
+- Tests pass in both builds (434 default; 409 with hypre, no GUI). hypre agrees with our
+  AMG-PCG on the Q1 model problem. PETSc's install check passed. 56 V3F runs and 16 PETSc runs
+  converged. Ratios computed by hand from `V3F.csv` and `V3F_petsc.csv`.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Runtime mismatch:** hypre was first built with the DLL runtime (`/MD`), which cannot link
+  with UniForge's `/MT`. Caught before linking and rebuilt.
+- **OpenMP mismatch:** MSVC's OpenMP 2.0 lacks `omp_get_thread_limit` (linker error). Fixed
+  with a documented shim instead of changing the OpenMP runtime.
+- **`find_package(OpenMP COMPONENTS C)`** failed in a C++-only project; fixed by enabling C
+  when hypre is on.
+- **Draft accuracy claim corrected:** the draft said every external error was "within the same
+  order of magnitude" as ours, but hypre θ 0.5 at 1.87 M is 9× larger (6.4e-10 vs 6.7e-11 K).
+  The draft's speed-up ranges were also restated per comparison.
+- **Caveats recorded:** the external settings were not tuned, hypre's OpenMP threads were not
+  pinned, and PETSc ran in a VM while Windows was on the Balanced plan.
+
+## 2026-11-28: V3g (sanitizer check, timing repeat)
+### Prompts (representative)
+- "Yes, do both": run the CI's ASan+UBSan and TSan builds of v3 locally without pushing, and
+  repeat the 3.76 M / 8-thread timing to explain the V3B vs V3C gap.
+### Outputs (files, functions)
+- GCC compile fixes in `Amg.cpp`, `Runner.cpp`, `HypreSolver.cpp`, `AmgTest.cpp`.
+- `UNIFORGE_NO_PIN` switch in `StudyCommand.cpp`, `tools/timing_repeat_v3g.sh`, the V3G write-up
+  and `results/v3/csv/V3G_timing.csv`.
+### My edits
+- Approved the High performance plan for the timing batch only (restored to Balanced after).
+### Verification (tests run, numbers checked, manual checks)
+- ASan+UBSan and TSan: 409/409 each, no reports; Windows 434/434 after the fix. Every timing
+  row was taken from the run CSVs. The old binaries were rebuilt from the V3B/V3C commits.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Hypothesis disproved:** the earlier note attributed the gap to the λ̂ start vector or the
+  setup change. The repeat showed V3B's own binary in the fast cluster, so the cause is thread
+  placement.
+- **Draft corrected:** the first V3G draft proposed "one thread per P-core first" as a fix, but
+  the pinning code already does that; the draft was corrected after reading the code.
+- **False alarm:** a grep for `error:` in the TSan build log matched `system_error` include
+  lines, not errors.
+
+## 2026-11-28: V3h (thread runs re-timed pinned)
+### Prompts (representative)
+- "re-time V3B–V3D thread runs pinned": rerun every multi-threaded V3B–V3D row with pinning,
+  keep the old CSVs, report whether any verdict changes.
+### Outputs (files, functions)
+- `planV3H` in `Plan.cpp` (56 runs), `results/v3/csv/V3H.csv`, the V3H section and the pointers
+  in the V3B–V3D verdicts.
+### My edits
+- None to the code; asked for the re-timing after V3G.
+### Verification (tests run, numbers checked, manual checks)
+- 434 tests pass. All 56 runs converged, at commit `bec0817` (hash checked in the binary). Every
+  ratio was computed by script from `V3H.csv` and the old CSVs, then re-checked by hand.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Draft claims corrected before commit:** the first V3H draft said every other run spread
+  ≤ 10 %, but 10 of 12 small-mesh runs had outliers. It also miscounted the runs (24/16 instead
+  of 28/12) and misstated three ranges (pinned-vs-V3C slowdown, V3B slow rows, 8 vs 20
+  threads). All were caught by recomputing from the CSV.
+
+## 2026-11-28: V3 report (draft)
+### Prompts (representative)
+- "Write up V3 results": a V3 report in the style and pipeline of the V2 report, with pinned
+  headlines, every caveat, a provenance appendix and an honest effort note.
+### Outputs (files, functions)
+- `figV1`–`figV5` in `Figures.cpp` (run only when named), `tools/report_v3/` (fill, build,
+  check), `docs/report_v3/` (source, filled HTML, provenance, PDF, figures).
+### My edits
+- None yet; the draft is for my review.
+### Verification (tests run, numbers checked, manual checks)
+- 434 tests pass. All 217 numbers are filled from the CSVs, and the PDF check passed. 14 PDF
+  numbers were recomputed independently from the CSVs with awk and all matched. Every page was
+  inspected as an image for layout.
+### Incorrect / unsuitable suggestions and how they were caught
+- **Wrong "total":** the first fill used the CSV's `total_s_median`, which disagreed with the
+  write-up's 1.31× at 0.29 M. The write-up defines total as setup + median solve, and the filler
+  now does the same.
+- **Over-broad headline:** "1.8–2.4× on 8 or 20 threads" was false for 8 threads (1.71× at
+  3.76 M). It now states 20 threads, gives the 8-thread range, and names the noisy 1.02 M row.
+- **Unsupported claims removed:** "this machine has no suitable setup" for GPU (not known), a
+  per-load memory of 302 MB (L20 / 20, not the increment), "CH-SP faster than CH everywhere"
+  (not on one noisy row), and an 8-thread maximum taken from the wrong size.
+- **Layout:** two figures were pushed to the next page, leaving half-empty pages; the following
+  text was moved ahead of them.
+- **References 1–6** were written from memory and are marked in the report as not yet checked.
+
+## 2026-11-28: V3 report review fixes
+### Prompts (representative)
+- "Send all fixes": the user's review of the draft (half-empty pages, a wrong error claim,
+  unverified references, provenance layout, memory rounding).
+### Outputs (files, functions)
+- V3 figures at 820 × 340 (same width and text size, shorter); provenance as one table in two
+  balanced columns with a `total` label; corrected accuracy paragraph in the report and in
+  `v3_experiments.md`; references 1–5 checked; report rebuilt (9 pages).
+### My edits
+- None; the fixes are the ones I asked for.
+### Verification (tests run, numbers checked, manual checks)
+- 434 tests pass, and the PDF check passed. Blank space below content was measured per page
+  (largest 24 % on body pages). The changed numbers were recomputed from the CSVs and found in
+  the PDF text. References 1–5 were resolved through Crossref (title, authors, venue, volume,
+  issue, pages and year).
+### Incorrect / unsuitable suggestions and how they were caught
+- **Accuracy claim:** the draft named hypre θ 0.5 at 1.87 M as the largest error, but every
+  solver, ours included, sits at 1e-9 to 6e-9 K from 56 k to 0.57 M: there the reference
+  limits accuracy. The write-up's 6.4e-10 was a misrounded 6-thread value (6.345e-10). Its "PETSc
+  largest 9.6e-11 K" overlooked the reference-limited sizes (2.3e-9 K at 0.29 M). Caught in the
+  user's review and confirmed against the CSV.
+- **Reference [3]:** "LNCS 2331" is not in the DOI record and was removed. [6] (PETSc manual,
+  no DOI) stays marked unverified.
+- **Rounding:** single-precision memory +28.5 % was given as 28 % in the write-up and 29 % in the
+  report; both now say 29 % (nearest integer).
+
 ## Entry template
 
 ```markdown

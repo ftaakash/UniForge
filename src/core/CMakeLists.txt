@@ -13,6 +13,11 @@ add_library(uniforge_core STATIC
     hw/MockAdapter.cpp
     hw/MockTransport.cpp
     hw/RetryPolicy.cpp
+    fem3d/Assembly.cpp
+    fem3d/Design.cpp
+    fem3d/Element.cpp
+    fem3d/HexMesh.cpp
+    fem3d/Post.cpp
     io/ImportErrors.cpp
     io/LineReader.cpp
     io/StlParser.cpp
@@ -29,6 +34,24 @@ add_library(uniforge_core STATIC
     ml/GradientCheck.cpp
     ml/TinyNet.cpp
     ml/Trainer.cpp
+    solvers/Observers.cpp
+    solvers/amg/Amg.cpp
+    solvers/direct/Cholesky.cpp
+    solvers/direct/Ordering.cpp
+    solvers/external/HypreSolver.cpp
+    solvers/SolverFactory.cpp
+    solvers/krylov/Ic0.cpp
+    solvers/krylov/Lanczos.cpp
+    solvers/krylov/Pcg.cpp
+    solvers/krylov/Preconditioner.cpp
+    sparse/CsrMatrix.cpp
+    sparse/KernelPool.cpp
+    sparse/SparseOps.cpp
+    sparse/VectorOps.cpp
+    study/Collect.cpp
+    study/Figures.cpp
+    study/Plan.cpp
+    study/Runner.cpp
     thermal/Analytical.cpp
     thermal/Assembler.cpp
     thermal/ConvergenceStudy.cpp
@@ -36,7 +59,13 @@ add_library(uniforge_core STATIC
     thermal/ErrorAnalysis.cpp
     thermal/RodProblem.cpp
     thermal/RodSolver.cpp
-    thermal/ThomasSolver.cpp)
+    thermal/ThomasSolver.cpp
+    viz/Colormap.cpp
+    viz/Image.cpp
+    viz/PngWriter.cpp
+    viz/Raster3D.cpp
+    viz/Spy.cpp
+    viz/SvgCanvas.cpp)
 if(WIN32)
     target_sources(uniforge_core PRIVATE perf/SystemInfo_win.cpp)
 else()
@@ -48,6 +77,18 @@ uniforge_target_defaults(uniforge_core)
 # The worker pool uses std::thread (pthreads on Linux).
 find_package(Threads REQUIRED)
 target_link_libraries(uniforge_core PUBLIC Threads::Threads)
+
+# Optional reference solver (V3f): hypre, built separately and found through HYPRE_ROOT. Off by
+# default, so the normal build stays offline and dependency-free (DEPENDENCIES.md).
+option(UNIFORGE_WITH_HYPRE "Link hypre (BoomerAMG) as the external reference solver" OFF)
+if(UNIFORGE_WITH_HYPRE)
+    set(HYPRE_ROOT "" CACHE PATH "hypre install prefix (contains lib/cmake/HYPRE)")
+    enable_language(C) # hypre is a C library; its package config looks for OpenMP::OpenMP_C
+    find_package(HYPRE CONFIG REQUIRED PATHS "${HYPRE_ROOT}" NO_DEFAULT_PATH)
+    find_package(OpenMP REQUIRED COMPONENTS C CXX)
+    target_link_libraries(uniforge_core PRIVATE HYPRE::HYPRE OpenMP::OpenMP_CXX)
+    target_compile_definitions(uniforge_core PRIVATE UNIFORGE_HAVE_HYPRE=1)
+endif()
 
 # Compiler flags of this build for the benchmark report (perf/SystemInfo.cpp), per configuration.
 set(uniforge_config_flags
